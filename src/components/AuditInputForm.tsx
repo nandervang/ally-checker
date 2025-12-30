@@ -10,8 +10,8 @@ import { Globe, Code, Upload, AlertCircle, FileText } from "lucide-react";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { ErrorDisplay } from "./ErrorDisplay";
 import { ProgressIndicator } from "./ProgressIndicator";
+import { runAxeAnalysisOnUrl, runAxeAnalysisOnSnippet, runAxeAnalysis } from "@/services/axeService";
 import { 
-  mockHtmlAuditResult, 
   mockPdfAuditResult, 
   mockDocxAuditResult,
   type AuditResult 
@@ -152,34 +152,51 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
 
     while (attempt < maxRetries) {
       try {
-        setAuditStep("fetching");
-        // TODO: Replace with actual API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        let result: AuditResult;
 
-        setAuditStep("analyzing");
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        if (mode === "url") {
+          setAuditStep("fetching");
+          // Run real axe-core analysis on URL
+          result = await runAxeAnalysisOnUrl(url);
+        } else if (mode === "html" && file) {
+          setAuditStep("fetching");
+          // Read HTML file content
+          const htmlContent = await file.text();
+          
+          setAuditStep("analyzing");
+          // Run axe-core analysis on HTML content
+          result = await runAxeAnalysis(htmlContent, { 
+            fileName: file.name, 
+            documentType: "html" 
+          });
+        } else if (mode === "snippet") {
+          setAuditStep("analyzing");
+          // Run axe-core analysis on snippet
+          result = await runAxeAnalysisOnSnippet(snippet);
+        } else if (mode === "document" && file) {
+          setAuditStep("fetching");
+          // For PDF/DOCX, still use mock data (document analysis will be implemented later)
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          
+          setAuditStep("analyzing");
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+          
+          result = file.name.endsWith(".pdf") 
+            ? { ...mockPdfAuditResult, fileName: file.name }
+            : { ...mockDocxAuditResult, fileName: file.name };
+        } else {
+          throw new Error("Invalid audit mode or missing input");
+        }
 
         setAuditStep("generating");
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
         setAuditStep("complete");
         
-        // Use mock data based on mode/file type
-        let mockResult: AuditResult;
-        if (mode === "document" && file) {
-          mockResult = file.name.endsWith(".pdf") 
-            ? { ...mockPdfAuditResult, fileName: file.name }
-            : { ...mockDocxAuditResult, fileName: file.name };
-        } else if (mode === "url") {
-          mockResult = { ...mockHtmlAuditResult, url };
-        } else {
-          mockResult = mockHtmlAuditResult;
-        }
-        
         // Notify parent component
-        onAuditComplete?.(mockResult);
+        onAuditComplete?.(result);
         
-        console.log("Audit complete:", mockResult);
+        console.log("Audit complete:", result);
         
         // Reset after 2 seconds
         setTimeout(() => {
@@ -187,11 +204,15 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
         }, 2000);
         
         return;
-      } catch {
+      } catch (error) {
         attempt++;
 
         if (attempt >= maxRetries) {
-          setAuditError(t("error.network"));
+          setAuditError(
+            error instanceof Error 
+              ? error.message 
+              : t("error.network")
+          );
           setAuditStep("idle");
           return;
         }
