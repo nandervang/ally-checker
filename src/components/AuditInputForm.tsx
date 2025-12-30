@@ -6,7 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Globe, Code, Upload, AlertCircle, FileText } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Globe, Code, Upload, AlertCircle, FileText, Brain, Zap } from "lucide-react";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { ErrorDisplay } from "./ErrorDisplay";
 import { ProgressIndicator } from "./ProgressIndicator";
@@ -39,6 +41,8 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [auditStep, setAuditStep] = useState<AuditStep>("idle");
   const [auditError, setAuditError] = useState<string | null>(null);
+  const [agentMode, setAgentMode] = useState<boolean>(false);
+  const [selectedModel, setSelectedModel] = useState<"claude" | "gemini" | "gpt4">("claude");
 
   const validateUrl = (value: string): boolean => {
     try {
@@ -274,7 +278,59 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
           />
         </div>
       )}
-      <Tabs value={mode} onValueChange={(value) => { setMode(value as InputMode); }} className="w-full">
+
+      {/* Agent Mode Toggle */}
+      <div className="bg-card border rounded-lg p-6 shadow-elevation-2">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            {agentMode ? (
+              <Brain className="h-6 w-6 text-primary" />
+            ) : (
+              <Zap className="h-6 w-6 text-muted-foreground" />
+            )}
+            <div>
+              <h3 className="text-lg font-semibold">
+                {agentMode ? "AI Agent Mode" : "Quick Mode"}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {agentMode 
+                  ? "AI-powered comprehensive analysis with heuristics" 
+                  : "Instant automated testing with axe-core"}
+              </p>
+            </div>
+          </div>
+          <Switch
+            checked={agentMode}
+            onCheckedChange={setAgentMode}
+            aria-label="Toggle AI Agent Mode"
+          />
+        </div>
+
+        {agentMode && (
+          <div className="mt-4 pt-4 border-t">
+            <Label htmlFor="model-select" className="text-sm font-medium mb-2 block">
+              AI Model
+            </Label>
+            <Select value={selectedModel} onValueChange={(value) => { setSelectedModel(value as typeof selectedModel); }}>
+              <SelectTrigger id="model-select" className="w-full">
+                <SelectValue placeholder="Select AI model" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="claude">Claude (Anthropic) - Recommended</SelectItem>
+                <SelectItem value="gemini">Gemini (Google)</SelectItem>
+                <SelectItem value="gpt4">GPT-4 (OpenAI)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-2">
+              {selectedModel === "claude" && "Best for accessibility analysis with MCP tools"}
+              {selectedModel === "gemini" && "Fast analysis with multimodal capabilities"}
+              {selectedModel === "gpt4" && "Reliable and comprehensive evaluation"}
+            </p>
+          </div>
+        )}
+      </div>
+
+      <Tabs value={mode} onValueChange={(value) => { setMode(value as InputMode); }} className="w-full">`
         <TabsList className="grid w-full grid-cols-4 h-auto">
           <TabsTrigger value="url" className="gap-2 text-base md:text-lg h-auto py-3 focus-ring">
             <Globe className="h-5 w-5" />
