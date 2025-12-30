@@ -7,11 +7,13 @@ import { Header } from "@/components/Header";
 import { Main } from "@/components/Main";
 import { Footer } from "@/components/Footer";
 import { AuditInputForm } from "@/components/AuditInputForm";
+import { useTheme } from "@/hooks/useTheme";
 import { Settings, FileText, Database, ChevronRight, Menu } from "lucide-react";
 import "./index.css";
 
 export function App() {
   const { t } = useTranslation();
+  const { theme, setTheme } = useTheme();
   const [activePanel, setActivePanel] = useState<string | null>(null);
 
   const menuItems = [
@@ -156,7 +158,9 @@ export function App() {
             </Card>
           </div>
         </div>
-      </main>
+      </Main>
+
+      <Footer />
 
       <Sheet open={activePanel === "overview"} onOpenChange={(open) => !open && setActivePanel(null)}>
         <SheetContent side="right" className="w-full sm:w-[540px] overflow-y-auto">
@@ -174,9 +178,7 @@ export function App() {
               <h3 className="font-semibold mb-3 text-xl md:text-2xl">{t("overview.colorSystem")}</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-4 bg-primary text-primary-foreground rounded-lg text-base md:text-lg">{t("overview.colors.primary")}</div>
-        Main>
-
-      <Footer /    <div className="p-4 bg-secondary text-secondary-foreground rounded-lg text-base md:text-lg">{t("overview.colors.secondary")}</div>
+                <div className="p-4 bg-secondary text-secondary-foreground rounded-lg text-base md:text-lg">{t("overview.colors.secondary")}</div>
                 <div className="p-4 bg-accent text-accent-foreground rounded-lg text-base md:text-lg">{t("overview.colors.accent")}</div>
                 <div className="p-4 bg-muted text-muted-foreground rounded-lg text-base md:text-lg">{t("overview.colors.muted")}</div>
               </div>

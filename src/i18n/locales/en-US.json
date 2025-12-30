@@ -124,5 +124,43 @@
     "current": "Current language",
     "swedish": "Swedish",
     "english": "English"
+  },
+  "loading": {
+    "default": "Loading...",
+    "analyzing": "Analyzing accessibility...",
+    "fetching": "Fetching website...",
+    "generating": "Generating report..."
+  },
+  "error": {
+    "title": "An error occurred",
+    "retry": "Try again",
+    "network": "Network error: Could not connect to server",
+    "timeout": "Request timed out",
+    "invalidUrl": "Invalid URL",
+    "fileTooLarge": "File is too large (max 10 MB)",
+    "invalidFileType": "Invalid file type (only HTML allowed)",
+    "rateLimit": "Too many requests, please try again later",
+    "unknown": "An unknown error occurred"
+  },
+  "progress": {
+    "step": "Step {{current}} of {{total}}",
+    "srOnly": "{{percentage}}% complete, {{currentStep}}"
+  },
+  "audit": {
+    "analyze": "Analyze Accessibility",
+    "urlLabel": "Website URL",
+    "urlPlaceholder": "https://example.com",
+    "fileLabel": "HTML File (max 10MB)",
+    "snippetLabel": "HTML Code Snippet",
+    "snippetPlaceholder": "<div>Your HTML code here...</div>",
+    "validation": {
+      "urlRequired": "URL is required",
+      "urlInvalid": "Please enter a valid URL (must start with http:// or https://)",
+      "fileRequired": "Please select an HTML file",
+      "fileInvalidType": "Please upload an HTML file (.html)",
+      "fileTooLarge": "File size must be less than 10MB",
+      "snippetRequired": "HTML snippet is required"
+    },
+    "fileSuccess": "{{name}} ({{size}} KB)"
   }
 }

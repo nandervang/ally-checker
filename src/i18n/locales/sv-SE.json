@@ -124,5 +124,43 @@
     "current": "Nuvarande språk",
     "swedish": "Svenska",
     "english": "Engelska"
+  },
+  "loading": {
+    "default": "Laddar...",
+    "analyzing": "Analyserar tillgänglighet...",
+    "fetching": "Hämtar webbplats...",
+    "generating": "Genererar rapport..."
+  },
+  "error": {
+    "title": "Ett fel uppstod",
+    "retry": "Försök igen",
+    "network": "Nätverksfel: Kunde inte ansluta till servern",
+    "timeout": "Begäran tog för lång tid",
+    "invalidUrl": "Ogiltig URL-adress",
+    "fileTooLarge": "Filen är för stor (max 10 MB)",
+    "invalidFileType": "Ogiltigt filformat (endast HTML tillåtet)",
+    "rateLimit": "För många förfrågningar, försök igen senare",
+    "unknown": "Ett okänt fel uppstod"
+  },
+  "progress": {
+    "step": "Steg {{current}} av {{total}}",
+    "srOnly": "{{percentage}}% färdigt, {{currentStep}}"
+  },
+  "audit": {
+    "analyze": "Analysera tillgänglighet",
+    "urlLabel": "Webbplats-URL",
+    "urlPlaceholder": "https://example.com",
+    "fileLabel": "HTML-fil (max 10 MB)",
+    "snippetLabel": "HTML-kodsnutt",
+    "snippetPlaceholder": "<div>Din HTML-kod här...</div>",
+    "validation": {
+      "urlRequired": "URL krävs",
+      "urlInvalid": "Ange en giltig URL (måste börja med http:// eller https://)",
+      "fileRequired": "Välj en HTML-fil",
+      "fileInvalidType": "Ladda upp en HTML-fil (.html)",
+      "fileTooLarge": "Filstorleken måste vara mindre än 10 MB",
+      "snippetRequired": "HTML-kodsnutt krävs"
+    },
+    "fileSuccess": "{{name}} ({{size}} KB)"
   }
 }
