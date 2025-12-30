@@ -103,18 +103,20 @@ const aiInsights = await analyzeWithAI(htmlContent, suspectedIssue);
 const mergedReport = consolidateFindings(axeResults, aiInsights);
 ```
 
-### 5. Report Generation: Python + python-docx + PydanticAI
+### 5. Report Generation: Netlify Functions (Python) + python-docx + PydanticAI
 
-**Decision**: Separate Python microservice for ETU Word report generation using python-docx and PydanticAI.
+**Decision**: Use Netlify Functions (serverless) for ETU Word report generation using Python runtime with python-docx and PydanticAI.
 
 **Rationale**:
 - **Python**: Best ecosystem for document generation (python-docx, docxtpl)
 - **python-docx**: Robust library for creating/modifying Word documents with precise formatting
 - **PydanticAI**: Type-safe AI integration for report summarization and recommendations
-- **Microservice Architecture**: Separates compute-intensive report generation from frontend
-- **Docker Deployment**: Easy scaling independent of main application
+- **Netlify Functions**: Serverless deployment eliminates Docker complexity and infrastructure management
+- **Auto-scaling**: Netlify handles scaling automatically based on demand
+- **Simplified Operations**: No container orchestration, automatic HTTPS, integrated monitoring
 
 **Alternatives Considered**:
+- **Docker microservice**: Rejected due to operational overhead (container management, scaling, deployment)
 - **JavaScript (docx npm)**: Rejected due to less mature library and limited formatting capabilities
 - **HTML to DOCX**: Rejected due to poor fidelity for professional Word documents
 - **LaTeX/PDF**: Rejected due to ETU requirement for editable Word format
@@ -222,12 +224,12 @@ const schema = await supabaseMCP.getSchema('audits')
 - Async execution to avoid blocking UI
 - Result caching for identical HTML
 
-### Python Report Service
-- FastAPI for async request handling
+### Python Report Service (Netlify Functions)
+- Netlify Functions runtime for serverless execution
 - Pydantic models for type safety
-- Docker multi-stage builds for small images
-- Health check endpoint for monitoring
-- Rate limiting for abuse prevention
+- Function-level configuration for timeouts and memory
+- Built-in Netlify monitoring and logging
+- Netlify rate limiting and DDoS protection
 
 ## Performance Optimization
 
@@ -285,10 +287,10 @@ const schema = await supabaseMCP.getSchema('audits')
 - Anonymous auth for unauthenticated users
 
 ### Report Service
-- Docker container on Railway/Fly.io
-- Auto-scaling based on request volume
-- Health checks every 30 seconds
-- Graceful shutdown handling
+- Netlify Functions (Python runtime)
+- Automatic serverless scaling based on request volume
+- Built-in health monitoring and logging
+- Zero-downtime deployments
 
 ## Open Questions (None Remaining)
 
