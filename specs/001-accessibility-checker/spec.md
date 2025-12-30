@@ -1,0 +1,205 @@
+# Feature Specification: Accessibility Checker Application
+
+**Feature Branch**: `001-accessibility-checker`  
+**Created**: 2025-12-30  
+**Status**: Draft  
+**Input**: User description: "A11y checker app with URL/HTML input, axe-core + AI analysis, WCAG-organized output"
+
+## User Scenarios & Testing *(mandatory)*
+
+### User Story 1 - Quick HTML Snippet Analysis (Priority: P1)
+
+A developer is working on a component and wants to quickly check if a small piece of HTML code has accessibility issues before committing it. They paste the HTML snippet into the checker and receive immediate feedback organized by WCAG principles.
+
+**Why this priority**: This is the core value proposition - fast, friction-free accessibility validation during active development. Developers can catch issues before they reach production.
+
+**Independent Test**: Can be fully tested by pasting a simple HTML snippet (e.g., `<button>Click me</button>`) and verifying that analysis results appear organized by WCAG principles. Delivers immediate value without requiring external dependencies.
+
+**Acceptance Scenarios**:
+
+1. **Given** the user has opened the application, **When** they paste an HTML code snippet (e.g., `<img src="cat.jpg">`) into the input area and click the "Analyze" button, **Then** they see a list of accessibility issues categorized by WCAG principles (Perceivable, Operable, Understandable, Robust)
+2. **Given** the user has pasted HTML with no accessibility issues, **When** they click "Analyze", **Then** they see a success message indicating no violations were found
+3. **Given** the user has pasted invalid HTML syntax, **When** they click "Analyze", **Then** they see a clear error message explaining the syntax issue
+
+---
+
+### User Story 2 - Full HTML Document Analysis (Priority: P2)
+
+A quality assurance tester receives a complete HTML file to audit. They paste the full HTML source code into the checker to get a comprehensive accessibility report covering all WCAG 2.2 AA violations and potential issues.
+
+**Why this priority**: Extends the core functionality to handle complete documents, enabling pre-deployment validation and comprehensive audits of entire pages.
+
+**Independent Test**: Can be tested by pasting a complete HTML document with `<!DOCTYPE>`, `<html>`, `<head>`, and `<body>` tags and verifying comprehensive analysis across all sections. Delivers value for QA workflows.
+
+**Acceptance Scenarios**:
+
+1. **Given** the user has a complete HTML document with multiple sections, **When** they paste it and click "Analyze", **Then** they receive a comprehensive report identifying all issues across the entire document structure
+2. **Given** the HTML contains both automated-detectable issues (missing alt text) and AI-analyzable issues (generic alt text like "image"), **When** analysis completes, **Then** both types of issues appear in the appropriate WCAG category
+3. **Given** the analysis finds 20+ issues, **When** results display, **Then** issues are grouped by WCAG principle with expandable sections for better readability
+
+---
+
+### User Story 3 - URL-Based Website Audit (Priority: P2)
+
+A content manager wants to audit a live webpage without accessing the source code. They enter the page URL, and the system fetches the HTML, performs the analysis, and provides a detailed accessibility report.
+
+**Why this priority**: Enables auditing of production websites and third-party pages without requiring technical access to source code. Critical for managers and non-technical auditors.
+
+**Independent Test**: Can be tested by entering a live URL (e.g., "https://example.com") and verifying the system fetches, analyzes, and reports issues. Delivers value for content teams and accessibility auditors.
+
+**Acceptance Scenarios**:
+
+1. **Given** the user enters a valid public URL, **When** they click "Analyze", **Then** the system fetches the page HTML and displays accessibility issues organized by WCAG principles
+2. **Given** the URL is inaccessible (404, timeout, or network error), **When** they click "Analyze", **Then** they see a clear error message explaining the fetch failure
+3. **Given** the URL requires authentication or returns JavaScript-rendered content, **When** they attempt analysis, **Then** they receive a message explaining limitations and suggesting they use the HTML source input method instead
+
+---
+
+### User Story 4 - Targeted Issue Investigation (Priority: P3)
+
+A developer suspects a specific accessibility problem (e.g., "color contrast might be too low") but isn't sure. They provide their HTML code along with a brief description of the suspected issue, and the AI agent investigates that specific concern in detail while also running the standard audit.
+
+**Why this priority**: Provides expert-level assistance for ambiguous or subjective accessibility concerns that automated tools might miss. Enhances the tool's value for learning and nuanced investigations.
+
+**Independent Test**: Can be tested by providing HTML code plus a suspected issue description (e.g., "Is this button's label clear enough?") and verifying the AI provides focused analysis on that concern. Delivers educational value and deeper insights.
+
+**Acceptance Scenarios**:
+
+1. **Given** the user provides HTML and describes a suspected issue (e.g., "Is this alt text meaningful?"), **When** they click "Analyze", **Then** the report includes a dedicated section addressing the specific concern with AI-powered heuristic analysis
+2. **Given** the user provides only a suspected issue description without HTML, **When** they click "Analyze", **Then** the system prompts them to provide HTML code for analysis
+3. **Given** the suspected issue is not found during analysis, **When** results display, **Then** the report clearly states the investigated concern and explains why it was not flagged as a violation
+
+---
+
+### User Story 5 - Issue Description Only Guidance (Priority: P3)
+
+A non-technical user (e.g., content writer) wants to understand if something might be an accessibility issue but doesn't have code. They describe the situation (e.g., "I have an image with alt text 'click here'"), and the AI provides educational guidance about potential accessibility concerns.
+
+**Why this priority**: Makes the tool accessible to non-developers and serves an educational purpose, expanding the user base beyond developers.
+
+**Independent Test**: Can be tested by entering only a text description of a potential issue and verifying the AI provides relevant accessibility guidance. Delivers educational value without requiring technical knowledge.
+
+**Acceptance Scenarios**:
+
+1. **Given** the user enters only a description of a possible issue (e.g., "My button just says 'Submit' with no context"), **When** they submit, **Then** they receive educational guidance about why this might be problematic and suggestions for improvement
+2. **Given** the description is too vague, **When** submitted, **Then** the AI asks clarifying questions to provide better guidance
+3. **Given** the described situation is actually accessible, **When** analyzed, **Then** the response confirms this and explains why it meets accessibility standards
+
+---
+
+### Edge Cases
+
+- What happens when the HTML contains inline SVGs with complex accessibility requirements?
+- How does the system handle extremely large HTML documents (100+ KB)?
+- What if the HTML uses custom web components or framework-specific syntax (React, Vue)?
+- How are dynamically-generated or JavaScript-dependent interactive elements analyzed when only static HTML is provided?
+- What if the user provides a URL that redirects multiple times or uses a non-standard port?
+- How does the system handle HTML with mixed character encodings or non-UTF-8 content?
+- What if the suspected issue description is in Swedish or another language?
+- How are issues prioritized when a single element violates multiple WCAG criteria?
+- What happens when axe-core and AI heuristics provide conflicting assessments?
+
+## Requirements *(mandatory)*
+
+### Functional Requirements
+
+**Input Handling**
+- **FR-001**: System MUST accept three input types: (1) URL string, (2) full HTML source code, (3) HTML code snippet
+- **FR-002**: System MUST allow users to optionally include a text description of a suspected accessibility issue alongside any input type
+- **FR-003**: System MUST allow users to provide only a suspected issue description without HTML/URL for educational guidance
+- **FR-004**: System MUST validate URL format before attempting to fetch content
+- **FR-005**: System MUST sanitize and validate HTML input to prevent security issues while preserving structure for analysis
+- **FR-006**: Input area MUST be prominently displayed as the focal point of the UI with minimum 18px font size
+
+**Analysis Engine**
+- **FR-007**: System MUST use axe-core library for automated WCAG 2.2 AA compliance checking
+- **FR-008**: System MUST employ AI-powered heuristic analysis to evaluate subjective accessibility concerns (e.g., alt text meaningfulness, button label clarity, heading structure logic)
+- **FR-009**: When a suspected issue is provided, AI agent MUST perform focused investigation on that specific concern in addition to standard audit
+- **FR-010**: System MUST detect and report violations across all four WCAG principles: Perceivable, Operable, Understandable, Robust
+- **FR-011**: System MUST identify WCAG 2.2 AA success criteria violated by each issue
+- **FR-012**: Analysis MUST complete within 30 seconds for typical HTML documents (< 50 KB)
+
+**URL Fetching**
+- **FR-013**: System MUST fetch HTML content from provided URLs using HTTP/HTTPS protocols
+- **FR-014**: System MUST handle common fetch errors (404, timeout, DNS failure) with clear user-friendly messages
+- **FR-015**: System MUST respect robots.txt and implement reasonable rate limiting to avoid overwhelming target servers
+- **FR-016**: System MUST set a timeout of 15 seconds for URL fetch operations
+- **FR-017**: System MUST inform users when JavaScript-rendered content cannot be analyzed from URL-based input
+
+**Output & Reporting**
+- **FR-018**: System MUST organize all findings into four primary sections: Perceivable, Operable, Understandable, Robust
+- **FR-019**: Each reported issue MUST include: (1) description, (2) affected WCAG success criterion, (3) severity level, (4) location in code, (5) suggested remediation
+- **FR-020**: When no issues are found, system MUST display a clear success message confirming accessibility compliance
+- **FR-021**: System MUST distinguish between automated findings (axe-core) and AI heuristic findings in the report
+- **FR-022**: When a suspected issue is investigated, system MUST include a dedicated section addressing that concern
+- **FR-023**: Report MUST use minimum 18px font size and maintain 4.5:1 color contrast for all text
+- **FR-024**: Issues MUST be sortable and filterable by severity, WCAG principle, and success criterion
+
+**User Interface**
+- **FR-025**: UI MUST be modern, simple, and desktop-optimized while remaining fully responsive
+- **FR-026**: UI MUST feature a large "Analyze" button (minimum 44x44px) as the primary call-to-action
+- **FR-027**: Input area MUST be the visual focal point with ample space for pasting code
+- **FR-028**: UI MUST provide clear visual feedback during analysis (loading state)
+- **FR-029**: UI MUST be fully keyboard accessible with visible focus indicators (3px outline, 3:1 contrast minimum)
+- **FR-030**: UI MUST follow Material Design 3 design tokens and ShadCN 2.0 component patterns
+- **FR-031**: UI MUST support both light and dark themes while maintaining WCAG AA contrast ratios
+- **FR-032**: UI MUST support Swedish (sv-SE) localization for all user-facing text
+
+**Error Handling**
+- **FR-033**: System MUST provide clear, actionable error messages for invalid HTML syntax
+- **FR-034**: System MUST gracefully handle analysis failures and explain what went wrong
+- **FR-035**: System MUST validate that at least one input field (URL, HTML, or issue description) is provided before allowing analysis
+
+### Key Entities
+
+- **Analysis Input**: Represents user-submitted content for analysis, containing one or more of: URL string, HTML source code, code snippet, suspected issue description. Tracks input type and timestamp.
+
+- **Audit Report**: Comprehensive results of accessibility analysis, organized by WCAG principles. Contains collections of violations, warnings, and passes. Includes metadata like analysis timestamp, input type, and total issue count.
+
+- **Accessibility Issue**: Individual violation or warning identified during analysis. Contains: description, WCAG success criterion reference (e.g., 1.4.3), severity level (critical/serious/moderate/minor), code location, affected HTML element, detection source (axe-core or AI heuristic), suggested remediation steps.
+
+- **WCAG Principle Category**: Organizational container for issues, corresponding to one of four WCAG principles (Perceivable, Operable, Understandable, Robust). Each category contains related issues and displays summary statistics.
+
+- **Suspected Issue Investigation**: When user provides a specific concern, this represents the AI agent's focused analysis results, including: original concern description, AI assessment, related WCAG criteria, confirmation or dismissal of concern, educational context.
+
+## Success Criteria *(mandatory)*
+
+### Measurable Outcomes
+
+- **SC-001**: Users can analyze a simple HTML snippet and receive categorized results in under 5 seconds
+- **SC-002**: System successfully detects 95% of common WCAG 2.2 AA violations testable by automated tools (verified against known test cases)
+- **SC-003**: AI heuristic analysis provides meaningful insights for subjective issues (alt text quality, label clarity) in 80% of cases as verified by accessibility expert review
+- **SC-004**: The application interface itself achieves 100% WCAG 2.2 AA compliance as verified by axe-core and manual audit
+- **SC-005**: Lighthouse accessibility audit of the application UI scores 95 or higher
+- **SC-006**: Users can complete full analysis workflow using only keyboard navigation in under 30 seconds
+- **SC-007**: All interactive elements meet 44x44px minimum touch target size requirement
+- **SC-008**: All body text renders at minimum 18px font size across all screen sizes
+- **SC-009**: URL fetch operations complete successfully for 95% of publicly accessible websites
+- **SC-010**: Zero critical accessibility violations in production deployment
+- **SC-011**: Swedish localization covers 100% of user-facing interface text
+- **SC-012**: System provides useful feedback when analyzing incomplete or malformed HTML in 90% of test cases
+
+## Assumptions
+
+- Users have basic understanding of HTML structure (for HTML input methods)
+- Target websites for URL analysis are publicly accessible and don't require authentication
+- JavaScript-rendered content analysis is out of scope for initial version (static HTML only)
+- AI heuristic analysis uses a general-purpose language model capable of understanding accessibility concepts (assumes access to such a model)
+- Users have modern browsers supporting ES6+ JavaScript features
+- Swedish Lag (2018:1937) compliance requirements are met by ensuring WCAG 2.2 AA compliance (Swedish law references WCAG standards)
+- Analysis is performed client-side for HTML snippets and server-side for URL fetching (for security and CORS reasons)
+- System focuses on web content accessibility, not mobile app or desktop software accessibility
+
+## Out of Scope
+
+- Real-time monitoring or continuous accessibility scanning
+- Integration with CI/CD pipelines or automated testing frameworks (future enhancement)
+- Accessibility remediation automation (only suggestions provided)
+- Analysis of PDF documents, video content, or audio files
+- User account management or saving analysis history
+- Comparison of multiple analyses or historical trending
+- Browser extension or IDE plugin versions
+- Mobile app native analysis
+- WCAG AAA (Level AAA) compliance checking
+- Automated fixing or code transformation features
+- Multi-page website crawling and batch analysis

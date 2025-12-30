@@ -1,0 +1,494 @@
+openapi: 3.0.3
+info:
+  title: Accessibility Checker API
+  description: |
+    Frontend API for the Accessibility Checker application. Handles audit creation,
+    analysis orchestration, and results retrieval. Built with Bun runtime.
+  version: 1.0.0
+  contact:
+    name: ETU Accessibility Team
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development
+  - url: https://ally-checker.vercel.app/api
+    description: Production
+
+tags:
+  - name: audits
+    description: Audit creation and management
+  - name: analysis
+    description: Accessibility analysis operations
+  - name: sessions
+    description: User session management
+
+paths:
+  /sessions:
+    post:
+      tags: [sessions]
+      summary: Create or retrieve user session
+      description: Creates a new anonymous session or retrieves existing session by ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                session_id:
+                  type: string
+                  format: uuid
+                  description: Existing session ID (optional)
+                locale:
+                  type: string
+                  enum: [sv-SE, en-US]
+                  default: sv-SE
+              example:
+                locale: "sv-SE"
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '200':
+          description: Existing session retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+
+  /audits:
+    post:
+      tags: [audits]
+      summary: Create new accessibility audit
+      description: Submits HTML, URL, or suspected issue for accessibility analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuditRequest'
+      responses:
+        '201':
+          description: Audit created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditResponse'
+        '400':
+          description: Invalid request (missing required fields, invalid URL, HTML too large)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    get:
+      tags: [audits]
+      summary: List user's recent audits
+      description: Retrieves audit history for the current session
+      parameters:
+        - name: session_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: List of audits
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  audits:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditSummary'
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+
+  /audits/{audit_id}:
+    get:
+      tags: [audits]
+      summary: Get audit details with all issues
+      description: Retrieves complete audit report including all accessibility issues
+      parameters:
+        - name: audit_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: session_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Complete audit report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditReport'
+        '404':
+          description: Audit not found or access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /analysis/analyze:
+    post:
+      tags: [analysis]
+      summary: Execute accessibility analysis
+      description: |
+        Performs hybrid analysis using axe-core and AI heuristics.
+        Long-running operation (up to 30 seconds). Consider using Server-Sent Events
+        or polling /audits/{audit_id} for status updates.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalysisRequest'
+      responses:
+        '200':
+          description: Analysis completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResult'
+        '400':
+          description: Invalid HTML or URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '408':
+          description: Analysis timeout (exceeded 30 seconds)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal analysis error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /analysis/validate-url:
+    post:
+      tags: [analysis]
+      summary: Validate URL before fetching
+      description: Checks if URL is valid, accessible, and within size limits
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url:
+                  type: string
+                  format: uri
+      responses:
+        '200':
+          description: URL is valid and accessible
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid: 
+                    type: boolean
+                    example: true
+                  content_length:
+                    type: integer
+                    description: Estimated content size in bytes
+                  content_type:
+                    type: string
+                    example: "text/html"
+        '400':
+          description: URL validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Session:
+      type: object
+      required: [id, created_at, locale]
+      properties:
+        id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        last_active_at:
+          type: string
+          format: date-time
+        locale:
+          type: string
+          enum: [sv-SE, en-US]
+        preferences:
+          type: object
+          additionalProperties: true
+
+    AuditRequest:
+      type: object
+      required: [session_id, input_type]
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        input_type:
+          type: string
+          enum: [url, html_full, html_snippet, issue_only]
+        input_content:
+          type: string
+          description: HTML content (required for html_full, html_snippet)
+          maxLength: 102400  # 100 KB
+        url:
+          type: string
+          format: uri
+          description: URL to analyze (required for url input_type)
+        suspected_issue:
+          type: string
+          description: User-described suspected accessibility concern (optional)
+          maxLength: 500
+      example:
+        session_id: "550e8400-e29b-41d4-a716-446655440000"
+        input_type: "html_snippet"
+        input_content: "<img src='cat.jpg'>"
+        suspected_issue: "Missing alt text"
+
+    AuditResponse:
+      type: object
+      required: [id, status, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        session_id:
+          type: string
+          format: uuid
+        input_type:
+          type: string
+          enum: [url, html_full, html_snippet, issue_only]
+        status:
+          type: string
+          enum: [pending, analyzing, completed, failed]
+        created_at:
+          type: string
+          format: date-time
+        message:
+          type: string
+          description: Status message (e.g., "Analysis started")
+
+    AuditSummary:
+      type: object
+      required: [id, input_type, status, created_at, total_issues]
+      properties:
+        id:
+          type: string
+          format: uuid
+        input_type:
+          type: string
+          enum: [url, html_full, html_snippet, issue_only]
+        url:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [pending, analyzing, completed, failed]
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        total_issues:
+          type: integer
+        perceivable_count:
+          type: integer
+        operable_count:
+          type: integer
+        understandable_count:
+          type: integer
+        robust_count:
+          type: integer
+
+    AuditReport:
+      allOf:
+        - $ref: '#/components/schemas/AuditSummary'
+        - type: object
+          required: [issues]
+          properties:
+            suspected_issue:
+              type: string
+              nullable: true
+            ai_investigation:
+              type: object
+              nullable: true
+              properties:
+                concern:
+                  type: string
+                assessment:
+                  type: string
+                related_criteria:
+                  type: array
+                  items:
+                    type: string
+                conclusion:
+                  type: string
+            issues:
+              type: array
+              items:
+                $ref: '#/components/schemas/Issue'
+            issues_by_principle:
+              type: object
+              properties:
+                Perceivable:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Issue'
+                Operable:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Issue'
+                Understandable:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Issue'
+                Robust:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Issue'
+
+    Issue:
+      type: object
+      required: [id, wcag_principle, success_criterion, severity, description, detection_source, remediation]
+      properties:
+        id:
+          type: string
+          format: uuid
+        wcag_principle:
+          type: string
+          enum: [Perceivable, Operable, Understandable, Robust]
+        success_criterion:
+          type: string
+          pattern: '^\d\.\d\.\d$'
+          example: "1.4.3"
+        severity:
+          type: string
+          enum: [critical, serious, moderate, minor]
+        description:
+          type: string
+          example: "Image missing alt attribute"
+        code_location:
+          type: string
+          nullable: true
+          example: "img:nth-child(2)"
+        element_snippet:
+          type: string
+          nullable: true
+          example: "<img src='cat.jpg'>"
+        detection_source:
+          type: string
+          enum: [axe-core, ai-heuristic]
+        remediation:
+          type: string
+          example: "Add descriptive alt attribute: <img src='cat.jpg' alt='Orange tabby cat sleeping'>"
+        wcag_reference_url:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://www.w3.org/WAI/WCAG22/Understanding/non-text-content.html"
+        impact:
+          type: string
+          enum: [user, developer, legal]
+          nullable: true
+
+    AnalysisRequest:
+      type: object
+      required: [audit_id]
+      properties:
+        audit_id:
+          type: string
+          format: uuid
+          description: Audit ID to analyze (created via /audits POST)
+
+    AnalysisResult:
+      type: object
+      required: [audit_id, status, issues_found]
+      properties:
+        audit_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [completed, failed]
+        issues_found:
+          type: integer
+        duration_ms:
+          type: integer
+          description: Analysis duration in milliseconds
+        error_message:
+          type: string
+          nullable: true
+
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          example: "INVALID_INPUT"
+        message:
+          type: string
+          example: "HTML content exceeds maximum size of 100KB"
+        details:
+          type: object
+          additionalProperties: true
+
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Optional API key for rate limit increases
+
+security: []  # No authentication required for MVP (session-based only)
