@@ -3,13 +3,13 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { useTheme } from "@/hooks/useTheme";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { Moon, Sun, Settings, FileText, Database, ChevronRight, Menu } from "lucide-react";
+import { Header } from "@/components/Header";
+import { Main } from "@/components/Main";
+import { Footer } from "@/components/Footer";
+import { Settings, FileText, Database, ChevronRight, Menu } from "lucide-react";
 import "./index.css";
 
 export function App() {
-  const { theme, setTheme } = useTheme();
   const { t } = useTranslation();
   const [activePanel, setActivePanel] = useState<string | null>(null);
 
@@ -21,14 +21,16 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      {/* Top Navigation Bar - Full Width */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-elevation-1">
-        <div className="flex h-16 items-center px-6 gap-6">
+      <Header />
+
+      <Main>
+        <div className="h-full w-full px-6 py-8">
+          {/* Mobile Menu Sheet */}
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="focus-ring md:hidden">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">{t("nav.menu")}</span>
+              <Button variant="outline" className="focus-ring md:hidden mb-6">
+                <Menu className="h-5 w-5 mr-2" />
+                {t("nav.menu")}
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-80">
@@ -36,13 +38,15 @@ export function App() {
                 <SheetTitle className="text-2xl">{t("nav.menu")}</SheetTitle>
                 <SheetDescription className="text-base">{t("app.subtitle")}</SheetDescription>
               </SheetHeader>
-              <nav className="flex flex-col gap-2 mt-6">
+              <nav className="flex flex-col gap-2 mt-6" aria-label="Mobile navigation">
                 {menuItems.map((item) => (
                   <Button
                     key={item.id}
                     variant="ghost"
                     className="justify-start gap-3 focus-ring text-lg h-auto py-3"
-                    onClick={() => setActivePanel(item.id)}
+                    onClick={() => {
+                      setActivePanel(item.id);
+                    }}
                   >
                     <item.icon className="h-5 w-5" />
                     {item.label}
@@ -51,28 +55,6 @@ export function App() {
               </nav>
             </SheetContent>
           </Sheet>
-
-          <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold">{t("app.title")}</h1>
-          
-          <div className="flex-1" />
-          
-          <LanguageSwitcher />
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="focus-ring"
-          >
-            {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            <span className="sr-only">{t("nav.toggleTheme")}</span>
-          </Button>
-        </div>
-      </header>
-
-      {/* Main Content - Full Width */}
-      <main className="flex-1 w-full">
-        <div className="h-full w-full px-6 py-8">
           {/* Quick Actions Bar */}
           <div className="flex gap-3 mb-8 overflow-x-auto pb-2">
             {menuItems.map((item) => (
@@ -180,7 +162,9 @@ export function App() {
               <h3 className="font-semibold mb-3 text-xl md:text-2xl">{t("overview.colorSystem")}</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-4 bg-primary text-primary-foreground rounded-lg text-base md:text-lg">{t("overview.colors.primary")}</div>
-                <div className="p-4 bg-secondary text-secondary-foreground rounded-lg text-base md:text-lg">{t("overview.colors.secondary")}</div>
+        Main>
+
+      <Footer /    <div className="p-4 bg-secondary text-secondary-foreground rounded-lg text-base md:text-lg">{t("overview.colors.secondary")}</div>
                 <div className="p-4 bg-accent text-accent-foreground rounded-lg text-base md:text-lg">{t("overview.colors.accent")}</div>
                 <div className="p-4 bg-muted text-muted-foreground rounded-lg text-base md:text-lg">{t("overview.colors.muted")}</div>
               </div>
