@@ -1,0 +1,341 @@
+openapi: 3.0.3
+info:
+  title: Accessibility Report Service API
+  description: |
+    Python-based microservice for generating professional Word documents (ETU format)
+    from accessibility audit results. Uses python-docx and PydanticAI.
+  version: 1.0.0
+  contact:
+    name: ETU Accessibility Team
+
+servers:
+  - url: http://localhost:8000/api
+    description: Local development
+  - url: https://report-service.fly.io/api
+    description: Production
+
+tags:
+  - name: reports
+    description: Report generation operations
+  - name: health
+    description: Service health checks
+
+paths:
+  /health:
+    get:
+      tags: [health]
+      summary: Health check
+      description: Returns service health status and version
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  version:
+                    type: string
+                    example: "1.0.0"
+                  uptime_seconds:
+                    type: integer
+                  python_version:
+                    type: string
+                    example: "3.11.5"
+
+  /reports/generate:
+    post:
+      tags: [reports]
+      summary: Generate ETU accessibility report
+      description: |
+        Generates a professional Word document (.docx) in ETU format based on audit results.
+        Uses PydanticAI for executive summary generation and python-docx for formatting.
+      security:
+        - ApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportRequest'
+      responses:
+        '200':
+          description: Report generated successfully
+          content:
+            application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: 'attachment; filename="accessibility-audit-report-2025-12-30.docx"'
+            X-Report-ID:
+              schema:
+                type: string
+                format: uuid
+              description: Unique report generation ID for tracking
+            X-Generation-Time-Ms:
+              schema:
+                type: integer
+              description: Time taken to generate report in milliseconds
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing or invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '408':
+          description: Report generation timeout (exceeded 60 seconds)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal report generation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /reports/preview:
+    post:
+      tags: [reports]
+      summary: Generate report preview (JSON)
+      description: |
+        Returns structured JSON preview of what will be in the generated report
+        without creating the actual Word document. Useful for frontend preview.
+      security:
+        - ApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportRequest'
+      responses:
+        '200':
+          description: Report preview generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportPreview'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /reports/templates:
+    get:
+      tags: [reports]
+      summary: List available report templates
+      description: Returns list of available ETU report templates
+      responses:
+        '200':
+          description: List of templates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  templates:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: "etu-standard"
+                        name:
+                          type: string
+                          example: "ETU Standard Report"
+                        description:
+                          type: string
+                        version:
+                          type: string
+                          example: "1.0"
+
+components:
+  schemas:
+    ReportRequest:
+      type: object
+      required: [audit_id, audit_data, template]
+      properties:
+        audit_id:
+          type: string
+          format: uuid
+          description: Audit ID from main application
+        template:
+          type: string
+          enum: [etu-standard, etu-detailed, etu-summary]
+          default: etu-standard
+          description: Report template to use
+        audit_data:
+          $ref: '#/components/schemas/AuditData'
+        locale:
+          type: string
+          enum: [sv-SE, en-US]
+          default: sv-SE
+        include_ai_summary:
+          type: boolean
+          default: true
+          description: Include AI-generated executive summary
+        include_screenshots:
+          type: boolean
+          default: false
+          description: Include screenshot placeholders (future feature)
+
+    AuditData:
+      type: object
+      required: [url, input_type, created_at, total_issues, issues]
+      properties:
+        url:
+          type: string
+          nullable: true
+          description: Analyzed URL or "HTML Input"
+        input_type:
+          type: string
+          enum: [url, html_full, html_snippet, issue_only]
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        total_issues:
+          type: integer
+        perceivable_count:
+          type: integer
+        operable_count:
+          type: integer
+        understandable_count:
+          type: integer
+        robust_count:
+          type: integer
+        suspected_issue:
+          type: string
+          nullable: true
+        ai_investigation:
+          type: object
+          nullable: true
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportIssue'
+
+    ReportIssue:
+      type: object
+      required: [wcag_principle, success_criterion, severity, description, remediation]
+      properties:
+        wcag_principle:
+          type: string
+          enum: [Perceivable, Operable, Understandable, Robust]
+        success_criterion:
+          type: string
+          pattern: '^\d\.\d\.\d$'
+        success_criterion_name:
+          type: string
+          example: "Contrast (Minimum)"
+        severity:
+          type: string
+          enum: [critical, serious, moderate, minor]
+        description:
+          type: string
+        code_location:
+          type: string
+          nullable: true
+        element_snippet:
+          type: string
+          nullable: true
+        detection_source:
+          type: string
+          enum: [axe-core, ai-heuristic]
+        remediation:
+          type: string
+        wcag_reference_url:
+          type: string
+          nullable: true
+        impact:
+          type: string
+          enum: [user, developer, legal]
+          nullable: true
+
+    ReportPreview:
+      type: object
+      required: [title, sections]
+      properties:
+        title:
+          type: string
+          example: "Accessibility Audit Report - 2025-12-30"
+        subtitle:
+          type: string
+          example: "WCAG 2.2 AA Compliance Assessment"
+        metadata:
+          type: object
+          properties:
+            audit_date:
+              type: string
+              format: date-time
+            audited_url:
+              type: string
+            total_issues:
+              type: integer
+            compliance_status:
+              type: string
+              enum: [compliant, non-compliant, needs-review]
+        sections:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+              content:
+                type: string
+                description: Markdown or plain text content
+              type:
+                type: string
+                enum: [summary, principle, recommendations, scorecard]
+        executive_summary:
+          type: string
+          description: AI-generated summary (if include_ai_summary=true)
+
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          example: "INVALID_AUDIT_DATA"
+        message:
+          type: string
+          example: "Audit data missing required field: issues"
+        details:
+          type: object
+          additionalProperties: true
+        trace_id:
+          type: string
+          format: uuid
+          description: Error trace ID for debugging
+
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-Report-Service-Key
+      description: API key for report service authentication (shared secret)
+
+security:
+  - ApiKey: []
