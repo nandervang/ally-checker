@@ -8,7 +8,18 @@ export default {
   theme: {
     extend: {
       fontSize: {
-        base: "18px", // Constitutional requirement: minimum 18px
+        // Fluid typography with clamp() - scales from mobile to ultra-wide
+        'xs': ['clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem)', { lineHeight: '1.5' }],
+        'sm': ['clamp(0.875rem, 0.8rem + 0.35vw, 1rem)', { lineHeight: '1.5' }],
+        'base': ['clamp(1.125rem, 1rem + 0.5vw, 1.5rem)', { lineHeight: '1.6' }], // 18px min
+        'lg': ['clamp(1.25rem, 1.1rem + 0.75vw, 1.875rem)', { lineHeight: '1.6' }],
+        'xl': ['clamp(1.5rem, 1.25rem + 1vw, 2.25rem)', { lineHeight: '1.4' }],
+        '2xl': ['clamp(1.875rem, 1.5rem + 1.5vw, 3rem)', { lineHeight: '1.3' }],
+        '3xl': ['clamp(2.25rem, 1.75rem + 2vw, 3.75rem)', { lineHeight: '1.2' }],
+        '4xl': ['clamp(3rem, 2rem + 3vw, 5rem)', { lineHeight: '1.1' }],
+        '5xl': ['clamp(3.75rem, 2.5rem + 4vw, 6rem)', { lineHeight: '1' }],
+        '6xl': ['clamp(4.5rem, 3rem + 5vw, 7.5rem)', { lineHeight: '1' }],
+        '7xl': ['clamp(6rem, 4rem + 7vw, 10rem)', { lineHeight: '1' }],
       },
       spacing: {
         "touch-target": "44px", // WCAG 2.2 AA requirement: 44x44px minimum
