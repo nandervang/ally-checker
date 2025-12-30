@@ -1,10 +1,9 @@
 <!--
 Sync Impact Report:
-- Version change: INITIAL → 1.0.0
-- Project: ETU Accessibility App (Educational Testing Unit)
-- Added principles: WCAG 2.2 AA & EAA & Swedish Law Compliance, Beads Task Tracking, Material Design 3 with Enhanced Accessibility
-- Enhanced requirements: 18px+ fonts, large touch targets, Swedish Lag (2018:1937) compliance
-- Templates requiring updates: ✅ All templates will align with these principles
+- Version change: 1.0.0 → 1.1.0
+- Modified principles: Beads Task Tracking (added mandatory verification requirements)
+- Enhanced requirements: All tasks must be tested and verified before marking complete
+- Templates requiring updates: ✅ Updated Beads workflow section with verification steps
 - Follow-up TODOs: None
 -->
 
@@ -48,7 +47,23 @@ All work items, issues, and tasks MUST be tracked using the Beads CLI:
 - All task status updates MUST flow through Beads database
 - Session memory and handoffs MUST reference Beads issue IDs
 
-**Rationale**: Beads provides persistent, queryable task tracking that survives sessions and enables better collaboration and continuity across development cycles.
+**Task Verification and Testing (MANDATORY):**
+
+Before marking any Beads task as complete, you MUST verify ALL acceptance criteria:
+1. **Read the full task description**: Run `bd show <id>` to review requirements
+2. **Test each acceptance criterion**: Verify actual functionality matches expected behavior
+3. **Document test results**: Add verification notes when closing: `bd close <id> --comment "Verified: [list checks]"`
+4. **Never assume completion**: Partial implementation or missing requirements means task stays open
+
+**Examples of proper verification:**
+- ✅ Task requires ESLint setup → Run `bun run lint` and verify it works
+- ✅ Task requires dark mode → Test theme toggle and verify visual changes
+- ✅ Task requires 18px fonts → Inspect computed styles and verify font-size
+- ✅ Task requires Vega style → Check components.json and verify configuration
+- ❌ WRONG: Marking task complete because files were created (must test functionality)
+- ❌ WRONG: Assuming task is done without testing each acceptance criterion
+
+**Rationale**: Beads provides persistent, queryable task tracking that survives sessions and enables better collaboration and continuity across development cycles. Mandatory verification ensures quality and prevents premature completion claims.
 
 ### III. Enhanced Accessibility UI Standards (NON-NEGOTIABLE)
 
@@ -195,7 +210,10 @@ bd sync               # Sync with git regularly
 
 **Completing work:**
 ```bash
-bd close <id>         # Mark work complete
+# MANDATORY: Test and verify ALL acceptance criteria first
+bd show <id>          # Review full requirements
+# ... test each criterion ...
+bd close <id> --comment "Verified: [list all checks performed]"
 bd sync               # Final sync
 git push              # Push changes
 ```
@@ -259,4 +277,4 @@ All features MUST maintain compliance audit trail:
 - **MINOR**: New principles or expanded requirements
 - **PATCH**: Clarifications or non-semantic updates
 
-**Version**: 1.0.0 | **Ratified**: 2025-12-30 | **Last Amended**: 2025-12-30
+**Version**: 1.1.0 | **Ratified**: 2025-12-30 | **Last Amended**: 2025-12-30
