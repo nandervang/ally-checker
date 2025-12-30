@@ -1,0 +1,128 @@
+{
+  "app": {
+    "title": "Accessibility Checker",
+    "subtitle": "Analyze website accessibility with WCAG 2.2 AA standards"
+  },
+  "nav": {
+    "overview": "Overview",
+    "components": "Components",
+    "settings": "Settings",
+    "menu": "Menu",
+    "toggleTheme": "Toggle theme",
+    "skipToMain": "Skip to main content"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "current": "Current theme"
+  },
+  "overview": {
+    "title": "Material Design 3 Overview",
+    "description": "Design system implementation details",
+    "colorSystem": "Color System",
+    "typographyScale": "Typography Scale",
+    "elevationShadows": "Elevation Shadows",
+    "colors": {
+      "primary": "Primary",
+      "secondary": "Secondary",
+      "accent": "Accent",
+      "muted": "Muted"
+    },
+    "headings": {
+      "h1": "Heading 1",
+      "h2": "Heading 2",
+      "h3": "Heading 3",
+      "h4": "Heading 4",
+      "large": "Large Text",
+      "body": "Body Text (fluid 18px+)",
+      "small": "Small Text"
+    },
+    "elevation": {
+      "level": "Level {{level}}"
+    }
+  },
+  "components": {
+    "title": "Component Library",
+    "description": "Available ShadCN components",
+    "interactive": "Interactive Components",
+    "installed": "Installed Components",
+    "buttons": {
+      "default": "Default",
+      "secondary": "Secondary",
+      "outline": "Outline",
+      "ghost": "Ghost",
+      "destructive": "Destructive"
+    },
+    "list": {
+      "accordion": "Accordion",
+      "alert": "Alert",
+      "button": "Button",
+      "card": "Card",
+      "dialog": "Dialog",
+      "dropdownMenu": "Dropdown Menu",
+      "form": "Form",
+      "progress": "Progress",
+      "separator": "Separator",
+      "sheet": "Sheet (Side Panel)",
+      "skeleton": "Skeleton",
+      "tabs": "Tabs",
+      "toast": "Toast (Sonner)"
+    }
+  },
+  "settings": {
+    "title": "Settings & Configuration",
+    "description": "Accessibility and theme preferences",
+    "themeSection": "Theme",
+    "a11yFeatures": "Accessibility Features",
+    "features": {
+      "focusIndicators": {
+        "title": "Focus Indicators",
+        "description": "3px ring with 3:1 contrast"
+      },
+      "touchTargets": {
+        "title": "Touch Targets",
+        "description": "44x44px minimum size"
+      },
+      "highContrast": {
+        "title": "High Contrast",
+        "description": "4.5:1 ratio for text"
+      },
+      "status": {
+        "active": "Active"
+      }
+    }
+  },
+  "cards": {
+    "m3Demo": {
+      "title": "Material Design 3",
+      "description": "M3 tokens with 18px base font and WCAG 2.2 AA",
+      "features": {
+        "baseFont": "18px base font",
+        "touchTargets": "44x44px touch targets",
+        "focusRings": "3px focus rings",
+        "contrast": "4.5:1 contrast ratio"
+      }
+    },
+    "uiComponents": {
+      "title": "UI Components",
+      "description": "ShadCN 2.0 library integration",
+      "items": {
+        "react": "React 19 + TypeScript",
+        "shadcn": "ShadCN 2.0 (new-york)",
+        "tailwind": "Tailwind CSS 4.0",
+        "linting": "ESLint + Prettier",
+        "darkMode": "Dark mode support"
+      }
+    },
+    "configuration": {
+      "title": "Configuration",
+      "description": "Accessibility utilities and themes"
+    }
+  },
+  "language": {
+    "switch": "Switch language",
+    "current": "Current language",
+    "swedish": "Swedish",
+    "english": "English"
+  }
+}

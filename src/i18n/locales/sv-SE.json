@@ -1,0 +1,128 @@
+{
+  "app": {
+    "title": "Tillgänglighetskontroll",
+    "subtitle": "Analysera webbplatsers tillgänglighet med WCAG 2.2 AA-standard"
+  },
+  "nav": {
+    "overview": "Översikt",
+    "components": "Komponenter",
+    "settings": "Inställningar",
+    "menu": "Meny",
+    "toggleTheme": "Växla tema",
+    "skipToMain": "Hoppa till huvudinnehåll"
+  },
+  "theme": {
+    "light": "Ljust",
+    "dark": "Mörkt",
+    "current": "Nuvarande tema"
+  },
+  "overview": {
+    "title": "Material Design 3 Översikt",
+    "description": "Designsystem implementeringsdetaljer",
+    "colorSystem": "Färgsystem",
+    "typographyScale": "Typografiskala",
+    "elevationShadows": "Skuggelevationer",
+    "colors": {
+      "primary": "Primär",
+      "secondary": "Sekundär",
+      "accent": "Accent",
+      "muted": "Dämpad"
+    },
+    "headings": {
+      "h1": "Rubrik 1",
+      "h2": "Rubrik 2",
+      "h3": "Rubrik 3",
+      "h4": "Rubrik 4",
+      "large": "Stor text",
+      "body": "Brödtext (fluid 18px+)",
+      "small": "Liten text"
+    },
+    "elevation": {
+      "level": "Nivå {{level}}"
+    }
+  },
+  "components": {
+    "title": "Komponentbibliotek",
+    "description": "Tillgängliga ShadCN-komponenter",
+    "interactive": "Interaktiva komponenter",
+    "installed": "Installerade komponenter",
+    "buttons": {
+      "default": "Standard",
+      "secondary": "Sekundär",
+      "outline": "Kontur",
+      "ghost": "Transparent",
+      "destructive": "Destruktiv"
+    },
+    "list": {
+      "accordion": "Dragspel",
+      "alert": "Varning",
+      "button": "Knapp",
+      "card": "Kort",
+      "dialog": "Dialog",
+      "dropdownMenu": "Rullgardinsmeny",
+      "form": "Formulär",
+      "progress": "Förlopp",
+      "separator": "Avskiljare",
+      "sheet": "Sidopanel",
+      "skeleton": "Skelett",
+      "tabs": "Flikar",
+      "toast": "Toast (Sonner)"
+    }
+  },
+  "settings": {
+    "title": "Inställningar & Konfiguration",
+    "description": "Tillgänglighets- och temainställningar",
+    "themeSection": "Tema",
+    "a11yFeatures": "Tillgänglighetsfunktioner",
+    "features": {
+      "focusIndicators": {
+        "title": "Fokusindikatorer",
+        "description": "3px ring med 3:1 kontrast"
+      },
+      "touchTargets": {
+        "title": "Pekzoner",
+        "description": "44x44px minimistorlek"
+      },
+      "highContrast": {
+        "title": "Hög kontrast",
+        "description": "4.5:1 förhållande för text"
+      },
+      "status": {
+        "active": "Aktiv"
+      }
+    }
+  },
+  "cards": {
+    "m3Demo": {
+      "title": "Material Design 3",
+      "description": "M3-tokens med 18px grundteckensnitt och WCAG 2.2 AA",
+      "features": {
+        "baseFont": "18px grundteckensnitt",
+        "touchTargets": "44x44px pekzoner",
+        "focusRings": "3px fokusringar",
+        "contrast": "4.5:1 kontrast"
+      }
+    },
+    "uiComponents": {
+      "title": "UI-komponenter",
+      "description": "ShadCN 2.0 biblioteksintegration",
+      "items": {
+        "react": "React 19 + TypeScript",
+        "shadcn": "ShadCN 2.0 (new-york)",
+        "tailwind": "Tailwind CSS 4.0",
+        "linting": "ESLint + Prettier",
+        "darkMode": "Mörkt läge"
+      }
+    },
+    "configuration": {
+      "title": "Konfiguration",
+      "description": "Tillgänglighetsverktyg och teman"
+    }
+  },
+  "language": {
+    "switch": "Byt språk",
+    "current": "Nuvarande språk",
+    "swedish": "Svenska",
+    "english": "Engelska"
+  }
+}
