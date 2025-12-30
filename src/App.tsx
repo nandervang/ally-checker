@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Header } from "@/components/Header";
 import { Main } from "@/components/Main";
 import { Footer } from "@/components/Footer";
+import { AuditInputForm } from "@/components/AuditInputForm";
 import { Settings, FileText, Database, ChevronRight, Menu } from "lucide-react";
 import "./index.css";
 
@@ -69,6 +70,17 @@ export function App() {
                 <ChevronRight className="h-4 w-4 md:h-5 md:w-5 ml-1" />
               </Button>
             ))}
+          </div>
+
+          {/* Audit Input Form - Main Feature */}
+          <div className="mt-12 mb-8">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2 text-center">
+              {t("app.title")}
+            </h2>
+            <p className="text-lg md:text-xl text-muted-foreground text-center mb-8">
+              {t("app.subtitle")}
+            </p>
+            <AuditInputForm />
           </div>
 
           {/* Content Grid - Responsive */}
