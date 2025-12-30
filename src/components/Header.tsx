@@ -1,12 +1,16 @@
 import { useTranslation } from "react-i18next";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/useTheme";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, Home, Clock, FileText } from "lucide-react";
 
 export function Header() {
   const { t } = useTranslation();
   const { theme, setTheme } = useTheme();
+  const location = useLocation();
+
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-elevation-1">
@@ -19,9 +23,48 @@ export function Header() {
       </a>
 
       <div className="flex h-16 items-center px-6 gap-6">
-        <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold">
-          {t("app.title")}
-        </h1>
+        <Link to="/" className="hover:opacity-80 transition-opacity">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold">
+            {t("app.title")}
+          </h1>
+        </Link>
+
+        {/* Navigation Links */}
+        <nav className="hidden md:flex gap-2 ml-6" aria-label="Main navigation">
+          <Button
+            asChild
+            variant={isActive("/") ? "default" : "ghost"}
+            size="sm"
+            className="gap-2"
+          >
+            <Link to="/">
+              <Home className="h-4 w-4" />
+              Home
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant={isActive("/history") ? "default" : "ghost"}
+            size="sm"
+            className="gap-2"
+          >
+            <Link to="/history">
+              <Clock className="h-4 w-4" />
+              History
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant={isActive("/statement") ? "default" : "ghost"}
+            size="sm"
+            className="gap-2"
+          >
+            <Link to="/statement">
+              <FileText className="h-4 w-4" />
+              Statement
+            </Link>
+          </Button>
+        </nav>
 
         <div className="flex-1" />
 
