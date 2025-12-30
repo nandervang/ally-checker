@@ -6,12 +6,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Globe, Code, Upload, AlertCircle } from "lucide-react";
+import { Globe, Code, Upload, AlertCircle, FileText } from "lucide-react";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { ErrorDisplay } from "./ErrorDisplay";
 import { ProgressIndicator } from "./ProgressIndicator";
+import { 
+  mockHtmlAuditResult, 
+  mockPdfAuditResult, 
+  mockDocxAuditResult,
+  type AuditResult 
+} from "@/data/mockAuditResults";
 
-type InputMode = "url" | "html" | "snippet";
+type InputMode = "url" | "html" | "snippet" | "document";
 
 interface ValidationError {
   field: string;
@@ -20,7 +26,11 @@ interface ValidationError {
 
 type AuditStep = "idle" | "fetching" | "analyzing" | "generating" | "complete";
 
-export function AuditInputForm() {
+interface AuditInputFormProps {
+  onAuditComplete?: (result: AuditResult) => void;
+}
+
+export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
   const { t } = useTranslation();
   const [mode, setMode] = useState<InputMode>("url");
   const [url, setUrl] = useState("");
@@ -55,7 +65,27 @@ export function AuditInputForm() {
 
     return true;
   };
+  const validateDocument = (uploadedFile: File): boolean => {
+    const validTypes = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    const maxSize = 25 * 1024 * 1024; // 25MB for documents
 
+    if (!validTypes.includes(uploadedFile.type) && 
+        !uploadedFile.name.endsWith(".pdf") && 
+        !uploadedFile.name.endsWith(".docx")) {
+      setErrors([{ field: "document", message: "Please upload a PDF or DOCX file" }]);
+      return false;
+    }
+
+    if (uploadedFile.size > maxSize) {
+      setErrors([{ field: "document", message: "File size must be less than 25MB" }]);
+      return false;
+    }
+
+    return true;
+  };
   const handleUrlBlur = () => {
     setErrors([]);
     if (url && !validateUrl(url)) {
@@ -66,7 +96,11 @@ export function AuditInputForm() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      if (validateFile(selectedFile)) {
+      const isValid = mode === "document" 
+        ? validateDocument(selectedFile) 
+        : validateFile(selectedFile);
+      
+      if (isValid) {
         setFile(selectedFile);
         setErrors([]);
       } else {
@@ -95,10 +129,15 @@ export function AuditInputForm() {
         setErrors([{ field: "file", message: t("audit.validation.fileRequired") }]);
         return;
       }
-    } else {
-      // mode === "snippet"
+    } else if (mode === "snippet") {
       if (!snippet.trim()) {
         setErrors([{ field: "snippet", message: t("audit.validation.snippetRequired") }]);
+        return;
+      }
+    } else {
+      // mode === "document"
+      if (!file) {
+        setErrors([{ field: "document", message: "Please select a PDF or DOCX file" }]);
         return;
       }
     }
@@ -125,8 +164,22 @@ export function AuditInputForm() {
 
         setAuditStep("complete");
         
-        // TODO: Handle successful audit result
-        console.log("Audit complete:", { mode, url, file, snippet });
+        // Use mock data based on mode/file type
+        let mockResult: AuditResult;
+        if (mode === "document" && file) {
+          mockResult = file.name.endsWith(".pdf") 
+            ? { ...mockPdfAuditResult, fileName: file.name }
+            : { ...mockDocxAuditResult, fileName: file.name };
+        } else if (mode === "url") {
+          mockResult = { ...mockHtmlAuditResult, url };
+        } else {
+          mockResult = mockHtmlAuditResult;
+        }
+        
+        // Notify parent component
+        onAuditComplete?.(mockResult);
+        
+        console.log("Audit complete:", mockResult);
         
         // Reset after 2 seconds
         setTimeout(() => {
@@ -201,18 +254,22 @@ export function AuditInputForm() {
         </div>
       )}
       <Tabs value={mode} onValueChange={(value) => { setMode(value as InputMode); }} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 h-auto">
+        <TabsList className="grid w-full grid-cols-4 h-auto">
           <TabsTrigger value="url" className="gap-2 text-base md:text-lg h-auto py-3 focus-ring">
             <Globe className="h-5 w-5" />
             URL
           </TabsTrigger>
           <TabsTrigger value="html" className="gap-2 text-base md:text-lg h-auto py-3 focus-ring">
             <Upload className="h-5 w-5" />
-            Upload HTML
+            HTML
+          </TabsTrigger>
+          <TabsTrigger value="document" className="gap-2 text-base md:text-lg h-auto py-3 focus-ring">
+            <FileText className="h-5 w-5" />
+            Document
           </TabsTrigger>
           <TabsTrigger value="snippet" className="gap-2 text-base md:text-lg h-auto py-3 focus-ring">
             <Code className="h-5 w-5" />
-            HTML Snippet
+            Snippet
           </TabsTrigger>
         </TabsList>
 
@@ -273,6 +330,37 @@ export function AuditInputForm() {
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription id="file-error" className="text-base">
                     {getFieldError("file")?.message}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Document Upload (PDF/DOCX) */}
+          <TabsContent value="document" className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="document-input" className="text-base md:text-lg">
+                Document (PDF or DOCX, max 25MB)
+              </Label>
+              <Input
+                id="document-input"
+                type="file"
+                accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                onChange={handleFileChange}
+                aria-invalid={!!getFieldError("document")}
+                aria-describedby={getFieldError("document") ? "document-error" : file ? "document-success" : undefined}
+                className="text-base md:text-lg h-auto py-3 focus-ring cursor-pointer"
+              />
+              {file && mode === "document" && !getFieldError("document") && (
+                <p id="document-success" className="text-sm md:text-base text-green-600 dark:text-green-400" role="status">
+                  ✓ {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                </p>
+              )}
+              {getFieldError("document") && (
+                <Alert variant="destructive" role="alert" aria-live="polite">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription id="document-error" className="text-base">
+                    {getFieldError("document")?.message}
                   </AlertDescription>
                 </Alert>
               )}

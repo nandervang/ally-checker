@@ -9,12 +9,14 @@ import { Footer } from "@/components/Footer";
 import { AuditInputForm } from "@/components/AuditInputForm";
 import { useTheme } from "@/hooks/useTheme";
 import { Settings, FileText, Database, ChevronRight, Menu } from "lucide-react";
+import type { AuditResult } from "@/data/mockAuditResults";
 import "./index.css";
 
 export function App() {
   const { t } = useTranslation();
   const { theme, setTheme } = useTheme();
   const [activePanel, setActivePanel] = useState<string | null>(null);
+  const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
 
   const menuItems = [
     { id: "overview", label: t("nav.overview"), icon: FileText },
@@ -82,8 +84,107 @@ export function App() {
             <p className="text-lg md:text-xl text-muted-foreground text-center mb-8">
               {t("app.subtitle")}
             </p>
-            <AuditInputForm />
+            <AuditInputForm onAuditComplete={setAuditResult} />
           </div>
+
+          {/* Display Audit Results */}
+          {auditResult && (
+            <Card className="shadow-elevation-3 border-2 border-primary mb-8">
+              <CardHeader>
+                <CardTitle className="text-2xl md:text-3xl">
+                  Audit Results
+                </CardTitle>
+                <CardDescription className="text-lg">
+                  {auditResult.url && `URL: ${auditResult.url}`}
+                  {auditResult.fileName && `File: ${auditResult.fileName}`}
+                  {" • "}
+                  {auditResult.documentType?.toUpperCase()}
+                  {" • "}
+                  {new Date(auditResult.timestamp).toLocaleString()}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Summary */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-4 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                    <div className="text-3xl font-bold text-red-700 dark:text-red-400">
+                      {auditResult.summary.critical}
+                    </div>
+                    <div className="text-sm text-red-600 dark:text-red-300">Critical</div>
+                  </div>
+                  <div className="p-4 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                    <div className="text-3xl font-bold text-orange-700 dark:text-orange-400">
+                      {auditResult.summary.serious}
+                    </div>
+                    <div className="text-sm text-orange-600 dark:text-orange-300">Serious</div>
+                  </div>
+                  <div className="p-4 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                    <div className="text-3xl font-bold text-yellow-700 dark:text-yellow-400">
+                      {auditResult.summary.moderate}
+                    </div>
+                    <div className="text-sm text-yellow-600 dark:text-yellow-300">Moderate</div>
+                  </div>
+                  <div className="p-4 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <div className="text-3xl font-bold text-blue-700 dark:text-blue-400">
+                      {auditResult.summary.minor}
+                    </div>
+                    <div className="text-sm text-blue-600 dark:text-blue-300">Minor</div>
+                  </div>
+                </div>
+
+                {/* Issues List */}
+                <div>
+                  <h3 className="text-xl font-semibold mb-4">
+                    Issues Found ({auditResult.issues.length})
+                  </h3>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {auditResult.issues.map((issue) => (
+                      <div
+                        key={issue.id}
+                        className="p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                issue.severity === "critical" ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400" :
+                                issue.severity === "serious" ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400" :
+                                issue.severity === "moderate" ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400" :
+                                "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                              }`}>
+                                {issue.severity.toUpperCase()}
+                              </span>
+                              <span className="text-sm text-muted-foreground">
+                                {issue.guideline} ({issue.wcagLevel})
+                              </span>
+                            </div>
+                            <h4 className="font-semibold text-lg mb-1">{issue.title}</h4>
+                            <p className="text-sm text-muted-foreground mb-2">{issue.description}</p>
+                            <p className="text-xs bg-muted p-2 rounded font-mono">{issue.element}</p>
+                            {issue.occurrences > 1 && (
+                              <p className="text-sm text-muted-foreground mt-2">
+                                {issue.occurrences} occurrences
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-4">
+                  <Button onClick={() => setAuditResult(null)} variant="outline">
+                    Run New Audit
+                  </Button>
+                  <Button onClick={() => console.log("Download report", auditResult)}>
+                    Download Report
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Content Grid - Responsive */}
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 w-full">
