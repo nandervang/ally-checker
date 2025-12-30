@@ -75,12 +75,12 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
     if (!validTypes.includes(uploadedFile.type) && 
         !uploadedFile.name.endsWith(".pdf") && 
         !uploadedFile.name.endsWith(".docx")) {
-      setErrors([{ field: "document", message: "Please upload a PDF or DOCX file" }]);
+      setErrors([{ field: "document", message: t("audit.validation.documentInvalidType") }]);
       return false;
     }
 
     if (uploadedFile.size > maxSize) {
-      setErrors([{ field: "document", message: "File size must be less than 25MB" }]);
+      setErrors([{ field: "document", message: t("audit.validation.documentTooLarge") }]);
       return false;
     }
 
@@ -137,7 +137,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
     } else {
       // mode === "document"
       if (!file) {
-        setErrors([{ field: "document", message: "Please select a PDF or DOCX file" }]);
+        setErrors([{ field: "document", message: t("audit.validation.documentRequired") }]);
         return;
       }
     }
@@ -340,7 +340,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
           <TabsContent value="document" className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="document-input" className="text-base md:text-lg">
-                Document (PDF or DOCX, max 25MB)
+                {t("audit.documentLabel")}
               </Label>
               <Input
                 id="document-input"
@@ -353,7 +353,8 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
               />
               {file && mode === "document" && !getFieldError("document") && (
                 <p id="document-success" className="text-sm md:text-base text-green-600 dark:text-green-400" role="status">
-                  ✓ {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                  ✓ {t("audit.fileSuccess", { name: file.name, size: (file.size / 1024).toFixed(1) })}
+                  {file.name.endsWith(".pdf") ? " (PDF)" : " (DOCX)"}
                 </p>
               )}
               {getFieldError("document") && (

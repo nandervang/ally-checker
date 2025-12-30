@@ -151,6 +151,7 @@
     "urlLabel": "Website URL",
     "urlPlaceholder": "https://example.com",
     "fileLabel": "HTML File (max 10MB)",
+    "documentLabel": "Document (PDF or DOCX, max 25MB)",
     "snippetLabel": "HTML Code Snippet",
     "snippetPlaceholder": "<div>Your HTML code here...</div>",
     "validation": {
@@ -159,6 +160,9 @@
       "fileRequired": "Please select an HTML file",
       "fileInvalidType": "Please upload an HTML file (.html)",
       "fileTooLarge": "File size must be less than 10MB",
+      "documentRequired": "Please select a PDF or DOCX file",
+      "documentInvalidType": "Please upload a PDF or DOCX file",
+      "documentTooLarge": "File size must be less than 25MB",
       "snippetRequired": "HTML snippet is required"
     },
     "fileSuccess": "{{name}} ({{size}} KB)"

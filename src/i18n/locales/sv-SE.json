@@ -151,6 +151,7 @@
     "urlLabel": "Webbplats-URL",
     "urlPlaceholder": "https://example.com",
     "fileLabel": "HTML-fil (max 10 MB)",
+    "documentLabel": "Dokument (PDF eller DOCX, max 25 MB)",
     "snippetLabel": "HTML-kodsnutt",
     "snippetPlaceholder": "<div>Din HTML-kod här...</div>",
     "validation": {
@@ -159,6 +160,9 @@
       "fileRequired": "Välj en HTML-fil",
       "fileInvalidType": "Ladda upp en HTML-fil (.html)",
       "fileTooLarge": "Filstorleken måste vara mindre än 10 MB",
+      "documentRequired": "Välj en PDF- eller DOCX-fil",
+      "documentInvalidType": "Ladda upp en PDF- eller DOCX-fil",
+      "documentTooLarge": "Filstorleken måste vara mindre än 25 MB",
       "snippetRequired": "HTML-kodsnutt krävs"
     },
     "fileSuccess": "{{name}} ({{size}} KB)"
