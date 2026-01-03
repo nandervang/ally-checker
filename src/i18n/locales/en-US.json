@@ -325,5 +325,17 @@
       "technologies": "Technologies Used",
       "standards": "Standards & Guidelines"
     }
+  },
+  "auth": {
+    "title": "Accessibility Checker",
+    "description": "Sign in or create an account to save your audits",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email Address",
+    "password": "Password",
+    "passwordRequirement": "Minimum 6 characters required",
+    "loading": "Loading...",
+    "signupSuccess": "Account created! Check your email for verification.",
+    "footer": "Your data is protected with Supabase Authentication"
   }
 }

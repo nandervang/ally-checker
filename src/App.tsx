@@ -8,6 +8,8 @@ import { Main } from "@/components/Main";
 import { Footer } from "@/components/Footer";
 import { AuditInputForm } from "@/components/AuditInputForm";
 import { AuditResults } from "@/components/AuditResults";
+import { AuthForm } from "@/components/AuthForm";
+import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/hooks/useTheme";
 import { Settings, FileText, Database, ChevronRight, Menu } from "lucide-react";
 import type { AuditResult } from "@/data/mockAuditResults";
@@ -16,8 +18,26 @@ import "./index.css";
 export function App() {
   const { t } = useTranslation();
   const { theme, setTheme } = useTheme();
+  const { user, loading } = useAuth();
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
+
+  // Show loading state while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-lg text-muted-foreground">{t("auth.loading")}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show auth form if not logged in
+  if (!user) {
+    return <AuthForm />;
+  }
 
   const menuItems = [
     { id: "overview", label: t("nav.overview"), icon: FileText },

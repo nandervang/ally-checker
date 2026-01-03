@@ -12,19 +12,22 @@ import { App } from "./App";
 import { AuditHistory } from "./pages/AuditHistory";
 import { AccessibilityStatement } from "./pages/AccessibilityStatement";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { AuthProvider } from "./contexts/AuthContext";
 import "./i18n/config"; // Initialize i18n
 
 const elem = document.getElementById("root")!;
 const app = (
   <StrictMode>
     <ErrorBoundary>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<App />} />
-          <Route path="/history" element={<AuditHistory />} />
-          <Route path="/statement" element={<AccessibilityStatement />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<App />} />
+            <Route path="/history" element={<AuditHistory />} />
+            <Route path="/statement" element={<AccessibilityStatement />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </ErrorBoundary>
   </StrictMode>
 );

@@ -325,5 +325,17 @@
       "technologies": "Teknologier som används",
       "standards": "Standarder och riktlinjer"
     }
+  },
+  "auth": {
+    "title": "Tillgänglighetskontroll",
+    "description": "Logga in eller skapa ett konto för att spara dina granskningar",
+    "signIn": "Logga in",
+    "signUp": "Skapa konto",
+    "email": "E-postadress",
+    "password": "Lösenord",
+    "passwordRequirement": "Minst 6 tecken krävs",
+    "loading": "Laddar...",
+    "signupSuccess": "Konto skapat! Kontrollera din e-post för verifiering.",
+    "footer": "Dina data skyddas med Supabase Authentication"
   }
 }
