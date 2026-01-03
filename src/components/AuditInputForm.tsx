@@ -13,6 +13,7 @@ import { LoadingSpinner } from "./LoadingSpinner";
 import { ErrorDisplay } from "./ErrorDisplay";
 import { ProgressIndicator } from "./ProgressIndicator";
 import { runAxeAnalysisOnUrl, runAxeAnalysisOnSnippet, runAxeAnalysis } from "@/services/axeService";
+import { runAIAgentAudit, isAIAgentAvailable } from "@/services/aiAgentService";
 import { 
   mockPdfAuditResult, 
   mockDocxAuditResult,
@@ -158,7 +159,38 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
       try {
         let result: AuditResult;
 
-        if (mode === "url") {
+        // Use AI Agent mode if enabled and available
+        if (agentMode && isAIAgentAvailable()) {
+          setAuditStep("fetching");
+          
+          // Prepare content for AI agent
+          let content = "";
+          let agentMode: "url" | "html" | "snippet" = "html";
+          
+          if (mode === "url") {
+            content = url;
+            agentMode = "url";
+          } else if (mode === "html" && file) {
+            content = await file.text();
+            agentMode = "html";
+          } else if (mode === "snippet") {
+            content = snippet;
+            agentMode = "snippet";
+          } else {
+            // For documents, fall back to quick mode
+            throw new Error("AI Agent mode not yet supported for PDF/DOCX");
+          }
+          
+          setAuditStep("analyzing");
+          // Run AI agent audit with MCP tools
+          result = await runAIAgentAudit({
+            mode: agentMode,
+            content,
+            model: selectedModel,
+          });
+        }
+        // Quick mode - use client-side axe-core
+        else if (mode === "url") {
           setAuditStep("fetching");
           // Run real axe-core analysis on URL
           result = await runAxeAnalysisOnUrl(url);

@@ -40,6 +40,8 @@
     "zod": "^4.2.1"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.71.2",
+    "@netlify/functions": "^5.1.2",
     "@types/bun": "latest",
     "@types/react": "^19",
     "@types/react-dom": "^19",
