@@ -2,13 +2,41 @@
 export interface Database {
   public: {
     Tables: {
+      user_sessions: {
+        Row: {
+          id: string;
+          supabase_user_id: string | null;
+          locale: 'sv-SE' | 'en-US';
+          preferences: Record<string, any>;
+          created_at: string;
+          last_active_at: string;
+        };
+        Insert: {
+          id?: string;
+          supabase_user_id?: string | null;
+          locale?: 'sv-SE' | 'en-US';
+          preferences?: Record<string, any>;
+          created_at?: string;
+          last_active_at?: string;
+        };
+        Update: {
+          id?: string;
+          supabase_user_id?: string | null;
+          locale?: 'sv-SE' | 'en-US';
+          preferences?: Record<string, any>;
+          created_at?: string;
+          last_active_at?: string;
+        };
+      };
       audits: {
         Row: {
           id: string;
           user_id: string;
+          session_id: string | null;
           input_type: 'url' | 'html' | 'snippet';
           input_value: string;
           url: string | null;
+          suspected_issue: string | null;
           status: 'queued' | 'analyzing' | 'complete' | 'failed';
           ai_model: string | null;
           total_issues: number;
@@ -28,9 +56,11 @@ export interface Database {
         Insert: {
           id?: string;
           user_id: string;
+          session_id?: string | null;
           input_type: 'url' | 'html' | 'snippet';
           input_value: string;
           url?: string | null;
+          suspected_issue?: string | null;
           status?: 'queued' | 'analyzing' | 'complete' | 'failed';
           ai_model?: string | null;
           total_issues?: number;
@@ -50,9 +80,11 @@ export interface Database {
         Update: {
           id?: string;
           user_id?: string;
+          session_id?: string | null;
           input_type?: 'url' | 'html' | 'snippet';
           input_value?: string;
           url?: string | null;
+          suspected_issue?: string | null;
           status?: 'queued' | 'analyzing' | 'complete' | 'failed';
           ai_model?: string | null;
           total_issues?: number;
