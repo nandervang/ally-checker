@@ -1,5 +1,6 @@
 import type { Handler, HandlerEvent } from "@netlify/functions";
 import Anthropic from "@anthropic-ai/sdk";
+import { runGeminiAudit } from "./gemini-agent";
 
 interface AuditRequest {
   mode: "url" | "html" | "snippet";
@@ -86,7 +87,7 @@ async function runAIAudit(request: AuditRequest) {
     case "claude":
       return await runClaudeAudit(request);
     case "gemini":
-      throw new Error("Gemini integration not yet implemented");
+      return await runGeminiAudit(request);
     case "gpt4":
       throw new Error("GPT-4 integration not yet implemented");
     default: {
