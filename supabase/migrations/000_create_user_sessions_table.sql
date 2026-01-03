@@ -22,44 +22,56 @@ CREATE INDEX IF NOT EXISTS idx_sessions_last_active ON user_sessions(last_active
 ALTER TABLE user_sessions ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policy: Users can view their own sessions
-CREATE POLICY "Users can view their own sessions"
-  ON user_sessions
-  FOR SELECT
-  USING (
-    supabase_user_id = auth.uid() OR
-    supabase_user_id IS NULL -- Allow anonymous sessions
-  );
+DO $$ BEGIN
+  CREATE POLICY "Users can view their own sessions"
+    ON user_sessions
+    FOR SELECT
+    USING (
+      supabase_user_id = auth.uid() OR
+      supabase_user_id IS NULL -- Allow anonymous sessions
+    );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- RLS Policy: Users can create sessions
-CREATE POLICY "Users can create their own sessions"
-  ON user_sessions
-  FOR INSERT
-  WITH CHECK (
-    supabase_user_id = auth.uid() OR
-    supabase_user_id IS NULL -- Allow anonymous sessions
-  );
+DO $$ BEGIN
+  CREATE POLICY "Users can create their own sessions"
+    ON user_sessions
+    FOR INSERT
+    WITH CHECK (
+      supabase_user_id = auth.uid() OR
+      supabase_user_id IS NULL -- Allow anonymous sessions
+    );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- RLS Policy: Users can update their own sessions
-CREATE POLICY "Users can update their own sessions"
-  ON user_sessions
-  FOR UPDATE
-  USING (
-    supabase_user_id = auth.uid() OR
-    supabase_user_id IS NULL
-  )
-  WITH CHECK (
-    supabase_user_id = auth.uid() OR
-    supabase_user_id IS NULL
-  );
+DO $$ BEGIN
+  CREATE POLICY "Users can update their own sessions"
+    ON user_sessions
+    FOR UPDATE
+    USING (
+      supabase_user_id = auth.uid() OR
+      supabase_user_id IS NULL
+    )
+    WITH CHECK (
+      supabase_user_id = auth.uid() OR
+      supabase_user_id IS NULL
+    );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- RLS Policy: Users can delete their own sessions
-CREATE POLICY "Users can delete their own sessions"
-  ON user_sessions
-  FOR DELETE
-  USING (
-    supabase_user_id = auth.uid() OR
-    supabase_user_id IS NULL
-  );
+DO $$ BEGIN
+  CREATE POLICY "Users can delete their own sessions"
+    ON user_sessions
+    FOR DELETE
+    USING (
+      supabase_user_id = auth.uid() OR
+      supabase_user_id IS NULL
+    );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Function to automatically update last_active_at
 CREATE OR REPLACE FUNCTION update_last_active_at()
@@ -71,6 +83,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger to update last_active_at on user_sessions
+DROP TRIGGER IF EXISTS update_user_sessions_last_active ON user_sessions;
 CREATE TRIGGER update_user_sessions_last_active
   BEFORE UPDATE ON user_sessions
   FOR EACH ROW
