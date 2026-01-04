@@ -228,7 +228,9 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
 
           // Convert to AuditResult format (using mock type for now)
           const result: AuditResult = {
-            url: audit.input_value,
+            url: audit.input_type === 'url' ? audit.input_value : undefined,
+            fileName: audit.input_type === 'snippet' ? 'HTML Snippet' : audit.input_type === 'html' ? 'HTML Document' : undefined,
+            documentType: audit.input_type === 'url' ? 'html' : audit.input_type as 'html' | 'snippet',
             timestamp: audit.created_at,
             summary: {
               totalIssues: audit.total_issues || 0,
