@@ -13,12 +13,13 @@ import { LoadingSpinner } from "./LoadingSpinner";
 import { ErrorDisplay } from "./ErrorDisplay";
 import { ProgressIndicator } from "./ProgressIndicator";
 import { runAxeAnalysisOnUrl, runAxeAnalysisOnSnippet, runAxeAnalysis } from "@/services/axeService";
-import { runAIAgentAudit, isAIAgentAvailable } from "@/services/aiAgentService";
 import { 
   mockPdfAuditResult, 
   mockDocxAuditResult,
   type AuditResult 
 } from "@/data/mockAuditResults";
+import { runAudit, getAudit, getAuditIssues, type AuditInput, type AuditProgress, type Issue } from "@/lib/audit";
+import { useAuth } from "@/contexts/AuthContext";
 
 type InputMode = "url" | "html" | "snippet" | "document";
 
@@ -35,6 +36,7 @@ interface AuditInputFormProps {
 
 export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [mode, setMode] = useState<InputMode>("url");
   const [url, setUrl] = useState("");
   const [snippet, setSnippet] = useState("");
@@ -42,8 +44,9 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [auditStep, setAuditStep] = useState<AuditStep>("idle");
   const [auditError, setAuditError] = useState<string | null>(null);
-  const [agentMode, setAgentMode] = useState<boolean>(false);
-  const [selectedModel, setSelectedModel] = useState<"claude" | "gemini" | "gpt4">("claude");
+  const [agentMode, setAgentMode] = useState<boolean>(true); // Default to AI mode
+  const [selectedModel, setSelectedModel] = useState<"claude" | "gemini" | "gpt4">("gemini"); // Use Gemini (implemented)
+  const [progressMessage, setProgressMessage] = useState<string>("");
 
   const validateUrl = (value: string): boolean => {
     try {
@@ -152,94 +155,158 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
   };
 
   const performAudit = async () => {
+    if (!user) {
+      setAuditError("You must be logged in to run audits");
+      return;
+    }
+
     const maxRetries = 3;
     let attempt = 0;
 
     while (attempt < maxRetries) {
       try {
-        let result: AuditResult;
-
-        // Use AI Agent mode if enabled and available
-        if (agentMode && isAIAgentAvailable()) {
-          setAuditStep("fetching");
-          
-          // Prepare content for AI agent
-          let content = "";
-          let agentMode: "url" | "html" | "snippet" = "html";
+        // Use new audit service
+        if (agentMode) {
+          // Prepare input for audit service
+          let inputType: "url" | "html" | "snippet" = "html";
+          let inputValue = "";
           
           if (mode === "url") {
-            content = url;
-            agentMode = "url";
+            inputType = "url";
+            inputValue = url;
           } else if (mode === "html" && file) {
-            content = await file.text();
-            agentMode = "html";
+            inputType = "html";
+            inputValue = await file.text();
           } else if (mode === "snippet") {
-            content = snippet;
-            agentMode = "snippet";
-          } else {
-            // For documents, fall back to quick mode
+            inputType = "snippet";
+            inputValue = snippet;
+          } else if (mode === "document") {
             throw new Error("AI Agent mode not yet supported for PDF/DOCX");
+          } else {
+            throw new Error("Invalid audit mode or missing input");
           }
-          
-          setAuditStep("analyzing");
-          // Run AI agent audit with MCP tools
-          result = await runAIAgentAudit({
-            mode: agentMode,
-            content,
-            model: selectedModel,
-          });
-        }
-        // Quick mode - use client-side axe-core
-        else if (mode === "url") {
-          setAuditStep("fetching");
-          // Run real axe-core analysis on URL
-          result = await runAxeAnalysisOnUrl(url);
-        } else if (mode === "html" && file) {
-          setAuditStep("fetching");
-          // Read HTML file content
-          const htmlContent = await file.text();
-          
-          setAuditStep("analyzing");
-          // Run axe-core analysis on HTML content
-          result = await runAxeAnalysis(htmlContent, { 
-            fileName: file.name, 
-            documentType: "html" 
-          });
-        } else if (mode === "snippet") {
-          setAuditStep("analyzing");
-          // Run axe-core analysis on snippet
-          result = await runAxeAnalysisOnSnippet(snippet);
-        } else if (mode === "document" && file) {
-          setAuditStep("fetching");
-          // For PDF/DOCX, still use mock data (document analysis will be implemented later)
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          
-          setAuditStep("analyzing");
-          await new Promise((resolve) => setTimeout(resolve, 1500));
-          
-          result = file.name.endsWith(".pdf") 
-            ? { ...mockPdfAuditResult, fileName: file.name }
-            : { ...mockDocxAuditResult, fileName: file.name };
-        } else {
-          throw new Error("Invalid audit mode or missing input");
-        }
 
-        setAuditStep("generating");
-        await new Promise((resolve) => setTimeout(resolve, 500));
+          const auditInput: AuditInput = {
+            input_type: inputType,
+            input_value: inputValue,
+            user_id: user.id,
+          };
 
-        setAuditStep("complete");
-        
-        // Notify parent component
-        onAuditComplete?.(result);
-        
-        console.log("Audit complete:", result);
-        
-        // Reset after 2 seconds
-        setTimeout(() => {
-          setAuditStep("idle");
-        }, 2000);
-        
-        return;
+          // Progress callback
+          const onProgress = (progress: AuditProgress) => {
+            setProgressMessage(progress.message);
+            
+            switch (progress.status) {
+              case "queued":
+                setAuditStep("idle");
+                break;
+              case "analyzing":
+                setAuditStep("analyzing");
+                break;
+              case "complete":
+                setAuditStep("generating");
+                break;
+              case "failed":
+                setAuditStep("idle");
+                break;
+            }
+          };
+
+          setAuditStep("fetching");
+          // Run audit and get ID
+          const auditId = await runAudit(auditInput, onProgress);
+
+          setAuditStep("generating");
+          
+          // Fetch complete audit with issues
+          const audit = await getAudit(auditId);
+          const issues = (await getAuditIssues(auditId)) as Issue[];
+
+          if (!audit) {
+            throw new Error("Failed to retrieve audit results");
+          }
+
+          // Convert to AuditResult format (using mock type for now)
+          const result: AuditResult = {
+            url: audit.input_value,
+            timestamp: audit.created_at,
+            summary: {
+              totalIssues: audit.total_issues || 0,
+              critical: audit.critical_issues || 0,
+              serious: audit.serious_issues || 0,
+              moderate: audit.moderate_issues || 0,
+              minor: audit.minor_issues || 0,
+              passed: 0, // Not tracked yet
+              failed: audit.total_issues || 0, // Same as total for now
+            },
+            issues: issues.map(issue => ({
+              id: `issue-${issue.wcag_criterion}`,
+              principle: issue.wcag_principle,
+              guideline: `${issue.wcag_criterion} ${issue.title}`,
+              wcagLevel: issue.wcag_level,
+              severity: issue.severity,
+              title: issue.title,
+              description: issue.description || "",
+              element: issue.element_html || "",
+              selector: issue.element_selector || "",
+              impact: issue.description || "",
+              remediation: issue.how_to_fix || "",
+              helpUrl: issue.wcag_url || `https://www.w3.org/WAI/WCAG22/Understanding/`,
+              occurrences: 1,
+            })),
+          };
+
+          setAuditStep("complete");
+          onAuditComplete?.(result);
+          
+          setTimeout(() => {
+            setAuditStep("idle");
+          }, 2000);
+          
+          return;
+        }
+        // Fallback to axe-core (quick mode)
+        else {
+          let result: AuditResult;
+          
+          if (mode === "url") {
+            setAuditStep("fetching");
+            result = await runAxeAnalysisOnUrl(url);
+          } else if (mode === "html" && file) {
+            setAuditStep("fetching");
+            const htmlContent = await file.text();
+            setAuditStep("analyzing");
+            result = await runAxeAnalysis(htmlContent, { 
+              fileName: file.name, 
+              documentType: "html" 
+            });
+          } else if (mode === "snippet") {
+            setAuditStep("analyzing");
+            result = await runAxeAnalysisOnSnippet(snippet);
+          } else if (mode === "document" && file) {
+            setAuditStep("fetching");
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            setAuditStep("analyzing");
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+            result = file.name.endsWith(".pdf") 
+              ? { ...mockPdfAuditResult, fileName: file.name }
+              : { ...mockDocxAuditResult, fileName: file.name };
+          } else {
+            throw new Error("Invalid audit mode or missing input");
+          }
+
+          setAuditStep("generating");
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
+          setAuditStep("complete");
+          onAuditComplete?.(result);
+          
+          setTimeout(() => {
+            setAuditStep("idle");
+          }, 2000);
+          
+          return;
+        }
       } catch (error) {
         attempt++;
 
@@ -302,11 +369,11 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
       {/* Show progress if audit is running */}
       {isProcessing && (
         <div className="space-y-4">
-          <LoadingSpinner message={getStepLabel()} />
+          <LoadingSpinner message={progressMessage || getStepLabel()} />
           <ProgressIndicator
             currentStep={getStepNumber()}
             totalSteps={3}
-            stepLabel={getStepLabel()}
+            stepLabel={progressMessage || getStepLabel()}
           />
         </div>
       )}
