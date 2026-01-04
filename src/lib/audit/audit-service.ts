@@ -161,11 +161,19 @@ export async function runAudit(
   onProgress?.({ status: 'queued', message: 'Starting audit...' });
 
   try {
-    // Call server-side API endpoint
+    // Get current session for authentication
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      throw new Error('You must be logged in to run audits');
+    }
+
+    // Call server-side API endpoint with auth token
     const response = await fetch('/api/run-audit', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
       },
       body: JSON.stringify(input),
     });
