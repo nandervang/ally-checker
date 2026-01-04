@@ -113,7 +113,7 @@ A non-technical user (e.g., content writer) wants to understand if something mig
 
 **Analysis Engine**
 - **FR-007**: System MUST use axe-core library for automated WCAG 2.2 AA compliance checking
-- **FR-008**: System MUST employ AI-powered heuristic analysis to evaluate subjective accessibility concerns (e.g., alt text meaningfulness, button label clarity, heading structure logic)
+- **FR-008**: System MUST employ AI agent (Gemini 2.5 Flash) with MCP tools to evaluate subjective accessibility concerns (e.g., alt text meaningfulness via analyze_html, button label clarity, heading structure logic), using WCAG documentation retrieval (get_wcag_criterion, search_wcag_by_principle) for accurate criterion mapping
 - **FR-009**: When a suspected issue is provided, AI agent MUST perform focused investigation on that specific concern in addition to standard audit
 - **FR-010**: System MUST detect and report violations across all four WCAG principles: Perceivable, Operable, Understandable, Robust
 - **FR-011**: System MUST identify WCAG 2.2 AA success criteria violated by each issue
@@ -179,12 +179,69 @@ A non-technical user (e.g., content writer) wants to understand if something mig
 - **SC-011**: Swedish localization covers 100% of user-facing interface text
 - **SC-012**: System provides useful feedback when analyzing incomplete or malformed HTML in 90% of test cases
 
+## Technical Architecture *(mandatory)*
+
+### MCP Architecture Overview
+
+The system uses Model Context Protocol (MCP) to enable AI agents to interact with specialized accessibility analysis tools. Three Python-based MCP servers provide modular capabilities connected via stdio transport:
+
+1. **fetch-server**: Web content retrieval with timeout control and metadata extraction
+2. **wcag-docs-server**: WCAG 2.2 criterion documentation and search capabilities
+3. **axe-core-server**: Automated accessibility testing using axe-core library
+
+This architecture separates concerns, allowing the AI model to orchestrate complex analysis workflows while specialized tools handle technical operations.
+
+### Available MCP Tools
+
+The AI agent has access to 6 MCP tools for comprehensive accessibility auditing:
+
+| Tool | Server | Purpose |
+|------|--------|---------|
+| `fetch_url` | fetch-server | Retrieve HTML content from URLs with configurable timeout |
+| `fetch_url_metadata` | fetch-server | Get HTTP headers and metadata without downloading full content |
+| `analyze_html` | axe-core-server | Run axe-core WCAG checks on HTML strings |
+| `analyze_url` | axe-core-server | Fetch and analyze live URLs with axe-core |
+| `get_wcag_criterion` | wcag-docs-server | Retrieve specific WCAG criterion details by ID (e.g., 1.1.1) |
+| `search_wcag_by_principle` | wcag-docs-server | Find WCAG criteria filtered by principle (Perceivable/Operable/Understandable/Robust) |
+
+### AI Model Integration
+
+**Primary Model**: Google Gemini 2.5 Flash with native MCP support
+
+Gemini was selected for its:
+- **Native MCP Support**: Built-in integration with MCP ClientSession (no custom bridge needed)
+- **Function Calling**: Automatic tool execution with multi-turn conversations
+- **Cost Efficiency**: Better pricing than Claude for high-volume function calling
+- **Reliability**: Temperature 0.3 for consistent, reproducible analysis
+
+**Integration Flow**:
+1. Initialize MCP servers via stdio transport (spawn Python processes)
+2. Discover available tools via `client.listTools()`
+3. Convert MCP tool schemas to Gemini function declarations
+4. Execute analysis with system instructions for accessibility auditing
+5. Function calling loop: Model requests tools → Execute against MCP → Feed results back → Continue until complete
+6. Parse final response into structured AuditResult
+
+**System Instructions**: The AI agent receives comprehensive context about accessibility principles, WCAG 2.2 criteria, common violations, and remediation strategies. It's instructed to use MCP tools systematically: fetch content, run automated checks, search WCAG documentation, and provide actionable remediation guidance.
+
+### Environment Configuration
+
+**Required Environment Variables**:
+- `GEMINI_API_KEY`: Google AI Studio API key for Gemini 2.5 Flash access
+
+**MCP Server Configuration**: Servers are spawned as child processes with stdio transport. Paths configured in `gemini-agent.ts`:
+- `fetch-server`: `netlify/mcp-servers/fetch/server.py`
+- `wcag-docs-server`: `netlify/mcp-servers/wcag-docs/server.py`
+- `axe-core-server`: `netlify/mcp-servers/axe-core/server.py`
+
 ## Assumptions
 
 - Users have basic understanding of HTML structure (for HTML input methods)
 - Target websites for URL analysis are publicly accessible and don't require authentication
 - JavaScript-rendered content analysis is out of scope for initial version (static HTML only)
-- AI heuristic analysis uses a general-purpose language model capable of understanding accessibility concepts (assumes access to such a model)
+- **AI heuristic analysis uses Google Gemini 2.5 Flash with native MCP support for tool calling**
+- **MCP servers (fetch, wcag-docs, axe-core) are operational and accessible via stdio transport**
+- **GEMINI_API_KEY is configured in Netlify environment variables**
 - Users have modern browsers supporting ES6+ JavaScript features
 - Swedish Lag (2018:1937) compliance requirements are met by ensuring WCAG 2.2 AA compliance (Swedish law references WCAG standards)
 - Analysis is performed client-side for HTML snippets and server-side for URL fetching (for security and CORS reasons)

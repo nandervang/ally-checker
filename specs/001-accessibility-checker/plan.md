@@ -23,8 +23,9 @@ The Accessibility Checker Application provides developers and content managers w
 - **Build**: Bun, Vite 5+
 - **Backend**: Supabase JS Client, Supabase Realtime
 - **Report Service**: python-docx, PydanticAI, FastAPI
-- **AI**: OpenAI SDK / Anthropic SDK (for heuristic analysis)
-- **MCP Servers**: Fetch MCP (web content), WCAG Documentation MCP, Supabase MCP
+- **AI**: Google Generative AI SDK (@google/generative-ai) for Gemini 2.5 Flash with native MCP support
+- **MCP Protocol**: @modelcontextprotocol/sdk for stdio transport and tool calling
+- **MCP Servers**: fetch-server (web content), wcag-docs-server (WCAG documentation), axe-core-server (automated testing)
 
 **Storage**: 
 - Supabase PostgreSQL (audit reports, accessibility issues, user sessions)

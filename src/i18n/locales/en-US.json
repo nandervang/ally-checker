@@ -1,0 +1,341 @@
+{
+  "app": {
+    "title": "Accessibility Checker",
+    "subtitle": "Analyze website accessibility with WCAG 2.2 AA standards"
+  },
+  "nav": {
+    "overview": "Overview",
+    "components": "Components",
+    "settings": "Settings",
+    "menu": "Menu",
+    "toggleTheme": "Toggle theme",
+    "skipToMain": "Skip to main content"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "current": "Current theme"
+  },
+  "overview": {
+    "title": "Material Design 3 Overview",
+    "description": "Design system implementation details",
+    "colorSystem": "Color System",
+    "typographyScale": "Typography Scale",
+    "elevationShadows": "Elevation Shadows",
+    "colors": {
+      "primary": "Primary",
+      "secondary": "Secondary",
+      "accent": "Accent",
+      "muted": "Muted"
+    },
+    "headings": {
+      "h1": "Heading 1",
+      "h2": "Heading 2",
+      "h3": "Heading 3",
+      "h4": "Heading 4",
+      "large": "Large Text",
+      "body": "Body Text (fluid 18px+)",
+      "small": "Small Text"
+    },
+    "elevation": {
+      "level": "Level {{level}}"
+    }
+  },
+  "components": {
+    "title": "Component Library",
+    "description": "Available ShadCN components",
+    "interactive": "Interactive Components",
+    "installed": "Installed Components",
+    "buttons": {
+      "default": "Default",
+      "secondary": "Secondary",
+      "outline": "Outline",
+      "ghost": "Ghost",
+      "destructive": "Destructive"
+    },
+    "list": {
+      "accordion": "Accordion",
+      "alert": "Alert",
+      "button": "Button",
+      "card": "Card",
+      "dialog": "Dialog",
+      "dropdownMenu": "Dropdown Menu",
+      "form": "Form",
+      "progress": "Progress",
+      "separator": "Separator",
+      "sheet": "Sheet (Side Panel)",
+      "skeleton": "Skeleton",
+      "tabs": "Tabs",
+      "toast": "Toast (Sonner)"
+    }
+  },
+  "settings": {
+    "title": "Settings & Configuration",
+    "description": "Accessibility and theme preferences",
+    "themeSection": "Theme",
+    "a11yFeatures": "Accessibility Features",
+    "features": {
+      "focusIndicators": {
+        "title": "Focus Indicators",
+        "description": "3px ring with 3:1 contrast"
+      },
+      "touchTargets": {
+        "title": "Touch Targets",
+        "description": "44x44px minimum size"
+      },
+      "highContrast": {
+        "title": "High Contrast",
+        "description": "4.5:1 ratio for text"
+      },
+      "status": {
+        "active": "Active"
+      }
+    }
+  },
+  "cards": {
+    "m3Demo": {
+      "title": "Material Design 3",
+      "description": "M3 tokens with 18px base font and WCAG 2.2 AA",
+      "features": {
+        "baseFont": "18px base font",
+        "touchTargets": "44x44px touch targets",
+        "focusRings": "3px focus rings",
+        "contrast": "4.5:1 contrast ratio"
+      }
+    },
+    "uiComponents": {
+      "title": "UI Components",
+      "description": "ShadCN 2.0 library integration",
+      "items": {
+        "react": "React 19 + TypeScript",
+        "shadcn": "ShadCN 2.0 (new-york)",
+        "tailwind": "Tailwind CSS 4.0",
+        "linting": "ESLint + Prettier",
+        "darkMode": "Dark mode support"
+      }
+    },
+    "configuration": {
+      "title": "Configuration",
+      "description": "Accessibility utilities and themes"
+    }
+  },
+  "language": {
+    "switch": "Switch language",
+    "current": "Current language",
+    "swedish": "Swedish",
+    "english": "English"
+  },
+  "loading": {
+    "default": "Loading...",
+    "analyzing": "Analyzing accessibility...",
+    "fetching": "Fetching website...",
+    "generating": "Generating report..."
+  },
+  "error": {
+    "title": "An error occurred",
+    "retry": "Try again",
+    "network": "Network error: Could not connect to server",
+    "timeout": "Request timed out",
+    "invalidUrl": "Invalid URL",
+    "fileTooLarge": "File is too large (max 10 MB)",
+    "invalidFileType": "Invalid file type (only HTML allowed)",
+    "rateLimit": "Too many requests, please try again later",
+    "unknown": "An unknown error occurred"
+  },
+  "progress": {
+    "step": "Step {{current}} of {{total}}",
+    "srOnly": "{{percentage}}% complete, {{currentStep}}"
+  },
+  "audit": {
+    "analyze": "Analyze Accessibility",
+    "urlLabel": "Website URL",
+    "urlPlaceholder": "https://example.com",
+    "fileLabel": "HTML File (max 10MB)",
+    "documentLabel": "Document (PDF or DOCX, max 25MB)",
+    "snippetLabel": "HTML Code Snippet",
+    "snippetPlaceholder": "<div>Your HTML code here...</div>",
+    "validation": {
+      "urlRequired": "URL is required",
+      "urlInvalid": "Please enter a valid URL (must start with http:// or https://)",
+      "fileRequired": "Please select an HTML file",
+      "fileInvalidType": "Please upload an HTML file (.html)",
+      "fileTooLarge": "File size must be less than 10MB",
+      "documentRequired": "Please select a PDF or DOCX file",
+      "documentInvalidType": "Please upload a PDF or DOCX file",
+      "documentTooLarge": "File size must be less than 25MB",
+      "snippetRequired": "HTML snippet is required"
+    },
+    "fileSuccess": "{{name}} ({{size}} KB)"
+  },
+  "results": {
+    "title": "Accessibility Report",
+    "url": "URL",
+    "file": "File",
+    "type": "Type",
+    "tested": "Tested",
+    "passed": "Tests Passed",
+    "failed": "Tests Failed",
+    "issues": "issues",
+    "severity": {
+      "critical": "Critical",
+      "serious": "Serious",
+      "moderate": "Moderate",
+      "minor": "Minor"
+    },
+    "principles": {
+      "perceivable": "Perceivable",
+      "operable": "Operable",
+      "understandable": "Understandable",
+      "robust": "Robust"
+    },
+    "tabs": {
+      "byPrinciple": "By WCAG Principle",
+      "bySeverity": "By Severity"
+    },
+    "details": {
+      "description": "Description",
+      "element": "Element",
+      "impact": "Impact",
+      "howToFix": "How to Fix",
+      "occurrences": "{{count}} occurrences",
+      "learnMore": "Learn more"
+    },
+    "actions": {
+      "newAudit": "Run New Audit",
+      "downloadReport": "Download Report"
+    }
+  },
+  "history": {
+    "title": "Audit History",
+    "description": "View all your previous accessibility audits",
+    "filters": {
+      "title": "Filters & Search",
+      "search": "Search URL or filename...",
+      "type": "Type",
+      "sortBy": "Sort by",
+      "types": {
+        "all": "All Types",
+        "html": "HTML",
+        "pdf": "PDF",
+        "docx": "DOCX"
+      },
+      "sortOptions": {
+        "newest": "Newest First",
+        "oldest": "Oldest First",
+        "mostIssues": "Most Issues"
+      },
+      "showing": "Showing {{count}} of {{total}} audits",
+      "clearFilters": "Clear Filters"
+    },
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{{count}} minutes ago",
+      "hoursAgo": "{{count}} hours ago",
+      "daysAgo": "{{count}} days ago"
+    },
+    "stats": {
+      "total": "Total",
+      "critical": "Critical",
+      "serious": "Serious",
+      "moderate": "Moderate",
+      "minor": "Minor",
+      "passed": "Passed"
+    },
+    "actions": {
+      "view": "View",
+      "download": "Download",
+      "delete": "Delete"
+    },
+    "empty": {
+      "title": "No Audit History",
+      "description": "You haven't performed any accessibility audits yet",
+      "action": "Start Your First Audit"
+    }
+  },
+  "statement": {
+    "title": "Accessibility Statement",
+    "subtitle": "Our commitment to digital accessibility",
+    "lastUpdated": "Last updated",
+    "commitment": {
+      "title": "Our Commitment",
+      "description": "We are committed to making our website accessible to all users, regardless of ability or disability. We strive to conform with WCAG 2.2 Level AA standards and continuously work to improve the user experience for all visitors."
+    },
+    "conformance": {
+      "title": "WCAG Conformance",
+      "description": "Our website has been tested against WCAG 2.2 guidelines",
+      "compliance": "compliance",
+      "target": "Our Target",
+      "targetDescription": "WCAG 2.2 Level AA full conformance within 6 months"
+    },
+    "features": {
+      "title": "Accessibility Features",
+      "description": "We have implemented the following accessibility features",
+      "list": {
+        "keyboard": "Full keyboard navigation support",
+        "screenReader": "Screen reader compatibility (NVDA, JAWS, VoiceOver)",
+        "contrast": "High contrast ratios (4.5:1 for text)",
+        "textSize": "Resizable text (supports up to 200% zoom)",
+        "focusIndicators": "Clear focus indicators (3px rings with 3:1 contrast)",
+        "skipLinks": "Skip-to links for quick navigation",
+        "altText": "Descriptive alternative text for images",
+        "captions": "Captions for videos and audio content",
+        "formLabels": "Clear form labels and instructions",
+        "errorMessages": "Descriptive error messages"
+      }
+    },
+    "limitations": {
+      "title": "Known Limitations",
+      "description": "We are actively working to address the following limitations",
+      "list": {
+        "pdfContent": "Some PDF files may not be fully accessible",
+        "thirdParty": "Third-party content may not meet our accessibility standards",
+        "legacyDocuments": "Legacy documents are being updated to meet current standards"
+      }
+    },
+    "testing": {
+      "title": "Testing & Feedback",
+      "methodsTitle": "Testing Methods",
+      "methods": {
+        "automated": "Automated accessibility tools (axe, WAVE, Lighthouse)",
+        "manual": "Manual keyboard navigation testing",
+        "screenReader": "Screen reader testing (NVDA, JAWS, VoiceOver)",
+        "userTesting": "User testing with people with disabilities"
+      },
+      "toolsTitle": "Tools Used"
+    },
+    "contact": {
+      "title": "Contact & Feedback",
+      "description": "We want to hear from you about accessibility issues",
+      "text": "If you encounter any accessibility barriers on our website, please let us know. Your feedback helps us improve for all users.",
+      "howTo": "How to Contact Us",
+      "methods": {
+        "email": "Email",
+        "form": "Online Form",
+        "formLink": "Accessibility Feedback Form",
+        "response": "We aim to respond within 5 business days"
+      },
+      "action": "Report an Accessibility Issue"
+    },
+    "technical": {
+      "title": "Technical Specifications",
+      "compatible": "Compatible With",
+      "browsers": "Modern browsers (Chrome, Firefox, Safari, Edge)",
+      "screenReaders": "NVDA, JAWS, VoiceOver, TalkBack",
+      "platforms": "Windows, macOS, iOS, Android",
+      "technologies": "Technologies Used",
+      "standards": "Standards & Guidelines"
+    }
+  },
+  "auth": {
+    "title": "Accessibility Checker",
+    "description": "Sign in or create an account to save your audits",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email Address",
+    "password": "Password",
+    "passwordRequirement": "Minimum 6 characters required",
+    "loading": "Loading...",
+    "signupSuccess": "Account created! Check your email for verification.",
+    "footer": "Your data is protected with Supabase Authentication"
+  }
+}

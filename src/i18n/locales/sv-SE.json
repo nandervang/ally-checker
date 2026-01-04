@@ -1,0 +1,341 @@
+{
+  "app": {
+    "title": "Tillgänglighetskontroll",
+    "subtitle": "Analysera webbplatsers tillgänglighet med WCAG 2.2 AA-standard"
+  },
+  "nav": {
+    "overview": "Översikt",
+    "components": "Komponenter",
+    "settings": "Inställningar",
+    "menu": "Meny",
+    "toggleTheme": "Växla tema",
+    "skipToMain": "Hoppa till huvudinnehåll"
+  },
+  "theme": {
+    "light": "Ljust",
+    "dark": "Mörkt",
+    "current": "Nuvarande tema"
+  },
+  "overview": {
+    "title": "Material Design 3 Översikt",
+    "description": "Designsystem implementeringsdetaljer",
+    "colorSystem": "Färgsystem",
+    "typographyScale": "Typografiskala",
+    "elevationShadows": "Skuggelevationer",
+    "colors": {
+      "primary": "Primär",
+      "secondary": "Sekundär",
+      "accent": "Accent",
+      "muted": "Dämpad"
+    },
+    "headings": {
+      "h1": "Rubrik 1",
+      "h2": "Rubrik 2",
+      "h3": "Rubrik 3",
+      "h4": "Rubrik 4",
+      "large": "Stor text",
+      "body": "Brödtext (fluid 18px+)",
+      "small": "Liten text"
+    },
+    "elevation": {
+      "level": "Nivå {{level}}"
+    }
+  },
+  "components": {
+    "title": "Komponentbibliotek",
+    "description": "Tillgängliga ShadCN-komponenter",
+    "interactive": "Interaktiva komponenter",
+    "installed": "Installerade komponenter",
+    "buttons": {
+      "default": "Standard",
+      "secondary": "Sekundär",
+      "outline": "Kontur",
+      "ghost": "Transparent",
+      "destructive": "Destruktiv"
+    },
+    "list": {
+      "accordion": "Dragspel",
+      "alert": "Varning",
+      "button": "Knapp",
+      "card": "Kort",
+      "dialog": "Dialog",
+      "dropdownMenu": "Rullgardinsmeny",
+      "form": "Formulär",
+      "progress": "Förlopp",
+      "separator": "Avskiljare",
+      "sheet": "Sidopanel",
+      "skeleton": "Skelett",
+      "tabs": "Flikar",
+      "toast": "Toast (Sonner)"
+    }
+  },
+  "settings": {
+    "title": "Inställningar & Konfiguration",
+    "description": "Tillgänglighets- och temainställningar",
+    "themeSection": "Tema",
+    "a11yFeatures": "Tillgänglighetsfunktioner",
+    "features": {
+      "focusIndicators": {
+        "title": "Fokusindikatorer",
+        "description": "3px ring med 3:1 kontrast"
+      },
+      "touchTargets": {
+        "title": "Pekzoner",
+        "description": "44x44px minimistorlek"
+      },
+      "highContrast": {
+        "title": "Hög kontrast",
+        "description": "4.5:1 förhållande för text"
+      },
+      "status": {
+        "active": "Aktiv"
+      }
+    }
+  },
+  "cards": {
+    "m3Demo": {
+      "title": "Material Design 3",
+      "description": "M3-tokens med 18px grundteckensnitt och WCAG 2.2 AA",
+      "features": {
+        "baseFont": "18px grundteckensnitt",
+        "touchTargets": "44x44px pekzoner",
+        "focusRings": "3px fokusringar",
+        "contrast": "4.5:1 kontrast"
+      }
+    },
+    "uiComponents": {
+      "title": "UI-komponenter",
+      "description": "ShadCN 2.0 biblioteksintegration",
+      "items": {
+        "react": "React 19 + TypeScript",
+        "shadcn": "ShadCN 2.0 (new-york)",
+        "tailwind": "Tailwind CSS 4.0",
+        "linting": "ESLint + Prettier",
+        "darkMode": "Mörkt läge"
+      }
+    },
+    "configuration": {
+      "title": "Konfiguration",
+      "description": "Tillgänglighetsverktyg och teman"
+    }
+  },
+  "language": {
+    "switch": "Byt språk",
+    "current": "Nuvarande språk",
+    "swedish": "Svenska",
+    "english": "Engelska"
+  },
+  "loading": {
+    "default": "Laddar...",
+    "analyzing": "Analyserar tillgänglighet...",
+    "fetching": "Hämtar webbplats...",
+    "generating": "Genererar rapport..."
+  },
+  "error": {
+    "title": "Ett fel uppstod",
+    "retry": "Försök igen",
+    "network": "Nätverksfel: Kunde inte ansluta till servern",
+    "timeout": "Begäran tog för lång tid",
+    "invalidUrl": "Ogiltig URL-adress",
+    "fileTooLarge": "Filen är för stor (max 10 MB)",
+    "invalidFileType": "Ogiltigt filformat (endast HTML tillåtet)",
+    "rateLimit": "För många förfrågningar, försök igen senare",
+    "unknown": "Ett okänt fel uppstod"
+  },
+  "progress": {
+    "step": "Steg {{current}} av {{total}}",
+    "srOnly": "{{percentage}}% färdigt, {{currentStep}}"
+  },
+  "audit": {
+    "analyze": "Analysera tillgänglighet",
+    "urlLabel": "Webbplats-URL",
+    "urlPlaceholder": "https://example.com",
+    "fileLabel": "HTML-fil (max 10 MB)",
+    "documentLabel": "Dokument (PDF eller DOCX, max 25 MB)",
+    "snippetLabel": "HTML-kodsnutt",
+    "snippetPlaceholder": "<div>Din HTML-kod här...</div>",
+    "validation": {
+      "urlRequired": "URL krävs",
+      "urlInvalid": "Ange en giltig URL (måste börja med http:// eller https://)",
+      "fileRequired": "Välj en HTML-fil",
+      "fileInvalidType": "Ladda upp en HTML-fil (.html)",
+      "fileTooLarge": "Filstorleken måste vara mindre än 10 MB",
+      "documentRequired": "Välj en PDF- eller DOCX-fil",
+      "documentInvalidType": "Ladda upp en PDF- eller DOCX-fil",
+      "documentTooLarge": "Filstorleken måste vara mindre än 25 MB",
+      "snippetRequired": "HTML-kodsnutt krävs"
+    },
+    "fileSuccess": "{{name}} ({{size}} KB)"
+  },
+  "results": {
+    "title": "Tillgänglighetsrapport",
+    "url": "URL",
+    "file": "Fil",
+    "type": "Typ",
+    "tested": "Testad",
+    "passed": "Godkända tester",
+    "failed": "Misslyckade tester",
+    "issues": "problem",
+    "severity": {
+      "critical": "Kritisk",
+      "serious": "Allvarlig",
+      "moderate": "Måttlig",
+      "minor": "Mindre"
+    },
+    "principles": {
+      "perceivable": "Möjlig att uppfatta",
+      "operable": "Hanterbar",
+      "understandable": "Begriplig",
+      "robust": "Robust"
+    },
+    "tabs": {
+      "byPrinciple": "Efter WCAG-princip",
+      "bySeverity": "Efter allvarlighetsgrad"
+    },
+    "details": {
+      "description": "Beskrivning",
+      "element": "Element",
+      "impact": "Påverkan",
+      "howToFix": "Så här fixar du",
+      "occurrences": "{{count}} förekomster",
+      "learnMore": "Läs mer"
+    },
+    "actions": {
+      "newAudit": "Ny tillgänglighetskontroll",
+      "downloadReport": "Ladda ner rapport"
+    }
+  },
+  "history": {
+    "title": "Granskningshistorik",
+    "description": "Se alla dina tidigare tillgänglighetskontroller",
+    "filters": {
+      "title": "Filter och sökning",
+      "search": "Sök URL eller filnamn...",
+      "type": "Typ",
+      "sortBy": "Sortera efter",
+      "types": {
+        "all": "Alla typer",
+        "html": "HTML",
+        "pdf": "PDF",
+        "docx": "DOCX"
+      },
+      "sortOptions": {
+        "newest": "Nyast först",
+        "oldest": "Äldst först",
+        "mostIssues": "Flest problem"
+      },
+      "showing": "Visar {{count}} av {{total}} granskningar",
+      "clearFilters": "Rensa filter"
+    },
+    "time": {
+      "justNow": "Nyss",
+      "minutesAgo": "{{count}} minuter sedan",
+      "hoursAgo": "{{count}} timmar sedan",
+      "daysAgo": "{{count}} dagar sedan"
+    },
+    "stats": {
+      "total": "Totalt",
+      "critical": "Kritisk",
+      "serious": "Allvarlig",
+      "moderate": "Måttlig",
+      "minor": "Mindre",
+      "passed": "Godkänd"
+    },
+    "actions": {
+      "view": "Visa",
+      "download": "Ladda ner",
+      "delete": "Ta bort"
+    },
+    "empty": {
+      "title": "Ingen granskningshistorik",
+      "description": "Du har inte genomfört några tillgänglighetskontroller än",
+      "action": "Starta din första granskning"
+    }
+  },
+  "statement": {
+    "title": "Tillgänglighetsredogörelse",
+    "subtitle": "Vårt engagemang för digital tillgänglighet",
+    "lastUpdated": "Senast uppdaterad",
+    "commitment": {
+      "title": "Vårt engagemang",
+      "description": "Vi är engagerade i att göra vår webbplats tillgänglig för alla användare, oavsett funktionsnedsättning. Vi strävar efter att följa WCAG 2.2 Level AA-standarder och arbetar kontinuerligt med att förbättra användarupplevelsen för alla besökare."
+    },
+    "conformance": {
+      "title": "WCAG-överensstämmelse",
+      "description": "Vår webbplats har testats mot WCAG 2.2-riktlinjerna",
+      "compliance": "överensstämmelse",
+      "target": "Vårt mål",
+      "targetDescription": "WCAG 2.2 Level AA full överensstämmelse inom 6 månader"
+    },
+    "features": {
+      "title": "Tillgänglighetsfunktioner",
+      "description": "Vi har implementerat följande tillgänglighetsfunktioner",
+      "list": {
+        "keyboard": "Fullständig tangentbordsnavigering",
+        "screenReader": "Kompatibilitet med skärmläsare (NVDA, JAWS, VoiceOver)",
+        "contrast": "Hög kontrast (4.5:1 förhållande för text)",
+        "textSize": "Anpassningsbar textstorlek (stöder upp till 200% zoom)",
+        "focusIndicators": "Tydliga fokusindikatorer (3px ringar med 3:1 kontrast)",
+        "skipLinks": "Hoppa-till länkar för snabb navigering",
+        "altText": "Beskrivande alternativtext för bilder",
+        "captions": "Undertexter för videor och ljud",
+        "formLabels": "Tydliga formuläretiketter och instruktioner",
+        "errorMessages": "Beskrivande felmeddelanden"
+      }
+    },
+    "limitations": {
+      "title": "Kända begränsningar",
+      "description": "Vi arbetar aktivt med att åtgärda följande begränsningar",
+      "list": {
+        "pdfContent": "Vissa PDF-filer kanske inte är helt tillgängliga",
+        "thirdParty": "Innehåll från tredje part kanske inte uppfyller våra tillgänglighetsstandarder",
+        "legacyDocuments": "Äldre dokument håller på att uppdateras för att uppfylla nuvarande standarder"
+      }
+    },
+    "testing": {
+      "title": "Testning och feedback",
+      "methodsTitle": "Testningsmetoder",
+      "methods": {
+        "automated": "Automatiserade tillgänglighetsverktyg (axe, WAVE, Lighthouse)",
+        "manual": "Manuell testning av tangentbordsnavigering",
+        "screenReader": "Testning med skärmläsare (NVDA, JAWS, VoiceOver)",
+        "userTesting": "Användartestning med personer med funktionsnedsättning"
+      },
+      "toolsTitle": "Verktyg som används"
+    },
+    "contact": {
+      "title": "Kontakt och feedback",
+      "description": "Vi vill gärna höra från dig om tillgänglighetsproblem",
+      "text": "Om du stöter på några tillgänglighetshinder på vår webbplats, vänligen låt oss veta. Din feedback hjälper oss att förbättra för alla användare.",
+      "howTo": "Hur du kontaktar oss",
+      "methods": {
+        "email": "E-post",
+        "form": "Onlineformulär",
+        "formLink": "Feedbackformulär för tillgänglighet",
+        "response": "Vi strävar efter att svara inom 5 arbetsdagar"
+      },
+      "action": "Rapportera ett tillgänglighetsproblem"
+    },
+    "technical": {
+      "title": "Tekniska specifikationer",
+      "compatible": "Kompatibel med",
+      "browsers": "Moderna webbläsare (Chrome, Firefox, Safari, Edge)",
+      "screenReaders": "NVDA, JAWS, VoiceOver, TalkBack",
+      "platforms": "Windows, macOS, iOS, Android",
+      "technologies": "Teknologier som används",
+      "standards": "Standarder och riktlinjer"
+    }
+  },
+  "auth": {
+    "title": "Tillgänglighetskontroll",
+    "description": "Logga in eller skapa ett konto för att spara dina granskningar",
+    "signIn": "Logga in",
+    "signUp": "Skapa konto",
+    "email": "E-postadress",
+    "password": "Lösenord",
+    "passwordRequirement": "Minst 6 tecken krävs",
+    "loading": "Laddar...",
+    "signupSuccess": "Konto skapat! Kontrollera din e-post för verifiering.",
+    "footer": "Dina data skyddas med Supabase Authentication"
+  }
+}
