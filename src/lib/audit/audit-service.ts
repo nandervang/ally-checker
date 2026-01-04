@@ -11,7 +11,6 @@
 import { supabase } from '../supabase';
 import type { Database } from '@/types/database';
 import type { AuditInput, AuditResult, AuditProgressCallback } from '@/types/audit';
-import { runGeminiAudit } from './gemini-agent';
 
 type AuditRow = Database['public']['Tables']['audits']['Row'];
 type AuditInsert = Database['public']['Tables']['audits']['Insert'];
@@ -20,8 +19,9 @@ type IssueInsert = Database['public']['Tables']['issues']['Insert'];
 
 /**
  * Create a new audit record in the database
+ * Exported for server-side use in API endpoints
  */
-async function createAudit(input: AuditInput): Promise<string> {
+export async function createAudit(input: AuditInput): Promise<string> {
   const auditData: AuditInsert = {
     user_id: input.user_id,
     session_id: input.session_id,
@@ -56,8 +56,9 @@ async function createAudit(input: AuditInput): Promise<string> {
 
 /**
  * Update audit status
+ * Exported for server-side use in API endpoints
  */
-async function updateAuditStatus(
+export async function updateAuditStatus(
   auditId: string,
   status: AuditRow['status'],
   errorMessage?: string
@@ -87,8 +88,9 @@ async function updateAuditStatus(
 
 /**
  * Save audit results to database
+ * Exported for server-side use in API endpoints
  */
-async function saveAuditResults(
+export async function saveAuditResults(
   auditId: string,
   result: AuditResult
 ): Promise<void> {
@@ -150,35 +152,39 @@ async function saveAuditResults(
 
 /**
  * Run a complete accessibility audit with database tracking
+ * Calls server-side API endpoint to avoid exposing API keys
  */
 export async function runAudit(
   input: AuditInput,
   onProgress?: AuditProgressCallback
 ): Promise<string> {
-  // Create audit record
-  const auditId = await createAudit(input);
+  onProgress?.({ status: 'queued', message: 'Starting audit...' });
 
   try {
-    // Update status to analyzing
-    await updateAuditStatus(auditId, 'analyzing');
-    onProgress?.({ status: 'analyzing', message: 'Running accessibility analysis...' });
+    // Call server-side API endpoint
+    const response = await fetch('/api/run-audit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(input),
+    });
 
-    // Run Gemini audit
-    const result = await runGeminiAudit(input);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Audit failed');
+    }
 
-    // Save results
-    await saveAuditResults(auditId, result);
+    const { auditId } = await response.json();
+
     onProgress?.({
       status: 'complete',
       message: 'Audit complete!',
-      issues_found: result.metrics.total_issues,
     });
 
     return auditId;
   } catch (error) {
-    // Mark as failed
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    await updateAuditStatus(auditId, 'failed', errorMessage);
     onProgress?.({ status: 'failed', message: errorMessage });
     throw error;
   }

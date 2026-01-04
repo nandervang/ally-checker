@@ -1,5 +1,8 @@
 import { serve } from "bun";
 import index from "./index.html";
+import { runGeminiAudit } from "./lib/audit/gemini-agent";
+import { createAudit, updateAuditStatus, saveAuditResults } from "./lib/audit/audit-service";
+import type { AuditInput } from "./types/audit";
 
 const server = serve({
   routes: {
@@ -26,6 +29,43 @@ const server = serve({
       return Response.json({
         message: `Hello, ${name}!`,
       });
+    },
+
+    "/api/run-audit": {
+      async POST(req) {
+        try {
+          const input: AuditInput = await req.json();
+
+          // Create audit record
+          const auditId = await createAudit(input);
+
+          try {
+            // Update status to analyzing
+            await updateAuditStatus(auditId, 'analyzing');
+
+            // Run Gemini audit server-side (has access to process.env)
+            const result = await runGeminiAudit(input);
+
+            // Save results
+            await saveAuditResults(auditId, result);
+
+            return Response.json({ auditId, success: true });
+          } catch (error) {
+            // Mark as failed
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            await updateAuditStatus(auditId, 'failed', errorMessage);
+            throw error;
+          }
+        } catch (error) {
+          console.error('Audit API error:', error);
+          return Response.json(
+            {
+              error: error instanceof Error ? error.message : 'Internal server error',
+            },
+            { status: 500 }
+          );
+        }
+      },
     },
   },
 

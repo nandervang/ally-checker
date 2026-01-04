@@ -29,9 +29,8 @@ export {
   sortIssues,
 } from './deduplication';
 
-export {
-  runGeminiAudit,
-} from './gemini-agent';
+// NOTE: runGeminiAudit is not exported to avoid client-side imports
+// It's only used server-side in /api/run-audit endpoint
 
 // Re-export types
 export type {
