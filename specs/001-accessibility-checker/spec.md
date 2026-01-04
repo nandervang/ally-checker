@@ -2,8 +2,45 @@
 
 **Feature Branch**: `001-accessibility-checker`  
 **Created**: 2025-12-30  
-**Status**: Draft  
+**Status**: In Development  
 **Input**: User description: "A11y checker app with URL/HTML input, axe-core + AI analysis, WCAG-organized output"
+
+## Development Workflow *(mandatory)*
+
+**Git & Branch Strategy:**
+
+This feature uses a **long-lived feature branch** workflow with beads (bd) for issue tracking:
+
+1. **All development happens on `001-accessibility-checker` branch**
+   - Do NOT work directly on `main` 
+   - Keep all commits on the feature branch during development
+   
+2. **Issue tracking syncs to `main` via bd**
+   - Run `bd sync` to synchronize issue database (not code)
+   - Issues are tracked in `.beads/*.jsonl` files on the `main` branch
+   - Code stays on the feature branch, issues sync across branches
+
+3. **Merge to `main` at major milestones only**
+   - When significant features are complete and tested
+   - After quality gates pass (tests, linters, builds)
+   - Use merge commits to preserve feature branch history:
+     ```bash
+     git checkout main
+     git merge --no-ff 001-accessibility-checker
+     git push
+     ```
+
+4. **Continue development on feature branch after merge**
+   - Stay on `001-accessibility-checker` for ongoing work
+   - The feature branch remains active until fully complete
+   - Multiple merges to main are expected during development
+
+**Critical Rules:**
+- ✅ Work on feature branch: `git checkout 001-accessibility-checker`
+- ✅ Sync issues: `bd sync` (syncs to main automatically)
+- ✅ Merge to main only at milestones
+- ❌ Do NOT delete feature branch after merging
+- ❌ Do NOT work directly on main during active development
 
 ## User Scenarios & Testing *(mandatory)*
 
