@@ -173,7 +173,7 @@ function parseJSONResponse(text: string): Issue[] {
         wcag_url: issue.url || issue.wcag_url,
       };
     });
-  } catch (error) {
+  } catch {
     return [];
   }
 }
@@ -223,10 +223,10 @@ function parseMarkdownSections(text: string): Issue[] {
       issues.push({
         wcag_criterion: criterion,
         wcag_level: WCAG_LEVEL_MAP[criterion] || 'AA',
-        wcag_principle: WCAG_PRINCIPLE_MAP[principleNum] || 'perceivable',
+        wcag_principle: (WCAG_PRINCIPLE_MAP[principleNum] || 'perceivable') as WCAGPrinciple,
         title: parsedIssue.title || `Issue with ${criterion}`,
         description: parsedIssue.description || '',
-        severity: parsedIssue.severity as IssueSeverity || 'moderate',
+        severity: (parsedIssue.severity as IssueSeverity) || 'moderate',
         source: 'ai-heuristic',
         element_selector: parsedIssue.selector,
         element_html: parsedIssue.html,
@@ -260,7 +260,7 @@ function parseSimpleList(text: string): Issue[] {
         issues.push({
           wcag_criterion: criterion,
           wcag_level: currentIssue.wcag_level || 'AA',
-          wcag_principle: WCAG_PRINCIPLE_MAP[principleNum] || 'perceivable',
+          wcag_principle: (WCAG_PRINCIPLE_MAP[principleNum] || 'perceivable') as WCAGPrinciple,
           title: currentIssue.title,
           description: currentIssue.description || '',
           severity: currentIssue.severity || 'moderate',
@@ -294,7 +294,7 @@ function parseSimpleList(text: string): Issue[] {
     issues.push({
       wcag_criterion: criterion,
       wcag_level: currentIssue.wcag_level || 'AA',
-      wcag_principle: WCAG_PRINCIPLE_MAP[principleNum] || 'perceivable',
+      wcag_principle: (WCAG_PRINCIPLE_MAP[principleNum] || 'perceivable') as WCAGPrinciple,
       title: currentIssue.title,
       description: currentIssue.description || '',
       severity: currentIssue.severity || 'moderate',

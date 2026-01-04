@@ -42,6 +42,46 @@ This feature uses a **long-lived feature branch** workflow with beads (bd) for i
 - ❌ Do NOT delete feature branch after merging
 - ❌ Do NOT work directly on main during active development
 
+## Testing & Verification *(mandatory)*
+
+**BEFORE marking any task as complete, you MUST:**
+
+1. **Write tests** - Create unit tests for the functionality
+2. **Run tests** - Execute tests and verify they pass
+3. **Manual verification** - Test the feature in the running app
+4. **Check errors** - Run `get_errors` tool to verify no type errors
+5. **Document results** - Record test output and verification steps
+
+**Verification Checklist:**
+
+```markdown
+## Task: [TASK-ID] - [Task Name]
+
+### Implementation
+- [ ] Code written
+- [ ] Types defined
+- [ ] Edge cases handled
+
+### Testing
+- [ ] Unit tests written
+- [ ] Tests pass (attach output)
+- [ ] Manual test performed
+- [ ] No TypeScript errors
+- [ ] No runtime errors
+
+### Evidence
+```
+[Paste test output here]
+```
+
+### Verification Steps
+1. [What you tested]
+2. [How you verified it works]
+3. [Edge cases checked]
+```
+
+**Never say "mostly complete" or "should work" - either it's verified and complete, or it's not done.**
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Quick HTML Snippet Analysis (Priority: P1)
