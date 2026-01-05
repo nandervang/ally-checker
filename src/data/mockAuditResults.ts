@@ -20,6 +20,7 @@ export interface AuditIssue {
 }
 
 export interface AuditResult {
+  auditId?: string;
   url?: string;
   fileName?: string;
   documentType?: "html" | "pdf" | "docx";
@@ -34,6 +35,19 @@ export interface AuditResult {
     failed: number;
   };
   issues: AuditIssue[];
+  agent_trace?: {
+    steps: Array<{
+      timestamp: string;
+      action: string;
+      tool?: string;
+      input?: Record<string, unknown>;
+      output?: string;
+      reasoning?: string;
+    }>;
+    tools_used: string[];
+    sources_consulted: string[];
+    duration_ms?: number;
+  };
 }
 
 export const mockHtmlAuditResult: AuditResult = {
@@ -475,4 +489,57 @@ export const mockDocxAuditResult: AuditResult = {
       occurrences: 8,
     },
   ],
+  agent_trace: {
+    steps: [
+      {
+        timestamp: new Date(Date.now() - 5000).toISOString(),
+        action: "fetch_webpage",
+        tool: "mcp_fetch_server",
+        input: { url: "https://example.com" },
+        output: "Successfully fetched HTML content (15.2 KB)",
+        reasoning: "Need to retrieve the webpage content for analysis"
+      },
+      {
+        timestamp: new Date(Date.now() - 4500).toISOString(),
+        action: "run_axe_analysis",
+        tool: "mcp_axe_core_server",
+        input: { html: "...", rules: ["wcag2aa"] },
+        output: "Found 12 accessibility violations across 4 WCAG principles",
+        reasoning: "Running automated accessibility testing with axe-core"
+      },
+      {
+        timestamp: new Date(Date.now() - 3000).toISOString(),
+        action: "consult_wcag_docs",
+        tool: "mcp_wcag_docs_server",
+        input: { criterion: "1.1.1" },
+        output: "WCAG 1.1.1 requires text alternatives for non-text content",
+        reasoning: "Looking up WCAG guidance for missing alt text issues"
+      },
+      {
+        timestamp: new Date(Date.now() - 2000).toISOString(),
+        action: "analyze_color_contrast",
+        tool: "mcp_axe_core_server",
+        input: { elements: ["#header", ".nav-item"] },
+        output: "Found 8 color contrast violations (ratios between 2.1:1 and 3.8:1)",
+        reasoning: "Performing detailed contrast analysis on flagged elements"
+      },
+      {
+        timestamp: new Date(Date.now() - 500).toISOString(),
+        action: "generate_recommendations",
+        reasoning: "Synthesizing findings into actionable remediation guidance",
+        output: "Generated 12 prioritized recommendations with WCAG references"
+      }
+    ],
+    tools_used: [
+      "mcp_fetch_server",
+      "mcp_axe_core_server", 
+      "mcp_wcag_docs_server"
+    ],
+    sources_consulted: [
+      "WCAG 2.2 Guidelines",
+      "axe-core rule definitions",
+      "W3C Understanding docs"
+    ],
+    duration_ms: 5200
+  }
 };

@@ -7,7 +7,7 @@ interface IssueSelectionToolbarProps {
   totalIssues: number;
   onSelectAll: () => void;
   onClear: () => void;
-  onGenerateReport: () => void;
+  onGenerateReport: () => void | Promise<void>;
   className?: string;
 }
 

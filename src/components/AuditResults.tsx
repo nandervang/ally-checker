@@ -12,7 +12,7 @@ import { useIssueSelection } from "@/hooks/useIssueSelection";
 import { IssueSelectionToolbar } from "./IssueSelectionToolbar";
 import { SelectableIssueCard } from "./SelectableIssueCard";
 import { generateCustomReport, downloadCustomReport } from "@/services/customReportService";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface AuditResultsProps {
   result: AuditResult;
@@ -55,7 +55,6 @@ const severityConfig = {
 
 export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResultsProps) {
   const { t } = useTranslation();
-  const { toast } = useToast();
   const [selectionMode, setSelectionMode] = useState(false);
   const [generating, setGenerating] = useState(false);
   
@@ -72,11 +71,7 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
 
   const handleGenerateCustomReport = async () => {
     if (selectedCount === 0) {
-      toast({
-        title: "No issues selected",
-        description: "Please select at least one issue to generate a report.",
-        variant: "destructive",
-      });
+      toast.error("Please select at least one issue to generate a report.");
       return;
     }
 
@@ -85,7 +80,7 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
       // Generate custom report
       const blob = await generateCustomReport(
         {
-          auditId: 'custom-' + Date.now(),
+          auditId: `custom-${String(Date.now())}`,
           selectedIssueIds: selectedIssues.map(i => i.id),
           format: 'word', // Default to Word format
           locale: 'sv-SE',
@@ -94,24 +89,18 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
       );
 
       // Download the report
-      const filename = `custom-report-${new Date().toISOString().split('T')[0]}`;
+      const today = new Date().toISOString().split('T')[0];
+      const filename = `custom-report-${today ?? 'unknown'}`;
       await downloadCustomReport(blob, filename, 'word');
 
-      toast({
-        title: "Report generated successfully",
-        description: `Custom report with ${selectedCount} issue${selectedCount !== 1 ? 's' : ''} has been downloaded.`,
-      });
+      toast.success(`Custom report with ${String(selectedCount)} issue${selectedCount !== 1 ? 's' : ''} has been downloaded.`);
 
       // Clear selection after successful generation
       clear();
       setSelectionMode(false);
     } catch (error) {
       console.error('Report generation error:', error);
-      toast({
-        title: "Report generation failed",
-        description: error instanceof Error ? error.message : "An error occurred while generating the report.",
-        variant: "destructive",
-      });
+      toast.error(error instanceof Error ? error.message : "An error occurred while generating the report.");
     } finally {
       setGenerating(false);
     }
@@ -225,6 +214,36 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
             </div>
             <div className="text-sm font-medium text-red-600 dark:text-red-300">{t("results.failed")}</div>
           </div>
+        </div>
+
+        {/* Action Buttons - Moved to top for visibility */}
+        <div className="flex flex-wrap gap-3 p-4 bg-muted/50 rounded-lg border-2 border-dashed">
+          <Button 
+            onClick={toggleSelectionMode}
+            variant={selectionMode ? "default" : "outline"}
+            size="lg"
+            className="gap-2"
+            aria-pressed={selectionMode}
+            disabled={generating}
+          >
+            <CheckSquare className="h-5 w-5" />
+            {selectionMode ? "✓ Selection Mode Active" : "📋 Create Custom Report"}
+          </Button>
+          
+          <Button onClick={onNewAudit} variant="outline" size="lg" className="gap-2">
+            <RotateCcw className="h-5 w-5" />
+            {t("results.actions.newAudit")}
+          </Button>
+          
+          <Button 
+            onClick={onDownloadReport || (() => { console.log("Download report", result); })} 
+            size="lg" 
+            className="gap-2"
+            disabled={generating}
+          >
+            <Download className="h-5 w-5" />
+            {t("results.actions.downloadReport")}
+          </Button>
         </div>
 
         {/* Tabbed View: By Principle vs By Severity */}
@@ -445,36 +464,6 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
             onGenerateReport={handleGenerateCustomReport}
           />
         )}
-
-        {/* Action Buttons */}
-        <div className="flex flex-wrap gap-4">
-          <Button onClick={onNewAudit} variant="outline" size="lg" className="gap-2">
-            <RotateCcw className="h-5 w-5" />
-            {t("results.actions.newAudit")}
-          </Button>
-          
-          <Button 
-            onClick={toggleSelectionMode}
-            variant={selectionMode ? "default" : "outline"}
-            size="lg"
-            className="gap-2"
-            aria-pressed={selectionMode}
-            disabled={generating}
-          >
-            <CheckSquare className="h-5 w-5" />
-            {selectionMode ? "✓ Selection Mode" : "Create Custom Report"}
-          </Button>
-          
-          <Button 
-            onClick={onDownloadReport || (() => { console.log("Download report", result); })} 
-            size="lg" 
-            className="gap-2"
-            disabled={generating}
-          >
-            <Download className="h-5 w-5" />
-            {t("results.actions.downloadReport")}
-          </Button>
-        </div>
       </CardContent>
     </Card>
   );

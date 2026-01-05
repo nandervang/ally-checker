@@ -273,6 +273,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
 
           // Convert to AuditResult format (using mock type for now)
           const result: AuditResult = {
+            auditId: audit.id,
             url: audit.input_type === 'url' ? audit.input_value : undefined,
             fileName: audit.input_type === 'snippet' ? 'HTML Snippet' : audit.input_type === 'html' ? 'HTML Document' : undefined,
             documentType: audit.input_type === 'url' ? 'html' : audit.input_type as 'html' | 'snippet',
@@ -292,18 +293,37 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
               guideline: `${issue.wcag_criterion} ${issue.title}`,
               wcagLevel: issue.wcag_level,
               severity: issue.severity,
-              title: issue.tit🎉 Audit complete! Displaying results...");
-          setAuditStep("complete");
-          onAuditComplete?.(result);
-          
-          setTimeout(() => {
-            setAuditStep("idle");
-            setProgressMessage("");
-          }, 15ccurrences: 1,
+              title: issue.title,
+              description: issue.description,
+              element: issue.element || '',
+              selector: issue.selector || '',
+              impact: issue.impact || issue.severity,
+              remediation: issue.remediation,
+              helpUrl: issue.help_url || '',
+              occurrences: 1,
             })),
+            agent_trace: audit.agent_trace ? {
+              steps: (audit.agent_trace as any).steps || [],
+              tools_used: audit.tools_used || [],
+              sources_consulted: (audit.agent_trace as any).sources_consulted || [],
+              duration_ms: (audit.agent_trace as any).duration_ms,
+            } : (audit.ai_model ? {
+              // Fallback trace if agent ran but didn't populate trace
+              steps: [
+                {
+                  timestamp: audit.created_at,
+                  action: "ai_agent_analysis",
+                  reasoning: `Analyzed ${audit.input_type} using ${audit.ai_model || 'AI agent'}`,
+                  output: `Found ${audit.total_issues} accessibility issues across ${audit.perceivable_issues + audit.operable_issues + audit.understandable_issues + audit.robust_issues} WCAG principles`
+                }
+              ],
+              tools_used: audit.tools_used || (audit.ai_model ? [audit.ai_model] : []),
+              sources_consulted: ["WCAG 2.2 Guidelines", "axe-core analysis"],
+              duration_ms: undefined
+            } : undefined),
           };
 
-          setProgressMessage("Audit complete!");
+          setProgressMessage("🎉 Audit complete! Displaying results...");
           setAuditStep("complete");
           onAuditComplete?.(result);
           
