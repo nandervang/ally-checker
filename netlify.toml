@@ -26,10 +26,11 @@
 # SUPABASE_URL
 # SUPABASE_ANON_KEY
 # SUPABASE_SERVICE_ROLE_KEY
-# ANTHROPIC_API_KEY
-# GEMINI_API_KEY
-# OPENAI_API_KEY
-# REPORT_SERVICE_KEY
+# GEMINI_API_KEY        # Google Gemini (recommended)
+# OPENAI_API_KEY        # OpenAI GPT-4 (same as GitHub Copilot)
+# ANTHROPIC_API_KEY     # Claude
+# GROQ_API_KEY          # Groq (fast open models)
+# REPORT_SERVICE_KEY    # Required for API auth
 
 # Headers for CORS and security
 [[headers]]

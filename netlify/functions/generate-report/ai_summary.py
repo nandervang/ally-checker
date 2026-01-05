@@ -1,27 +1,31 @@
 """
 AI-powered executive summary generation using PydanticAI.
+
+Supported AI Providers:
+- Gemini (Google): Fast, cost-effective, default choice
+- OpenAI (GPT-4): High quality, used by GitHub Copilot
+- Anthropic (Claude): Excellent reasoning, alternative option
+- Groq: Ultra-fast inference with open models
+- Ollama: Local models, no API costs
+
+Provider Priority:
+1. Gemini (if GEMINI_API_KEY set)
+2. OpenAI (if OPENAI_API_KEY set) - Same models as GitHub Copilot
+3. Anthropic (if ANTHROPIC_API_KEY set)
+4. Groq (if GROQ_API_KEY set)
+5. Ollama (if running locally)
 """
 
 import os
-from typing import Optional
+from typing import Optional, Literal
 from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIModel
+from pydantic_ai.models.gemini import GeminiModel
 
 from .models import AuditData
 
 
-# Initialize PydanticAI agent for summary generation
-def _create_summary_agent():
-    """Create PydanticAI agent for executive summary generation."""
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        raise ValueError("OPENAI_API_KEY not configured")
-    
-    model = OpenAIModel("gpt-4o-mini", api_key=api_key)
-    return Agent(
-        model=model,
-        result_type=str,
-        system_prompt="""You are an accessibility expert generating executive summaries for WCAG 2.2 AA audit reports.
+SYSTEM_PROMPT = """You are an accessibility expert generating executive summaries for WCAG 2.2 AA audit reports.
 
 Your summaries should be:
 - Concise (150-250 words)
@@ -38,12 +42,53 @@ Do not include:
 - Apologetic language
 
 Be direct, clear, and helpful."""
-    )
 
 
-def generate_executive_summary(audit_data: AuditData, locale: str = "en-US") -> str:
+# Initialize PydanticAI agent for summary generation
+def _create_summary_agent(provider: Literal["openai", "gemini", "anthropic", "groq", "ollama"] = "gemini"):
     """
-    Generate AI-powered executive summary for accessibility audit.
+    Create PydanticAI agent for executive summary generation.
+    
+    Args:
+        provider: AI provider to use (gemini, openai, anthropic, groq, or ollama)
+        
+    Returns:
+        Configured PydanticAI Agent
+        
+    Note:
+        OpenAI uses the same GPT-4 models as GitHub Copilot.
+    """
+    if provider == "gemini":
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY not configured")
+        model = GeminiModel("gemini-2.0-flash-exp", api_key=api_key)
+        
+    elif provider == "openai":
+        # Same models as GitHub Copilot (GPT-4o, GPT-4, etc.)
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY not configured")
+        model = OpenAIModel("gpt-4o-mini", api_key=api_key)
+        
+    elif provider == "anthropic":
+        from pydantic_ai.models.anthropic import AnthropicModel
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY not configured")
+        model = AnthropicModel("claude-3-5-sonnet-20241022", api_key=api_key)
+        
+    elif provider == "groq":
+        from pydantic_ai.models.groq import GroqModel
+        api_key = os.environ.get("GROQ_API_KEY")
+        if not api_key:
+            raise ValueError("GROQ_API_KEY not configured")
+        # Ultra-fast inference with Llama or Mixtral
+        model = GroqModel("llama-3.3-70b-versatile", api_key=api_key)
+        
+    elif provider == "ollama":
+        from pydantic_ai.models.oautomatic fallback chain:
+    Gemini → OpenAI (same as GitHub Copilot) → Anthropic → Groq → Ollama
     
     Args:
         audit_data: The audit results to summarize
@@ -52,8 +97,47 @@ def generate_executive_summary(audit_data: AuditData, locale: str = "en-US") -> 
     Returns:
         Executive summary text
     """
-    try:
-        agent = _create_summary_agent()
+    # Try providers in order of preference
+    providers = []
+    
+    if os.environ.get("GEMINI_API_KEY"):
+        providers.append("gemini")
+    if os.environ.get("OPENAI_API_KEY"):  # GitHub Copilot uses these models
+        providers.append("openai")
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        providers.append("anthropic")
+    if os.environ.get("GROQ_API_KEY"):
+        providers.append("groq")
+    
+    # Always try Ollama last (local, no API key)
+    providers.append("ollama")
+    
+    if len(providers) == 1:  # Only Ollama
+        print("Warning: No cloud AI providers configured, will attempt local Ollama
+    Args:
+        audit_data: The audit results to summarize
+        locale: Language locale (sv-SE or en-US)
+        
+    Returns:
+        Executive summary text
+    """
+    # Try providers in order: Gemini (default) -> OpenAI -> Anthropic
+    providers = []
+    
+    if os.environ.get("GEMINI_API_KEY"):
+        providers.append("gemini")
+    if os.environ.get("OPENAI_API_KEY"):
+        providers.append("openai")
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        providers.append("anthropic")
+    
+    if not providers:
+        raise ValueError("No AI provider API keys configured (need GEMINI_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY)")
+    
+    last_error = None
+    for provider in providers:
+        try:
+            agent = _create_summary_agent(provider)
         
         # Build context for AI
         language = "Swedish" if locale == "sv-SE" else "English"
@@ -110,59 +194,16 @@ def generate_executive_summary(audit_data: AuditData, locale: str = "en-US") -> 
         
         prompt += f"\nGenerate a professional executive summary in {language}."
         
-        # Run agent
-        result = agent.run_sync(prompt)
-        return result.data
-        
-    except Exception as e:
-        print(f"Error generating AI summary: {e}")
-        raise
-
-
-def generate_executive_summary_anthropic(audit_data: AuditData, locale: str = "en-US") -> str:
-    """
-    Alternative: Generate summary using Anthropic Claude via PydanticAI.
+            # Run agent
+            result = agent.run_sync(prompt)
+            return result.data
+            
+        except Exception as e:
+            print(f"Error generating AI summary with {provider}: {e}")
+            last_error = e
+            continue  # Try next provider
     
-    This is a fallback option if OpenAI is not available.
-    """
-    try:
-        from pydantic_ai.models.anthropic import AnthropicModel
-        
-        api_key = os.environ.get("ANTHROPIC_API_KEY")
-        if not api_key:
-            raise ValueError("ANTHROPIC_API_KEY not configured")
-        
-        model = AnthropicModel("claude-3-5-sonnet-20241022", api_key=api_key)
-        agent = Agent(
-            model=model,
-            result_type=str,
-            system_prompt="You are an accessibility expert generating executive summaries for WCAG 2.2 AA audit reports."
-        )
-        
-        # Same prompt building logic as above
-        language = "Swedish" if locale == "sv-SE" else "English"
-        severity_counts = {}
-        for issue in audit_data.issues:
-            severity_counts[issue.severity] = severity_counts.get(issue.severity, 0) + 1
-        
-        prompt = f"""Generate a concise {language} executive summary (150-250 words) for this accessibility audit:
-
-Total Issues: {audit_data.total_issues}
-- Critical: {severity_counts.get('critical', 0)}
-- Serious: {severity_counts.get('serious', 0)}  
-- Moderate: {severity_counts.get('moderate', 0)}
-- Minor: {severity_counts.get('minor', 0)}
-
-WCAG Principles:
-- Perceivable: {audit_data.perceivable_count}
-- Operable: {audit_data.operable_count}
-- Understandable: {audit_data.understandable_count}
-- Robust: {audit_data.robust_count}
-
-Focus on compliance status, key concerns, and overall assessment."""
-        
-        result = agent.run_sync(prompt)
-        return result.data
+n result.data
         
     except Exception as e:
         print(f"Error generating Anthropic summary: {e}")

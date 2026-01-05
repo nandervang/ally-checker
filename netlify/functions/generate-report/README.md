@@ -10,7 +10,7 @@ This Netlify Function generates professional accessibility audit reports in mult
   - Markdown - GitHub/GitLab compatible
   - Plain Text - Screen reader optimized
 
-- **AI-Powered Summaries**: Uses PydanticAI with OpenAI/Anthropic for executive summaries
+- **AI-Powered Summaries**: Uses PydanticAI with Gemini (default), OpenAI (GitHub Copilot models), Anthropic, Groq, or Ollama for executive summaries
 - **Bilingual Support**: Swedish (sv-SE) and English (en-US)
 - **WCAG Organized**: Issues grouped by the four WCAG principles
 - **Accessible Documents**: Proper heading structure, color contrast, semantic markup
@@ -90,7 +90,17 @@ pip install -r requirements.txt
 
 Required:
 - `REPORT_SERVICE_KEY`: API authentication key
-- `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`: For AI summaries
+
+Optional (at least one recommended for AI summaries):
+- `GEMINI_API_KEY`: Google Gemini API key (recommended, fastest/cheapest)
+- `OPENAI_API_KEY`: OpenAI API key (same models as GitHub Copilot: GPT-4o, GPT-4o-mini)
+- `ANTHROPIC_API_KEY`: Anthropic Claude API key (excellent reasoning)
+- `GROQ_API_KEY`: Groq API key (ultra-fast open models)
+- Ollama: No API key needed, uses local models if running
+
+The system will automatically try providers in order: Gemini → OpenAI → Anthropic → Groq → Ollama
+
+**Note**: OpenAI provider uses the same GPT-4 models that power GitHub Copilot.
 
 ### Testing
 
@@ -140,7 +150,8 @@ Screen reader optimized with:
 - Clear hierarchical structure
 - 80-column wrapping
 - No special formatting
-- Uppercase section headers
+- Ugoogle-generativeai`: Google Gemini support
+- `ppercase section headers
 
 ## Dependencies
 
