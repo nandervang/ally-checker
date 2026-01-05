@@ -43,6 +43,9 @@ INPUT PROCESSING:
 - URL (input_type='url'): Use MCP Fetch to retrieve page, perform comprehensive audit
 - HTML (input_type='html'): Analyze complete markup structure, semantic elements, ARIA
 - Snippet (input_type='snippet'): Focus on specific component/issue with targeted remediation
+- Document (input_type='document'): Use document accessibility MCP tools for PDF/DOCX auditing
+  - PDF: Check PDF/UA compliance (tagged PDF, structure, alt text, reading order, forms, tables)
+  - DOCX: Check WCAG adaptations (headings, alt text, tables, hyperlinks, language)
 
 ANALYSIS APPROACH:
 Automated checks: Color contrast, alt text, form labels, ARIA validity, heading hierarchy
@@ -163,6 +166,34 @@ The user suspects this accessibility issue:
 ${input.suspected_issue ? `Context: ${input.suspected_issue}` : ''}
 
 Provide analysis and remediation guidance for this specific issue.`;
+
+    case 'document':
+      return `${basePrompt}
+
+Analyze the accessibility of this ${input.document_type?.toUpperCase()} document: ${input.input_value}
+Document storage path: ${input.document_path}
+
+${input.document_type === 'pdf' ? `
+Use the document accessibility MCP tools to perform a comprehensive PDF/UA (ISO 14289) compliance audit:
+1. Check if PDF is tagged (required for PDF/UA) - use check_pdf_tags
+2. Verify document structure and bookmarks - use extract_pdf_structure
+3. Check for alternative text on images - use check_alt_text
+4. Analyze reading order - use check_reading_order
+5. Review form fields, tables, and color contrast
+
+Focus on PDF/UA requirements and WCAG 2.2 AA adapted for documents.
+` : `
+Use the document accessibility MCP tools to perform a comprehensive WCAG 2.2 AA audit for DOCX:
+1. Verify heading hierarchy - use extract_docx_structure and check_docx_headings
+2. Check alternative text for images - use check_alt_text
+3. Validate table accessibility - use check_docx_tables
+4. Review hyperlink descriptiveness - use check_docx_hyperlinks
+5. Check document language and title settings
+
+Focus on WCAG 2.2 AA success criteria adapted for document context.
+`}
+
+Provide specific remediation guidance for document formats (not web HTML).`;
   }
 }
 
@@ -179,8 +210,18 @@ export async function runGeminiAudit(input: AuditInput): Promise<AuditResult> {
   try {
     let allIssues: Issue[] = [];
 
+    // Documents and snippets don't need chunking
+    if (input.input_type === 'document' || input.input_type === 'snippet') {
+      const prompt = createPrompt(input);
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      const text = response.text();
+
+      const parsedIssues = parseGeminiResponse(text, input);
+      allIssues = parsedIssues;
+    }
     // Check if HTML input needs chunking
-    if (input.input_type === 'html' && input.input_value.length > CHUNK_SIZE) {
+    else if (input.input_type === 'html' && input.input_value.length > CHUNK_SIZE) {
       console.log(`HTML content is large (${input.input_value.length} chars). Chunking into smaller pieces...`);
       
       const chunks = chunkHTML(input.input_value);
