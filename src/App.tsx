@@ -50,7 +50,7 @@ export function App() {
       <Header />
 
       <Main>
-        <div className="h-full w-full px-6 py-8">
+        <div className="max-w-[1400px] mx-auto w-full px-6 lg:px-8 py-8"
           {/* Mobile Menu Sheet */}
           <Sheet>
             <SheetTrigger asChild>

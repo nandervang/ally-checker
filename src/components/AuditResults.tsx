@@ -1,12 +1,16 @@
 import { useTranslation } from "react-i18next";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { AlertCircle, CheckCircle, Download, ExternalLink, RotateCcw } from "lucide-react";
+import { AlertCircle, CheckCircle, Download, ExternalLink, RotateCcw, CheckSquare } from "lucide-react";
 import type { AuditResult, AuditIssue } from "@/data/mockAuditResults";
 import { AgentTraceViewer } from "./AgentTraceViewer";
+import { useIssueSelection } from "@/hooks/useIssueSelection";
+import { IssueSelectionToolbar } from "./IssueSelectionToolbar";
+import { SelectableIssueCard } from "./SelectableIssueCard";
 
 interface AuditResultsProps {
   result: AuditResult;
@@ -49,6 +53,33 @@ const severityConfig = {
 
 export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResultsProps) {
   const { t } = useTranslation();
+  const [selectionMode, setSelectionMode] = useState(false);
+  
+  const {
+    count: selectedCount,
+    toggle,
+    selectAll,
+    clear,
+    announcement,
+    clearAnnouncement,
+    isSelected,
+    selectedIssues,
+  } = useIssueSelection(result.issues);
+
+  const handleGenerateCustomReport = () => {
+    // TODO: Implement custom report generation
+    console.log('Generating report for', selectedCount, 'issues:', selectedIssues);
+    if (onDownloadReport) {
+      onDownloadReport();
+    }
+  };
+
+  const toggleSelectionMode = () => {
+    if (selectionMode) {
+      clear();
+    }
+    setSelectionMode(!selectionMode);
+  };
 
   // Group issues by principle
   const issuesByPrinciple = result.issues.reduce<Record<string, AuditIssue[]>>((acc, issue) => {
@@ -173,91 +204,29 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
                     </Badge>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <Accordion type="single" collapsible className="w-full">
-                    {issues.map((issue, idx) => (
-                      <AccordionItem key={issue.id} value={`issue-${String(idx)}`}>
-                        <AccordionTrigger className="hover:no-underline">
-                          <div className="flex items-start gap-3 text-left w-full">
-                            <Badge className={severityConfig[issue.severity].color}>
-                              {severityConfig[issue.severity].label}
-                            </Badge>
-                            <div className="flex-1">
-                              <div className="font-semibold">{issue.title}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {issue.guideline} ({issue.wcagLevel})
-                              </div>
-                            </div>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="space-y-3 pt-3">
-                          <div>
-                            <h5 className="font-semibold mb-1">{t("results.details.description")}</h5>
-                            <p className="text-sm">{issue.description}</p>
-                          </div>
-                          <div>
-                            <h5 className="font-semibold mb-1">{t("results.details.element")}</h5>
-                            <code className="text-xs bg-muted p-2 rounded block overflow-x-auto">
-                              {issue.element}
-                            </code>
-                          </div>
-                          <div>
-                            <h5 className="font-semibold mb-1">{t("results.details.impact")}</h5>
-                            <p className="text-sm">{issue.impact}</p>
-                          </div>
-                          <div>
-                            <h5 className="font-semibold mb-1">{t("results.details.howToFix")}</h5>
-                            <p className="text-sm">{issue.remediation}</p>
-                          </div>
-                          {issue.occurrences > 1 && (
-                            <div className="text-sm font-medium">
-                              {t("results.details.occurrences", { count: issue.occurrences })}
-                            </div>
-                          )}
-                          <div>
-                            <a
-                              href={issue.helpUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm text-primary hover:underline flex items-center gap-1"
-                            >
-                              {t("results.details.learnMore")}
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </CardContent>
-              </Card>
-            ))}
-          </TabsContent>
-
-          {/* By Severity */}
-          <TabsContent value="severity" className="space-y-4">
-            {(["critical", "serious", "moderate", "minor"] as const).map((severity) => {
-              const issues = issuesBySeverity[severity] || [];
-              if (issues.length === 0) return null;
-
-              return (
-                <Card key={severity} className={`${severityConfig[severity].color} border-2`}>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-xl flex items-center gap-2">
-                      {severityConfig[severity].label}
-                      <Badge variant="secondary" className="ml-auto">
-                        {issues.length} {t("results.issues")}
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <CardContent className="space-y-3">
+                  {selectionMode ? (
+                    // Selection mode: Use selectable cards
+                    issues.map((issue) => (
+                      <SelectableIssueCard
+                        key={issue.id}
+                        issue={issue}
+                        isSelected={isSelected(issue.id)}
+                        selectionMode={selectionMode}
+                        onToggle={() => { toggle(issue.id); }}
+                        principleColor={principleColors[principle]}
+                        severityConfig={severityConfig[issue.severity]}
+                      />
+                    ))
+                  ) : (
+                    // Normal mode: Use accordion
                     <Accordion type="single" collapsible className="w-full">
                       {issues.map((issue, idx) => (
                         <AccordionItem key={issue.id} value={`issue-${String(idx)}`}>
                           <AccordionTrigger className="hover:no-underline">
                             <div className="flex items-start gap-3 text-left w-full">
-                              <Badge className={principleColors[issue.principle]}>
-                                {principleNames[issue.principle]}
+                              <Badge className={severityConfig[issue.severity].color}>
+                                {severityConfig[issue.severity].label}
                               </Badge>
                               <div className="flex-1">
                                 <div className="font-semibold">{issue.title}</div>
@@ -306,6 +275,100 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
                         </AccordionItem>
                       ))}
                     </Accordion>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </TabsContent>
+
+          {/* By Severity */}
+          <TabsContent value="severity" className="space-y-4">
+            {(["critical", "serious", "moderate", "minor"] as const).map((severity) => {
+              const issues = issuesBySeverity[severity] || [];
+              if (issues.length === 0) return null;
+
+              return (
+                <Card key={severity} className={`${severityConfig[severity].color} border-2`}>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      {severityConfig[severity].label}
+                      <Badge variant="secondary" className="ml-auto">
+                        {issues.length} {t("results.issues")}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {selectionMode ? (
+                      // Selection mode: Use selectable cards
+                      issues.map((issue) => (
+                        <SelectableIssueCard
+                          key={issue.id}
+                          issue={issue}
+                          isSelected={isSelected(issue.id)}
+                          selectionMode={selectionMode}
+                          onToggle={() => { toggle(issue.id); }}
+                          principleColor={principleColors[issue.principle]}
+                          severityConfig={severityConfig[severity]}
+                        />
+                      ))
+                    ) : (
+                      // Normal mode: Use accordion
+                      <Accordion type="single" collapsible className="w-full">
+                        {issues.map((issue, idx) => (
+                          <AccordionItem key={issue.id} value={`issue-${String(idx)}`}>
+                            <AccordionTrigger className="hover:no-underline">
+                              <div className="flex items-start gap-3 text-left w-full">
+                                <Badge className={principleColors[issue.principle]}>
+                                  {principleNames[issue.principle]}
+                                </Badge>
+                                <div className="flex-1">
+                                  <div className="font-semibold">{issue.title}</div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {issue.guideline} ({issue.wcagLevel})
+                                  </div>
+                                </div>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="space-y-3 pt-3">
+                            <div>
+                              <h5 className="font-semibold mb-1">{t("results.details.description")}</h5>
+                              <p className="text-sm">{issue.description}</p>
+                            </div>
+                            <div>
+                              <h5 className="font-semibold mb-1">{t("results.details.element")}</h5>
+                              <code className="text-xs bg-muted p-2 rounded block overflow-x-auto">
+                                {issue.element}
+                              </code>
+                            </div>
+                            <div>
+                              <h5 className="font-semibold mb-1">{t("results.details.impact")}</h5>
+                              <p className="text-sm">{issue.impact}</p>
+                            </div>
+                            <div>
+                              <h5 className="font-semibold mb-1">{t("results.details.howToFix")}</h5>
+                              <p className="text-sm">{issue.remediation}</p>
+                            </div>
+                            {issue.occurrences > 1 && (
+                              <div className="text-sm font-medium">
+                                {t("results.details.occurrences", { count: issue.occurrences })}
+                              </div>
+                            )}
+                            <div>
+                              <a
+                                href={issue.helpUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-primary hover:underline flex items-center gap-1"
+                              >
+                                {t("results.details.learnMore")}
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                    )}
                   </CardContent>
                 </Card>
               );
@@ -316,12 +379,48 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
         {/* Agent Trace Viewer */}
         {result.agent_trace && <AgentTraceViewer trace={result.agent_trace} />}
 
+        {/* Screen Reader Announcements */}
+        {announcement && (
+          <div
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            className="sr-only"
+            onAnimationEnd={clearAnnouncement}
+          >
+            {announcement}
+          </div>
+        )}
+
+        {/* Selection Toolbar */}
+        {selectionMode && (
+          <IssueSelectionToolbar
+            count={selectedCount}
+            totalIssues={result.issues.length}
+            onSelectAll={selectAll}
+            onClear={clear}
+            onGenerateReport={handleGenerateCustomReport}
+          />
+        )}
+
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-4">
           <Button onClick={onNewAudit} variant="outline" size="lg" className="gap-2">
             <RotateCcw className="h-5 w-5" />
             {t("results.actions.newAudit")}
           </Button>
+          
+          <Button 
+            onClick={toggleSelectionMode}
+            variant={selectionMode ? "default" : "outline"}
+            size="lg"
+            className="gap-2"
+            aria-pressed={selectionMode}
+          >
+            <CheckSquare className="h-5 w-5" />
+            {selectionMode ? "✓ Selection Mode" : "Create Custom Report"}
+          </Button>
+          
           <Button onClick={onDownloadReport || (() => { console.log("Download report", result); })} size="lg" className="gap-2">
             <Download className="h-5 w-5" />
             {t("results.actions.downloadReport")}
