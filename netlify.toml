@@ -1,0 +1,59 @@
+[build]
+  command = "bun run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+  BUN_VERSION = "1.3"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Python functions configuration
+[[plugins]]
+  package = "@netlify/plugin-functions-install-core"
+
+[dev]
+  command = "bun dev"
+  port = 5173
+  publish = "dist"
+  autoLaunch = false
+  functions = "netlify/functions"
+
+# Environment variables (set in Netlify dashboard or .env)
+# SUPABASE_URL
+# SUPABASE_ANON_KEY
+# SUPABASE_SERVICE_ROLE_KEY
+# ANTHROPIC_API_KEY
+# GEMINI_API_KEY
+# OPENAI_API_KEY
+# REPORT_SERVICE_KEY
+
+# Headers for CORS and security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type, X-Report-Service-Key"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+
+# Redirects
+[[redirects]]
+  from = "/api/reports/*"
+  to = "/.netlify/functions/generate-report/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
