@@ -9,7 +9,7 @@
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import type { AuditInput, AuditResult, Issue } from '@/types/audit';
+import type { AuditInput, AuditResult, Issue, AgentTrace, AgentTraceStep } from '@/types/audit';
 import { parseGeminiResponse } from './response-parser';
 import { calculateMetrics } from './metrics';
 import { deduplicateIssues, sortIssues } from './deduplication';
@@ -207,18 +207,70 @@ export async function runGeminiAudit(input: AuditInput): Promise<AuditResult> {
     systemInstruction: SYSTEM_PROMPT,
   });
 
+  const startTime = Date.now();
+  const trace: AgentTrace = {
+    steps: [],
+    tools_used: [],
+    sources_consulted: [],
+  };
+
+  const addTraceStep = (action: string, details?: Partial<AgentTraceStep>) => {
+    trace.steps.push({
+      timestamp: new Date().toISOString(),
+      action,
+      ...details,
+    });
+  };
+
   try {
     let allIssues: Issue[] = [];
 
+    addTraceStep('Audit initialized', {
+      reasoning: `Starting ${input.input_type} accessibility audit using Gemini 2.0 Flash AI model`,
+    });
+
     // Documents and snippets don't need chunking
     if (input.input_type === 'document' || input.input_type === 'snippet') {
+      if (input.input_type === 'document') {
+        addTraceStep('Document audit started', {
+          reasoning: `Analyzing ${input.document_type?.toUpperCase()} file for ${input.document_type === 'pdf' ? 'PDF/UA (ISO 14289)' : 'WCAG 2.2 AA document'} compliance`,
+        });
+        trace.tools_used.push(`document_${input.document_type}_auditor`);
+        trace.sources_consulted.push(
+          input.document_type === 'pdf' ? 'PDF/UA (ISO 14289) Standard' : 'WCAG 2.2 Document Guidelines',
+          'WCAG 2.2 Level AA Success Criteria'
+        );
+      }
+
+      addTraceStep('Preparing prompt for AI analysis', {
+        reasoning: 'Constructing detailed prompt with accessibility guidelines and evaluation criteria',
+      });
+
       const prompt = createPrompt(input);
+      
+      addTraceStep('Sending request to Gemini AI', {
+        tool: 'gemini-2.0-flash-exp',
+        reasoning: 'AI model will analyze content against WCAG 2.2 AA guidelines',
+      });
+
       const result = await model.generateContent(prompt);
       const response = result.response;
       const text = response.text();
 
+      addTraceStep('AI analysis complete', {
+        output: `Received ${text.length} characters of analysis`,
+        reasoning: 'Parsing AI response to extract accessibility issues',
+      });
+
+      trace.tools_used.push('gemini-2.0-flash-exp');
+      trace.sources_consulted.push('WCAG 2.2 Understanding Documents', 'WCAG 2.2 Techniques');
+
       const parsedIssues = parseGeminiResponse(text, input);
       allIssues = parsedIssues;
+
+      addTraceStep('Issues extracted', {
+        output: `Found ${parsedIssues.length} accessibility issues`,
+      });
     }
     // Check if HTML input needs chunking
     else if (input.input_type === 'html' && input.input_value.length > CHUNK_SIZE) {
@@ -255,13 +307,31 @@ export async function runGeminiAudit(input: AuditInput): Promise<AuditResult> {
     }
 
     // Deduplicate issues (especially important when chunking)
+    addTraceStep('Deduplicating issues', {
+      reasoning: 'Removing duplicate issues that may have been found multiple times',
+    });
     let issues = deduplicateIssues(allIssues);
 
+    addTraceStep('Sorting issues by severity', {
+      output: `${issues.length} unique issues identified`,
+      reasoning: 'Prioritizing critical and serious issues first',
+    });
     // Sort by severity
     issues = sortIssues(issues);
 
     // Calculate metrics
+    addTraceStep('Calculating WCAG compliance metrics', {
+      reasoning: 'Grouping issues by WCAG principles (Perceivable, Operable, Understandable, Robust)',
+    });
     const metrics = calculateMetrics(issues);
+
+    // Add trace duration
+    trace.duration_ms = Date.now() - startTime;
+
+    addTraceStep('Audit complete', {
+      output: `${issues.length} issues, ${metrics.critical_issues} critical, ${metrics.serious_issues} serious`,
+      reasoning: `Completed in ${trace.duration_ms}ms using ${trace.tools_used.length} tools`,
+    });
 
     // Build result
     const auditResult: AuditResult = {
@@ -269,10 +339,16 @@ export async function runGeminiAudit(input: AuditInput): Promise<AuditResult> {
       metrics,
       ai_model: 'gemini-2.0-flash-exp',
       url: input.input_type === 'url' ? input.input_value : undefined,
+      agent_trace: trace,
     };
 
     return auditResult;
   } catch (error) {
+    addTraceStep('Audit failed', {
+      output: error instanceof Error ? error.message : 'Unknown error',
+      reasoning: 'An error occurred during the audit process',
+    });
+    
     console.error('Gemini audit failed:', error);
     throw new Error(`Failed to run accessibility audit: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }

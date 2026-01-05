@@ -51,6 +51,9 @@ export interface Database {
           understandable_issues: number;
           robust_issues: number;
           error_message: string | null;
+          agent_trace: Record<string, unknown> | null;
+          tools_used: string[] | null;
+          analysis_steps: string[] | null;
           created_at: string;
           updated_at: string;
           completed_at: string | null;
@@ -77,6 +80,9 @@ export interface Database {
           understandable_issues?: number;
           robust_issues?: number;
           error_message?: string | null;
+          agent_trace?: Record<string, unknown> | null;
+          tools_used?: string[] | null;
+          analysis_steps?: string[] | null;
           created_at?: string;
           updated_at?: string;
           completed_at?: string | null;
@@ -103,6 +109,9 @@ export interface Database {
           understandable_issues?: number;
           robust_issues?: number;
           error_message?: string | null;
+          agent_trace?: Record<string, unknown> | null;
+          tools_used?: string[] | null;
+          analysis_steps?: string[] | null;
           created_at?: string;
           updated_at?: string;
           completed_at?: string | null;

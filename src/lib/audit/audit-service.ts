@@ -164,6 +164,9 @@ export async function saveAuditResults(
     operable_issues: result.metrics.operable_issues,
     understandable_issues: result.metrics.understandable_issues,
     robust_issues: result.metrics.robust_issues,
+    agent_trace: result.agent_trace as Record<string, unknown> | null | undefined,
+    tools_used: result.agent_trace?.tools_used,
+    analysis_steps: result.agent_trace?.steps.map(s => s.action),
     completed_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };

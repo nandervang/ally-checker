@@ -40,12 +40,30 @@ export interface AuditMetrics {
   robust_issues: number;
 }
 
+// Audit trail tracking
+export interface AgentTraceStep {
+  timestamp: string;
+  action: string;
+  tool?: string;
+  input?: Record<string, unknown>;
+  output?: string;
+  reasoning?: string;
+}
+
+export interface AgentTrace {
+  steps: AgentTraceStep[];
+  tools_used: string[];
+  sources_consulted: string[];
+  duration_ms?: number;
+}
+
 // Complete audit result
 export interface AuditResult {
   issues: Issue[];
   metrics: AuditMetrics;
   ai_model: string;
   url?: string;
+  agent_trace?: AgentTrace;
 }
 
 // Input for running an audit

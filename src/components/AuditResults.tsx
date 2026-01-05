@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AlertCircle, CheckCircle, Download, ExternalLink, RotateCcw } from "lucide-react";
 import type { AuditResult, AuditIssue } from "@/data/mockAuditResults";
+import { AgentTraceViewer } from "./AgentTraceViewer";
 
 interface AuditResultsProps {
   result: AuditResult;
@@ -311,6 +312,9 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
             })}
           </TabsContent>
         </Tabs>
+
+        {/* Agent Trace Viewer */}
+        {result.agent_trace && <AgentTraceViewer trace={result.agent_trace} />}
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-4">
