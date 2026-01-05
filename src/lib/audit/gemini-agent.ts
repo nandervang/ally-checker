@@ -22,6 +22,12 @@ if (!GEMINI_API_KEY) {
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
+// Gemini 2.0 Flash context window limits
+const MAX_INPUT_TOKENS = 1_000_000; // 1M tokens
+const CHARS_PER_TOKEN = 4; // Approximate: 1 token ≈ 4 characters
+const MAX_PROMPT_CHARS = MAX_INPUT_TOKENS * CHARS_PER_TOKEN * 0.8; // Use 80% of limit for safety
+const CHUNK_SIZE = Math.floor(MAX_PROMPT_CHARS * 0.3); // Each chunk is ~30% of max
+
 /**
  * Enhanced system prompt for accessibility analysis
  * Includes MCP tools, systematic coverage, and processing guidance
@@ -83,9 +89,43 @@ GUIDELINES:
 - Think like users: Consider real assistive technology usage patterns`;
 
 /**
+ * Split large HTML into chunks that fit within token limits
+ */
+function chunkHTML(html: string): string[] {
+  if (html.length <= CHUNK_SIZE) {
+    return [html];
+  }
+
+  const chunks: string[] = [];
+  let currentPos = 0;
+
+  while (currentPos < html.length) {
+    let chunkEnd = Math.min(currentPos + CHUNK_SIZE, html.length);
+    
+    // Try to break at a tag boundary to avoid breaking HTML structure
+    if (chunkEnd < html.length) {
+      const lastTagClose = html.lastIndexOf('>', chunkEnd);
+      const lastTagOpen = html.lastIndexOf('<', chunkEnd);
+      
+      // If we're in the middle of a tag, back up to the last complete tag
+      if (lastTagOpen > lastTagClose) {
+        chunkEnd = lastTagClose + 1;
+      } else if (lastTagClose > currentPos) {
+        chunkEnd = lastTagClose + 1;
+      }
+    }
+
+    chunks.push(html.substring(currentPos, chunkEnd));
+    currentPos = chunkEnd;
+  }
+
+  return chunks;
+}
+
+/**
  * Create mode-specific prompt based on input type
  */
-function createPrompt(input: AuditInput): string {
+function createPrompt(input: AuditInput, chunkIndex?: number, totalChunks?: number): string {
   const basePrompt = SYSTEM_PROMPT;
 
   switch (input.input_type) {
@@ -98,16 +138,21 @@ ${input.suspected_issue ? `Pay special attention to: ${input.suspected_issue}` :
 
 Fetch the page content and perform a comprehensive WCAG 2.2 AA accessibility audit.`;
 
-    case 'html':
+    case 'html': {
+      const chunkInfo = chunkIndex !== undefined && totalChunks !== undefined
+        ? `\n\nNote: This is chunk ${chunkIndex + 1} of ${totalChunks}. Analyze this section and ${chunkIndex < totalChunks - 1 ? 'we will continue with the next chunk' : 'provide final results combining all chunks'}.`
+        : '';
+      
       return `${basePrompt}
 
-Analyze this HTML code for accessibility issues:
+Analyze this HTML code for accessibility issues:${chunkInfo}
 
 \`\`\`html
 ${input.input_value}
 \`\`\`
 
 ${input.suspected_issue ? `Focus on: ${input.suspected_issue}` : 'Perform a comprehensive WCAG 2.2 AA accessibility audit.'}`;
+    }
 
     case 'snippet':
       return `${basePrompt}
@@ -123,6 +168,7 @@ Provide analysis and remediation guidance for this specific issue.`;
 
 /**
  * Run Gemini audit with function calling for MCP tools
+ * Handles large HTML inputs by chunking if necessary
  */
 export async function runGeminiAudit(input: AuditInput): Promise<AuditResult> {
   const model = genAI.getGenerativeModel({ 
@@ -130,19 +176,45 @@ export async function runGeminiAudit(input: AuditInput): Promise<AuditResult> {
     systemInstruction: SYSTEM_PROMPT,
   });
 
-  const prompt = createPrompt(input);
-
   try {
-    // Generate response
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+    let allIssues: Issue[] = [];
 
-    // Parse response into structured issues
-    let issues = parseGeminiResponse(text);
+    // Check if HTML input needs chunking
+    if (input.input_type === 'html' && input.input_value.length > CHUNK_SIZE) {
+      console.log(`HTML content is large (${input.input_value.length} chars). Chunking into smaller pieces...`);
+      
+      const chunks = chunkHTML(input.input_value);
+      console.log(`Split into ${chunks.length} chunks for processing`);
 
-    // Deduplicate issues
-    issues = deduplicateIssues(issues);
+      // Process each chunk
+      for (let i = 0; i < chunks.length; i++) {
+        console.log(`Processing chunk ${i + 1}/${chunks.length} (${chunks[i].length} chars)...`);
+        
+        const chunkInput: AuditInput = {
+          ...input,
+          input_value: chunks[i],
+        };
+
+        const prompt = createPrompt(chunkInput, i, chunks.length);
+        const result = await model.generateContent(prompt);
+        const response = result.response;
+        const text = response.text();
+
+        // Parse and accumulate issues from this chunk
+        const chunkIssues = parseGeminiResponse(text);
+        allIssues.push(...chunkIssues);
+      }
+    } else {
+      // Process normally for non-chunked content
+      const prompt = createPrompt(input);
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      const text = response.text();
+      allIssues = parseGeminiResponse(text);
+    }
+
+    // Deduplicate issues (especially important when chunking)
+    let issues = deduplicateIssues(allIssues);
 
     // Sort by severity
     issues = sortIssues(issues);
