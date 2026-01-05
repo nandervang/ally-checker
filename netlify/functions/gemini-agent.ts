@@ -12,9 +12,11 @@ import { spawn } from "child_process";
 import path from "path";
 
 interface AuditRequest {
-  mode: "url" | "html" | "snippet";
+  mode: "url" | "html" | "snippet" | "document";
   content: string;
   model: "claude" | "gemini" | "gpt4";
+  documentType?: "pdf" | "docx";
+  filePath?: string;
 }
 
 interface MCPToolResult {
@@ -173,6 +175,21 @@ async function initializeMCPTools() {
     console.warn("Failed to initialize axe-core-server:", error);
   }
 
+  // Initialize document-accessibility-server
+  try {
+    const docAccessClient = await initializeMCPServer(
+      "document-accessibility",
+      "python3",
+      [path.join(serversDir, "document-accessibility-server/server.py")]
+    );
+    clients.set("document-accessibility", docAccessClient);
+    
+    const docAccessTools = await docAccessClient.listTools();
+    allTools.push(...docAccessTools.tools.map(t => convertMCPToolToGemini(t, "document")));
+  } catch (error) {
+    console.warn("Failed to initialize document-accessibility-server:", error);
+  }
+
   return { clients, tools: allTools };
 }
 
@@ -292,12 +309,21 @@ Your task is to perform a comprehensive accessibility audit using the provided M
 - get_wcag_criterion: Get details for a specific WCAG criterion (e.g., "1.1.1")
 - search_wcag_by_principle: Search criteria by principle (Perceivable, Operable, Understandable, Robust)
 - get_all_criteria: List all available WCAG criteria
+- audit_pdf: Comprehensive PDF accessibility audit (PDF/UA compliance)
+- audit_docx: Comprehensive DOCX accessibility audit (WCAG for documents)
+- extract_pdf_structure: Get PDF outline, bookmarks, pages
+- extract_docx_structure: Get DOCX headings, sections, tables
+- check_pdf_tags: Verify PDF tagging (PDF/UA requirement)
+- check_alt_text: Check for images and alternative text
+- check_reading_order: Analyze logical reading order
+- check_color_contrast: Color contrast guidance for documents
 
 **Audit Process:**
 1. For URLs: Use fetch_url or analyze_url to get content and run automated tests
 2. For HTML/snippets: Use analyze_html to run axe-core tests
-3. Reference specific WCAG criteria using get_wcag_criterion for accuracy
-4. Apply heuristic evaluation for issues automated tools miss:
+3. For Documents (PDF/DOCX): Use document-specific audit tools (audit_pdf, audit_docx)
+4. Reference specific WCAG criteria using get_wcag_criterion for accuracy
+5. Apply heuristic evaluation for issues automated tools miss:
    - Semantic HTML structure and logical document flow
    - Heading hierarchy (proper h1-h6 nesting, no skipped levels)
    - Form controls with proper labels and error identification
@@ -364,6 +390,21 @@ ${request.content}
 Process:
 1. Use analyze_html to test the snippet
 2. Identify potential accessibility issues
+
+    case "document":
+      const docType = request.documentType || "pdf";
+      const filePath = request.filePath || request.content;
+      return `Audit the accessibility of this ${docType.toUpperCase()} document: ${filePath}
+
+Process:
+1. Use ${docType === "pdf" ? "audit_pdf" : "audit_docx"} tool for comprehensive document accessibility audit
+2. Check document structure using extract_${docType}_structure
+3. Verify specific requirements:
+   ${docType === "pdf" 
+     ? "- Tagged PDF (PDF/UA requirement) using check_pdf_tags\n   - Alternative text for images\n   - Logical reading order\n   - Form field accessibility" 
+     : "- Heading hierarchy and structure\n   - Alternative text for images and objects\n   - Table accessibility\n   - Hyperlink descriptiveness"}
+4. Cross-reference findings with WCAG criteria using get_wcag_criterion
+5. Provide comprehensive document accessibility report with ${docType === "pdf" ? "PDF/UA" : "WCAG 2.2 AA"} remediation guidance`;
 3. Cross-reference with get_wcag_criterion
 4. Provide focused audit report with specific fixes`;
   }

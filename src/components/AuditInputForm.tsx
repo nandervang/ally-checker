@@ -168,8 +168,9 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
         // Use new audit service
         if (agentMode) {
           // Prepare input for audit service
-          let inputType: "url" | "html" | "snippet" = "html";
+          let inputType: "url" | "html" | "snippet" | "document" = "html";
           let inputValue = "";
+          let documentType: "pdf" | "docx" | undefined = undefined;
           
           if (mode === "url") {
             inputType = "url";
@@ -180,8 +181,13 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
           } else if (mode === "snippet") {
             inputType = "snippet";
             inputValue = snippet;
-          } else if (mode === "document") {
-            throw new Error("AI Agent mode not yet supported for PDF/DOCX");
+          } else if (mode === "document" && file) {
+            inputType = "document";
+            inputValue = file.name; // Filename as placeholder
+            documentType = file.name.endsWith(".pdf") ? "pdf" : "docx";
+            // TODO: Upload file to Supabase Storage and get file path
+            // For now, we'll use mock results until storage is implemented
+            throw new Error("Document upload to Supabase Storage not yet implemented. Using Quick Mode for documents.");
           } else {
             throw new Error("Invalid audit mode or missing input");
           }

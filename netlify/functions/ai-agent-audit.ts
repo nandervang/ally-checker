@@ -3,10 +3,12 @@ import Anthropic from "@anthropic-ai/sdk";
 import { runGeminiAudit } from "./gemini-agent";
 
 interface AuditRequest {
-  mode: "url" | "html" | "snippet";
+  mode: "url" | "html" | "snippet" | "document";
   content: string;
   model: "claude" | "gemini" | "gpt4";
   language?: string;
+  documentType?: "pdf" | "docx";
+  filePath?: string;
 }
 
 interface MCPToolResult {
