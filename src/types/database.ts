@@ -33,9 +33,11 @@ export interface Database {
           id: string;
           user_id: string;
           session_id: string | null;
-          input_type: 'url' | 'html' | 'snippet';
+          input_type: 'url' | 'html' | 'snippet' | 'document';
           input_value: string;
           url: string | null;
+          document_path: string | null;
+          document_type: 'pdf' | 'docx' | null;
           suspected_issue: string | null;
           status: 'queued' | 'analyzing' | 'complete' | 'failed';
           ai_model: string | null;
@@ -57,9 +59,11 @@ export interface Database {
           id?: string;
           user_id: string;
           session_id?: string | null;
-          input_type: 'url' | 'html' | 'snippet';
+          input_type: 'url' | 'html' | 'snippet' | 'document';
           input_value: string;
           url?: string | null;
+          document_path?: string | null;
+          document_type?: 'pdf' | 'docx' | null;
           suspected_issue?: string | null;
           status?: 'queued' | 'analyzing' | 'complete' | 'failed';
           ai_model?: string | null;
@@ -81,9 +85,11 @@ export interface Database {
           id?: string;
           user_id?: string;
           session_id?: string | null;
-          input_type?: 'url' | 'html' | 'snippet';
+          input_type?: 'url' | 'html' | 'snippet' | 'document';
           input_value?: string;
           url?: string | null;
+          document_path?: string | null;
+          document_type?: 'pdf' | 'docx' | null;
           suspected_issue?: string | null;
           status?: 'queued' | 'analyzing' | 'complete' | 'failed';
           ai_model?: string | null;

@@ -13,6 +13,7 @@ export {
   getAudit,
   getAuditIssues,
   getUserAudits,
+  uploadDocumentForAudit,
 } from './audit-service';
 
 export {

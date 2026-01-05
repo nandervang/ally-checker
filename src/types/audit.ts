@@ -55,6 +55,8 @@ export interface AuditInput {
   suspected_issue?: string;
   user_id: string;
   session_id?: string;
+  document_path?: string;
+  document_type?: 'pdf' | 'docx';
 }
 
 // Progress callback for streaming updates

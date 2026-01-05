@@ -9,6 +9,7 @@
  */
 
 import { supabase } from '../supabase';
+import { uploadDocument } from '../storage';
 import type { Database } from '@/types/database';
 import type { AuditInput, AuditResult, AuditProgressCallback } from '@/types/audit';
 
@@ -16,6 +17,60 @@ type AuditRow = Database['public']['Tables']['audits']['Row'];
 type AuditInsert = Database['public']['Tables']['audits']['Insert'];
 type AuditUpdate = Database['public']['Tables']['audits']['Update'];
 type IssueInsert = Database['public']['Tables']['issues']['Insert'];
+
+/**
+ * Upload document and create audit record
+ */
+export async function uploadDocumentForAudit(
+  file: File,
+  userId: string,
+  sessionId?: string
+): Promise<{ auditId: string; documentPath: string; documentType: 'pdf' | 'docx' }> {
+  // Upload document to storage
+  const uploadResult = await uploadDocument(file, userId);
+  
+  if (uploadResult.error || !uploadResult.path) {
+    throw new Error(`Document upload failed: ${uploadResult.error || 'Unknown error'}`);
+  }
+
+  const documentType = file.name.endsWith('.pdf') ? 'pdf' : 'docx';
+
+  // Create audit record with document reference
+  const auditData: AuditInsert = {
+    user_id: userId,
+    session_id: sessionId,
+    input_type: 'document',
+    input_value: file.name,
+    document_path: uploadResult.path,
+    document_type: documentType,
+    status: 'queued',
+    total_issues: 0,
+    critical_issues: 0,
+    serious_issues: 0,
+    moderate_issues: 0,
+    minor_issues: 0,
+    perceivable_issues: 0,
+    operable_issues: 0,
+    understandable_issues: 0,
+    robust_issues: 0,
+  };
+
+  const { data, error } = await supabase
+    .from('audits')
+    .insert(auditData)
+    .select('id')
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to create audit: ${error.message}`);
+  }
+
+  return {
+    auditId: data.id,
+    documentPath: uploadResult.path,
+    documentType,
+  };
+}
 
 /**
  * Create a new audit record in the database
@@ -28,6 +83,8 @@ export async function createAudit(input: AuditInput): Promise<string> {
     input_type: input.input_type,
     input_value: input.input_value,
     url: input.input_type === 'url' ? input.input_value : null,
+    document_path: input.document_path,
+    document_type: input.document_type,
     suspected_issue: input.suspected_issue,
     status: 'queued',
     total_issues: 0,

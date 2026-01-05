@@ -18,7 +18,15 @@ import {
   mockDocxAuditResult,
   type AuditResult 
 } from "@/data/mockAuditResults";
-import { runAudit, getAudit, getAuditIssues, type AuditInput, type AuditProgress, type Issue } from "@/lib/audit";
+import { 
+  runAudit, 
+  getAudit, 
+  getAuditIssues, 
+  uploadDocumentForAudit,
+  type AuditInput, 
+  type AuditProgress, 
+  type Issue 
+} from "@/lib/audit";
 import { useAuth } from "@/contexts/AuthContext";
 
 type InputMode = "url" | "html" | "snippet" | "document";
@@ -170,6 +178,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
           // Prepare input for audit service
           let inputType: "url" | "html" | "snippet" | "document" = "html";
           let inputValue = "";
+          let documentPath: string | undefined = undefined;
           let documentType: "pdf" | "docx" | undefined = undefined;
           
           if (mode === "url") {
@@ -183,11 +192,16 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
             inputValue = snippet;
           } else if (mode === "document" && file) {
             inputType = "document";
-            inputValue = file.name; // Filename as placeholder
-            documentType = file.name.endsWith(".pdf") ? "pdf" : "docx";
-            // TODO: Upload file to Supabase Storage and get file path
-            // For now, we'll use mock results until storage is implemented
-            throw new Error("Document upload to Supabase Storage not yet implemented. Using Quick Mode for documents.");
+            
+            // Upload document to Supabase Storage
+            setProgressMessage("Uploading document...");
+            const uploadResult = await uploadDocumentForAudit(file, user.id);
+            
+            documentPath = uploadResult.documentPath;
+            documentType = uploadResult.documentType;
+            inputValue = file.name;
+            
+            setProgressMessage("Document uploaded, starting analysis...");
           } else {
             throw new Error("Invalid audit mode or missing input");
           }
@@ -196,6 +210,8 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
             input_type: inputType,
             input_value: inputValue,
             user_id: user.id,
+            document_path: documentPath,
+            document_type: documentType,
           };
 
           // Progress callback
