@@ -175,6 +175,10 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
       try {
         // Use new audit service
         if (agentMode) {
+          // Set initial loading state
+          setAuditStep("fetching");
+          setProgressMessage("🔧 Initializing AI accessibility audit...");
+          
           // Prepare input for audit service
           let inputType: "url" | "html" | "snippet" | "document" = "html";
           let inputValue = "";
@@ -184,24 +188,30 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
           if (mode === "url") {
             inputType = "url";
             inputValue = url;
+            setProgressMessage("🌐 Fetching web page content and resources...");
           } else if (mode === "html" && file) {
             inputType = "html";
+            setProgressMessage("📄 Reading HTML file content...");
             inputValue = await file.text();
+            setProgressMessage("✅ HTML loaded, preparing for AI analysis...");
           } else if (mode === "snippet") {
             inputType = "snippet";
             inputValue = snippet;
+            setProgressMessage("🔍 Preparing code snippet for analysis...");
           } else if (mode === "document" && file) {
             inputType = "document";
             
             // Upload document to Supabase Storage
-            setProgressMessage("Uploading document...");
+            setProgressMessage(`📤 Uploading ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB) to secure storage...`);
             const uploadResult = await uploadDocumentForAudit(file, user.id);
             
             documentPath = uploadResult.documentPath;
             documentType = uploadResult.documentType;
             inputValue = file.name;
             
-            setProgressMessage("Document uploaded, starting analysis...");
+            setProgressMessage("✅ Document uploaded, initializing accessibility checker...");
+            setAuditStep("analyzing");
+            setProgressMessage(`🔬 AI agent inspecting ${documentType?.toUpperCase()} structure and metadata...`);
           } else {
             throw new Error("Invalid audit mode or missing input");
           }
@@ -220,12 +230,25 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
             
             switch (progress.status) {
               case "queued":
-                setAuditStep("idle");
+                setProgressMessage("⏳ Audit queued, connecting to AI agent...");
+                setAuditStep("analyzing");
                 break;
               case "analyzing":
+                // Provide detailed messages based on input type
+                if (inputType === "url") {
+                  setProgressMessage("🤖 AI agent analyzing page structure, semantics, and ARIA patterns...");
+                } else if (inputType === "html") {
+                  setProgressMessage("🤖 AI agent checking WCAG 2.2 compliance and accessibility patterns...");
+                } else if (inputType === "snippet") {
+                  setProgressMessage("🤖 AI agent evaluating component accessibility and best practices...");
+                } else if (inputType === "document") {
+                  const docType = documentType?.toUpperCase();
+                  setProgressMessage(`🤖 AI agent validating ${docType} against ${documentType === 'pdf' ? 'PDF/UA standards' : 'WCAG document guidelines'}...`);
+                }
                 setAuditStep("analyzing");
                 break;
               case "complete":
+                setProgressMessage("✨ Analysis complete, compiling findings into report...");
                 setAuditStep("generating");
                 break;
               case "failed":
@@ -234,10 +257,10 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
             }
           };
 
-          setAuditStep("fetching");
           // Run audit and get ID
           const auditId = await runAudit(auditInput, onProgress);
 
+          setProgressMessage("📊 Retrieving audit results from database...");
           setAuditStep("generating");
           
           // Fetch complete audit with issues
@@ -269,22 +292,24 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
               guideline: `${issue.wcag_criterion} ${issue.title}`,
               wcagLevel: issue.wcag_level,
               severity: issue.severity,
-              title: issue.title,
-              description: issue.description || "",
-              element: issue.element_html || "",
-              selector: issue.element_selector || "",
-              impact: issue.description || "",
-              remediation: issue.how_to_fix || "",
-              helpUrl: issue.wcag_url || `https://www.w3.org/WAI/WCAG22/Understanding/`,
-              occurrences: 1,
-            })),
-          };
-
+              title: issue.tit🎉 Audit complete! Displaying results...");
           setAuditStep("complete");
           onAuditComplete?.(result);
           
           setTimeout(() => {
             setAuditStep("idle");
+            setProgressMessage("");
+          }, 15ccurrences: 1,
+            })),
+          };
+
+          setProgressMessage("Audit complete!");
+          setAuditStep("complete");
+          onAuditComplete?.(result);
+          
+          setTimeout(() => {
+            setAuditStep("idle");
+            setProgressMessage("");
           }, 2000);
           
           return;
