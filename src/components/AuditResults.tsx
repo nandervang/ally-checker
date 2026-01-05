@@ -11,6 +11,8 @@ import { AgentTraceViewer } from "./AgentTraceViewer";
 import { useIssueSelection } from "@/hooks/useIssueSelection";
 import { IssueSelectionToolbar } from "./IssueSelectionToolbar";
 import { SelectableIssueCard } from "./SelectableIssueCard";
+import { generateCustomReport, downloadCustomReport } from "@/services/customReportService";
+import { useToast } from "@/hooks/use-toast";
 
 interface AuditResultsProps {
   result: AuditResult;
@@ -53,7 +55,9 @@ const severityConfig = {
 
 export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResultsProps) {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [selectionMode, setSelectionMode] = useState(false);
+  const [generating, setGenerating] = useState(false);
   
   const {
     count: selectedCount,
@@ -66,11 +70,50 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
     selectedIssues,
   } = useIssueSelection(result.issues);
 
-  const handleGenerateCustomReport = () => {
-    // TODO: Implement custom report generation
-    console.log('Generating report for', selectedCount, 'issues:', selectedIssues);
-    if (onDownloadReport) {
-      onDownloadReport();
+  const handleGenerateCustomReport = async () => {
+    if (selectedCount === 0) {
+      toast({
+        title: "No issues selected",
+        description: "Please select at least one issue to generate a report.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      // Generate custom report
+      const blob = await generateCustomReport(
+        {
+          auditId: 'custom-' + Date.now(),
+          selectedIssueIds: selectedIssues.map(i => i.id),
+          format: 'word', // Default to Word format
+          locale: 'sv-SE',
+        },
+        result.issues
+      );
+
+      // Download the report
+      const filename = `custom-report-${new Date().toISOString().split('T')[0]}`;
+      await downloadCustomReport(blob, filename, 'word');
+
+      toast({
+        title: "Report generated successfully",
+        description: `Custom report with ${selectedCount} issue${selectedCount !== 1 ? 's' : ''} has been downloaded.`,
+      });
+
+      // Clear selection after successful generation
+      clear();
+      setSelectionMode(false);
+    } catch (error) {
+      console.error('Report generation error:', error);
+      toast({
+        title: "Report generation failed",
+        description: error instanceof Error ? error.message : "An error occurred while generating the report.",
+        variant: "destructive",
+      });
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -416,12 +459,18 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
             size="lg"
             className="gap-2"
             aria-pressed={selectionMode}
+            disabled={generating}
           >
             <CheckSquare className="h-5 w-5" />
             {selectionMode ? "✓ Selection Mode" : "Create Custom Report"}
           </Button>
           
-          <Button onClick={onDownloadReport || (() => { console.log("Download report", result); })} size="lg" className="gap-2">
+          <Button 
+            onClick={onDownloadReport || (() => { console.log("Download report", result); })} 
+            size="lg" 
+            className="gap-2"
+            disabled={generating}
+          >
             <Download className="h-5 w-5" />
             {t("results.actions.downloadReport")}
           </Button>
