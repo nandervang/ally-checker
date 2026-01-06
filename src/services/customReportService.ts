@@ -98,9 +98,15 @@ export async function generateCustomReport(
       // If Netlify function isn't available (local dev without netlify dev),
       // fall back to mock
       if (response.status === 404 && import.meta.env.DEV) {
-        console.info('📝 Netlify function not available - using dev mock.');
-        console.info('💡 TIP: Run `netlify dev` instead of `bun dev` to test real report generation locally.');
+        console.warn('⚠️ Netlify function not available - using text mock');
+        console.info('💡 TIP: Run `netlify dev` instead of `bun dev` to generate real Word documents');
+        console.info(`📝 Mock format: ${request.format}`);
         const reportText = generateMockReport(selectedIssues, allIssues.length);
+        // For Word format in dev mode, warn user it's actually text
+        if (request.format === 'word') {
+          console.error('❌ Cannot generate .docx in mock mode - saving as .txt instead');
+          return new Blob([reportText], { type: 'text/plain' });
+        }
         return new Blob([reportText], { type: getMimeType(request.format) });
       }
       
@@ -113,9 +119,14 @@ export async function generateCustomReport(
   } catch (error) {
     // Network error or function not running - fall back to mock in dev
     if (import.meta.env.DEV && (error instanceof TypeError)) {
-      console.info('📝 Report service unavailable - using dev mock.');
-      console.info('💡 TIP: Run `netlify dev` to start local Netlify Functions with Python report generator.');
+      console.warn('⚠️ Report service unavailable - using text mock');
+      console.info('💡 TIP: Run `netlify dev` to start local Netlify Functions with Python report generator');
       const reportText = generateMockReport(selectedIssues, allIssues.length);
+      // For Word format in dev mode, warn user it's actually text
+      if (request.format === 'word') {
+        console.error('❌ Cannot generate .docx in mock mode - saving as .txt instead');
+        return new Blob([reportText], { type: 'text/plain' });
+      }
       return new Blob([reportText], { type: getMimeType(request.format) });
     }
     throw error;

@@ -13,7 +13,16 @@ from .templates.word_template import generate_word_report
 from .templates.html_template import generate_html_report
 from .templates.markdown_template import generate_markdown_report
 from .templates.text_template import generate_text_report
-from .ai_summary import generate_executive_summary
+
+# Try to import AI summary, but make it optional
+try:
+    from .ai_summary import generate_executive_summary
+    AI_SUMMARY_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: AI summary unavailable: {e}")
+    AI_SUMMARY_AVAILABLE = False
+    def generate_executive_summary(*args, **kwargs):
+        return None
 
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:

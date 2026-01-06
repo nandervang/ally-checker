@@ -127,7 +127,9 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
 
       // Download the report
       const today = new Date().toISOString().split('T')[0];
-      const filename = `custom-report-${today ?? 'unknown'}.docx`;
+      // Check blob type to determine correct extension (mock mode returns text/plain)
+      const extension = blob.type === 'text/plain' ? 'txt' : 'docx';
+      const filename = `custom-report-${today ?? 'unknown'}.${extension}`;
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -135,7 +137,11 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
       a.click();
       URL.revokeObjectURL(url);
 
-      toast.success(`Custom report with ${String(selectedCount)} issue${selectedCount !== 1 ? 's' : ''} has been downloaded.`);
+      if (extension === 'txt') {
+        toast.info('Dev mode: Report saved as .txt (run netlify dev for Word format)');
+      } else {
+        toast.success(`Custom report with ${String(selectedCount)} issue${selectedCount !== 1 ? 's' : ''} has been downloaded.`);
+      }
 
       // Clear selection after successful generation
       clear();
