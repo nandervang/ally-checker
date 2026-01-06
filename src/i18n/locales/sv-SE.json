@@ -337,5 +337,92 @@
     "loading": "Laddar...",
     "signupSuccess": "Konto skapat! Kontrollera din e-post för verifiering.",
     "footer": "Dina data skyddas med Supabase Authentication"
+  },
+  "collections": {
+    "save": {
+      "title": "Spara problemsamling",
+      "description": "Spara {{count}} valda problem{{plural}} som en namngiven samling för framtida referens.",
+      "nameLabel": "Samlingens namn",
+      "namePlaceholder": "t.ex., Kritiska problem Sprint 1",
+      "descriptionLabel": "Beskrivning (valfritt)",
+      "descriptionPlaceholder": "Lägg till anteckningar om denna samling...",
+      "charactersCount": "{{count}}/{{max}} tecken",
+      "required": "*",
+      "saveButton": "Spara samling",
+      "cancelButton": "Avbryt",
+      "errors": {
+        "nameRequired": "Samlingens namn krävs",
+        "nameTooLong": "Samlingens namn måste vara {{max}} tecken eller kortare",
+        "saveFailed": "Kunde inte spara samlingen"
+      }
+    },
+    "load": {
+      "button": "Ladda samling ({{count}})",
+      "loading": "Laddar...",
+      "title": "Sparade samlingar",
+      "empty": "Inga sparade samlingar",
+      "issuesCount": "{{count}} problem",
+      "manage": "Hantera samling"
+    },
+    "manage": {
+      "title": "Hantera samling",
+      "editTab": "Redigera",
+      "deleteTab": "Ta bort",
+      "nameLabel": "Samlingens namn",
+      "descriptionLabel": "Beskrivning",
+      "saveButton": "Spara ändringar",
+      "deleteButton": "Ta bort samling",
+      "cancelButton": "Avbryt",
+      "confirmDelete": {
+        "title": "Är du säker?",
+        "description": "Detta kommer permanent radera denna samling. Åtgärden kan inte ångras.",
+        "cancel": "Avbryt",
+        "confirm": "Ja, ta bort"
+      },
+      "errors": {
+        "updateFailed": "Kunde inte uppdatera samlingen",
+        "deleteFailed": "Kunde inte ta bort samlingen"
+      }
+    },
+    "messages": {
+      "saved": "Samlingen \"{{name}}\" sparades!",
+      "loaded": "Laddade \"{{name}}\" ({{count}} problem)",
+      "updated": "Samlingen uppdaterades",
+      "deleted": "Samlingen raderades",
+      "loginRequired": "Du måste vara inloggad för att spara samlingar.",
+      "selectIssues": "Välj minst ett problem att spara."
+    }
+  },
+  "statementGenerator": {
+    "dialog": {
+      "title": "Generera tillgänglighetsredogörelse",
+      "description": "Skapa en WCAG 2.2-kompatibel tillgänglighetsredogörelse från valda problem.",
+      "organizationLabel": "Organisationsnamn",
+      "organizationPlaceholder": "Din organisation",
+      "websiteLabel": "Webbplats-URL",
+      "websitePlaceholder": "https://exempel.se",
+      "emailLabel": "Kontakt-e-post",
+      "emailPlaceholder": "tillganglighet@exempel.se",
+      "generateButton": "Generera redogörelse",
+      "generating": "Genererar...",
+      "resetButton": "Börja om",
+      "closeButton": "Stäng"
+    },
+    "preview": {
+      "title": "Förhandsgranska och ladda ner",
+      "htmlTab": "HTML",
+      "markdownTab": "Markdown",
+      "textTab": "Ren text",
+      "downloadHtml": "Ladda ner HTML",
+      "downloadMarkdown": "Ladda ner Markdown",
+      "downloadText": "Ladda ner text"
+    },
+    "messages": {
+      "fillRequired": "Fyll i alla obligatoriska fält",
+      "generated": "Tillgänglighetsredogörelse genererad",
+      "generationFailed": "Kunde inte generera redogörelse",
+      "downloaded": "Redogörelse nedladdad som {{format}}",
+      "selectIssues": "Välj minst ett problem för att generera en redogörelse."
+    }
   }
 }

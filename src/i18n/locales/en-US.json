@@ -337,5 +337,92 @@
     "loading": "Loading...",
     "signupSuccess": "Account created! Check your email for verification.",
     "footer": "Your data is protected with Supabase Authentication"
+  },
+  "collections": {
+    "save": {
+      "title": "Save Issue Collection",
+      "description": "Save {{count}} selected issue{{plural}} as a named collection for future reference.",
+      "nameLabel": "Collection Name",
+      "namePlaceholder": "e.g., Critical Issues Sprint 1",
+      "descriptionLabel": "Description (Optional)",
+      "descriptionPlaceholder": "Add notes about this collection...",
+      "charactersCount": "{{count}}/{{max}} characters",
+      "required": "*",
+      "saveButton": "Save Collection",
+      "cancelButton": "Cancel",
+      "errors": {
+        "nameRequired": "Collection name is required",
+        "nameTooLong": "Collection name must be {{max}} characters or less",
+        "saveFailed": "Failed to save collection"
+      }
+    },
+    "load": {
+      "button": "Load Collection ({{count}})",
+      "loading": "Loading...",
+      "title": "Saved Collections",
+      "empty": "No saved collections",
+      "issuesCount": "{{count}} issues",
+      "manage": "Manage collection"
+    },
+    "manage": {
+      "title": "Manage Collection",
+      "editTab": "Edit",
+      "deleteTab": "Delete",
+      "nameLabel": "Collection Name",
+      "descriptionLabel": "Description",
+      "saveButton": "Save Changes",
+      "deleteButton": "Delete Collection",
+      "cancelButton": "Cancel",
+      "confirmDelete": {
+        "title": "Are you sure?",
+        "description": "This will permanently delete this collection. This action cannot be undone.",
+        "cancel": "Cancel",
+        "confirm": "Yes, delete"
+      },
+      "errors": {
+        "updateFailed": "Failed to update collection",
+        "deleteFailed": "Failed to delete collection"
+      }
+    },
+    "messages": {
+      "saved": "Collection \"{{name}}\" saved successfully!",
+      "loaded": "Loaded \"{{name}}\" ({{count}} issues)",
+      "updated": "Collection updated successfully",
+      "deleted": "Collection deleted successfully",
+      "loginRequired": "You must be logged in to save collections.",
+      "selectIssues": "Please select at least one issue to save."
+    }
+  },
+  "statementGenerator": {
+    "dialog": {
+      "title": "Generate Accessibility Statement",
+      "description": "Create a WCAG 2.2 compliant accessibility statement from selected issues.",
+      "organizationLabel": "Organization Name",
+      "organizationPlaceholder": "Your Organization",
+      "websiteLabel": "Website URL",
+      "websitePlaceholder": "https://example.com",
+      "emailLabel": "Contact Email",
+      "emailPlaceholder": "accessibility@example.com",
+      "generateButton": "Generate Statement",
+      "generating": "Generating...",
+      "resetButton": "Start Over",
+      "closeButton": "Close"
+    },
+    "preview": {
+      "title": "Preview & Download",
+      "htmlTab": "HTML",
+      "markdownTab": "Markdown",
+      "textTab": "Plain Text",
+      "downloadHtml": "Download HTML",
+      "downloadMarkdown": "Download Markdown",
+      "downloadText": "Download Text"
+    },
+    "messages": {
+      "fillRequired": "Please fill in all required fields",
+      "generated": "Accessibility statement generated successfully",
+      "generationFailed": "Failed to generate statement",
+      "downloaded": "Statement downloaded as {{format}}",
+      "selectIssues": "Please select at least one issue to generate a statement."
+    }
   }
 }
