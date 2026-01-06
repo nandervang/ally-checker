@@ -38,14 +38,25 @@ class AuditData(BaseModel):
     issues: List[ReportIssue]
 
 
+class CustomReportMetadata(BaseModel):
+    """Metadata for custom reports generated from issue selections."""
+    report_type: Literal["full", "custom"] = "full"
+    total_audit_issues: Optional[int] = None
+    selected_issues: Optional[int] = None
+    selection_criteria: Optional[str] = None
+    generated_at: Optional[datetime] = None
+
+
 class ReportRequest(BaseModel):
     """Request to generate a report."""
     audit_id: str
     template: Literal["etu-standard", "etu-detailed", "etu-summary", "html", "markdown", "text"] = "etu-standard"
+    format: Optional[Literal["word", "html", "markdown", "text"]] = None
     audit_data: AuditData
     locale: Literal["sv-SE", "en-US"] = "sv-SE"
     include_ai_summary: bool = True
     include_screenshots: bool = False
+    metadata: Optional[CustomReportMetadata] = None
 
 
 class ErrorResponse(BaseModel):

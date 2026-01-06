@@ -104,7 +104,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 executive_summary = _generate_fallback_summary(report_request.audit_data, report_request.locale)
         
         # Determine output format from template or query parameter
-        format_type = _get_format_from_template(report_request.template)
+        format_type = report_request.format or _get_format_from_template(report_request.template)
         query_format = event.get("queryStringParameters", {}).get("format")
         if query_format:
             format_type = query_format

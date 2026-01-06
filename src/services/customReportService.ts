@@ -1,6 +1,20 @@
 /**
  * Custom Report Service
  * Generates reports from selected issues subset
+ * 
+ * DEVELOPMENT (recommended):
+ * - Run `netlify dev` to start local Netlify Functions
+ * - Python report generator runs at http://localhost:8888/.netlify/functions/generate-report
+ * - Full production-like behavior with actual report generation
+ * 
+ * DEVELOPMENT (quick mode):
+ * - Run `bun dev` for frontend-only development
+ * - Falls back to text mock if Netlify function unavailable
+ * - Faster startup, but mock reports only
+ * 
+ * PRODUCTION:
+ * - Deployed Netlify Functions handle all report generation
+ * - Requires VITE_REPORT_SERVICE_KEY environment variable
  */
 
 import type { AuditIssue } from '@/data/mockAuditResults';
@@ -70,37 +84,42 @@ export async function generateCustomReport(
   };
 
   // Call report generation endpoint
-  // In development, use a mock implementation
-  if (import.meta.env.DEV) {
-    // Development mock: generate a simple text report
-    console.log('Development mode: Generating mock custom report', reportPayload);
-    
-    const reportText = generateMockReport(selectedIssues, allIssues.length);
-    const blob = new Blob([reportText], { type: getMimeType(request.format) });
-    
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    return blob;
-  }
-  
-  // Production: call Netlify function
-  const response = await fetch('/.netlify/functions/generate-report', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(reportPayload),
-  });
+  try {
+    const response = await fetch('/.netlify/functions/generate-report', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Report-Service-Key': import.meta.env.VITE_REPORT_SERVICE_KEY || '',
+      },
+      body: JSON.stringify(reportPayload),
+    });
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Report generation failed: ${error}`);
-  }
+    if (!response.ok) {
+      // If Netlify function isn't available (local dev without netlify dev),
+      // fall back to mock
+      if (response.status === 404 && import.meta.env.DEV) {
+        console.info('📝 Netlify function not available - using dev mock.');
+        console.info('💡 TIP: Run `netlify dev` instead of `bun dev` to test real report generation locally.');
+        const reportText = generateMockReport(selectedIssues, allIssues.length);
+        return new Blob([reportText], { type: getMimeType(request.format) });
+      }
+      
+      const error = await response.text();
+      throw new Error(`Report generation failed: ${error}`);
+    }
 
-  // Return blob for download
-  return await response.blob();
-}
+    // Return blob for download
+    return await response.blob();
+  } catch (error) {
+    // Network error or function not running - fall back to mock in dev
+    if (import.meta.env.DEV && (error instanceof TypeError)) {
+      console.info('📝 Report service unavailable - using dev mock.');
+      console.info('💡 TIP: Run `netlify dev` to start local Netlify Functions with Python report generator.');
+      const reportText = generateMockReport(selectedIssues, allIssues.length);
+      return new Blob([reportText], { type: getMimeType(request.format) });
+    }
+    throw error;
+  }
 
 /**
  * Download custom report

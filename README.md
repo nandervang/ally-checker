@@ -27,12 +27,39 @@ Create a `.env.local` file:
 GEMINI_API_KEY=your_gemini_api_key
 SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_REPORT_SERVICE_KEY=your_report_service_key  # For custom report generation
+```
+
+And a `.env` file for Netlify Functions:
+
+```bash
+REPORT_SERVICE_KEY=your_report_service_key  # Same as VITE_REPORT_SERVICE_KEY
 ```
 
 ### Development
 
+**Recommended: Full Stack with Netlify Functions**
+```bash
+netlify dev
+```
+This runs both the frontend (http://localhost:8888) and all Netlify Functions including the Python-based report generator. You get production-like behavior locally.
+
+**Alternative: Frontend Only (Quick Start)**
 ```bash
 bun dev
+```
+Runs frontend at http://localhost:3000 with mock reports. Faster startup but custom reports will be text-only mocks.
+
+**First time using Netlify Dev?**
+```bash
+# Install Netlify CLI globally
+npm install -g netlify-cli
+
+# Login to Netlify (if deploying)
+netlify login
+
+# Link to your Netlify site (if you have one)
+netlify link
 ```
 
 ### Production
