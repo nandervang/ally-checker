@@ -75,11 +75,11 @@ export async function generateCustomReport(
       })),
     },
     metadata: {
-      report_type: 'custom',
-      total_audit_issues: allIssues.length,
-      selected_issues: selectedIssues.length,
-      selection_criteria: 'User selection',
-      generated_at: new Date().toISOString(),
+      reportType: 'custom',
+      totalAuditIssues: allIssues.length,
+      selectedIssues: selectedIssues.length,
+      selectionCriteria: 'User selection',
+      generatedAt: new Date().toISOString(),
     } as CustomReportMetadata,
   };
 
@@ -120,15 +120,16 @@ export async function generateCustomReport(
     }
     throw error;
   }
+}
 
 /**
  * Download custom report
  */
-export async function downloadCustomReport(
+export function downloadCustomReport(
   blob: Blob,
   filename: string,
   format: string
-): Promise<void> {
+): void {
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -150,7 +151,7 @@ export async function downloadCustomReport(
  */
 function extractSuccessCriterion(guideline: string): string {
   const match = guideline.match(/^(\d+\.\d+\.\d+)/);
-  return match ? match[1] : '1.1.1'; // Fallback
+  return match ? match[1] ?? '1.1.1' : '1.1.1'; // Fallback
 }
 
 /**
@@ -176,7 +177,7 @@ function generateMockReport(selectedIssues: AuditIssue[], totalIssues: number): 
 =================================
 
 Generated: ${timestamp}
-Selected Issues: ${selectedIssues.length} of ${totalIssues} total
+Selected Issues: ${String(selectedIssues.length)} of ${String(totalIssues)} total
 
 ISSUES BY SEVERITY
 ------------------
@@ -184,18 +185,18 @@ ISSUES BY SEVERITY
 `;
 
   // Group by severity
-  const bySeverity = selectedIssues.reduce((acc, issue) => {
+  const bySeverity = selectedIssues.reduce<Record<string, AuditIssue[]>>((acc, issue) => {
     if (!acc[issue.severity]) acc[issue.severity] = [];
-    acc[issue.severity].push(issue);
+    acc[issue.severity]?.push(issue);
     return acc;
-  }, {} as Record<string, AuditIssue[]>);
+  }, {});
 
   for (const [severity, issues] of Object.entries(bySeverity)) {
-    report += `\n${severity.toUpperCase()} (${issues.length} issues)\n`;
+    report += `\n${severity.toUpperCase()} (${String(issues.length)} issues)\n`;
     report += '-'.repeat(50) + '\n\n';
     
     issues.forEach((issue, idx) => {
-      report += `${idx + 1}. ${issue.title}\n`;
+      report += `${String(idx + 1)}. ${issue.title}\n`;
       report += `   WCAG: ${issue.guideline} (${issue.wcagLevel})\n`;
       report += `   Principle: ${issue.principle}\n`;
       report += `   Description: ${issue.description}\n`;
