@@ -89,6 +89,13 @@ export function useIssueSelection(issues: AuditIssue[]) {
     setAnnouncement(`${String(rangeIds.length)} issues selected in range.`);
   }, [issues]);
 
+  const loadCollection = useCallback((issueIds: string[], collectionName: string) => {
+    // Filter to only include IDs that exist in current issues
+    const validIds = issueIds.filter(id => issues.some(i => i.id === id));
+    setSelected(new Set(validIds));
+    setAnnouncement(`Loaded "${collectionName}" - ${String(validIds.length)} issues selected.`);
+  }, [issues]);
+
   return {
     selected,
     count: selected.size,
@@ -97,6 +104,7 @@ export function useIssueSelection(issues: AuditIssue[]) {
     clear,
     selectByFilter,
     toggleRange,
+    loadCollection,
     announcement,
     clearAnnouncement: () => { setAnnouncement(''); },
     isSelected: (id: string) => selected.has(id),

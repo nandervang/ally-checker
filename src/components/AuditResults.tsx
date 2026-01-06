@@ -12,6 +12,7 @@ import { useIssueSelection } from "@/hooks/useIssueSelection";
 import { IssueSelectionToolbar } from "./IssueSelectionToolbar";
 import { SelectableIssueCard } from "./SelectableIssueCard";
 import { SaveCollectionDialog } from "./SaveCollectionDialog";
+import { CollectionLoader } from "./CollectionLoader";
 import { generateCustomReport } from "@/services/customReportService";
 import { saveCollection } from "@/lib/collectionService";
 import { toast } from "sonner";
@@ -68,6 +69,7 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
     toggle,
     selectAll,
     clear,
+    loadCollection,
     announcement,
     clearAnnouncement,
     isSelected,
@@ -256,6 +258,14 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
 
         {/* Action Buttons - Moved to top for visibility */}
         <div className="flex flex-wrap gap-3 p-4 bg-muted/50 rounded-lg border-2 border-dashed">
+          <CollectionLoader
+            auditId={result.auditId || `audit-${String(Date.now())}`}
+            onLoadCollection={(issueIds, collectionName) => {
+              loadCollection(issueIds, collectionName);
+              setSelectionMode(true);
+            }}
+          />
+          
           <Button 
             onClick={toggleSelectionMode}
             variant={selectionMode ? "default" : "outline"}
