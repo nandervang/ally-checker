@@ -13,6 +13,7 @@ import { IssueSelectionToolbar } from "./IssueSelectionToolbar";
 import { SelectableIssueCard } from "./SelectableIssueCard";
 import { SaveCollectionDialog } from "./SaveCollectionDialog";
 import { CollectionLoader } from "./CollectionLoader";
+import { StatementGeneratorDialog } from "./StatementGeneratorDialog";
 import { generateCustomReport } from "@/services/customReportService";
 import { saveCollection } from "@/lib/collectionService";
 import { toast } from "sonner";
@@ -63,6 +64,7 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
   const [selectionMode, setSelectionMode] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [statementDialogOpen, setStatementDialogOpen] = useState(false);
   
   const {
     count: selectedCount,
@@ -511,6 +513,7 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
             onClear={clear}
             onGenerateReport={handleGenerateCustomReport}
             onSaveCollection={() => { setSaveDialogOpen(true); }}
+            onGenerateStatement={() => { setStatementDialogOpen(true); }}
           />
         )}
 
@@ -520,6 +523,13 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
           onOpenChange={setSaveDialogOpen}
           onSave={handleSaveCollection}
           selectedCount={selectedCount}
+        />
+
+        {/* Accessibility Statement Generator Dialog */}
+        <StatementGeneratorDialog
+          open={statementDialogOpen}
+          onOpenChange={setStatementDialogOpen}
+          selectedIssues={selectedIssues}
         />
       </CardContent>
     </Card>
