@@ -4,12 +4,24 @@ WCAG 2.2 Level AA compliance checker powered by Gemini AI with MCP tools integra
 
 ## Features
 
+### Core Accessibility Auditing
 - 🤖 **AI-Powered Analysis**: Gemini 2.0 Flash with enhanced system prompt
 - 🔧 **MCP Tools Integration**: Fetch server for URL retrieval, WCAG Docs for criterion details
 - ⚡ **axe-core Integration**: Automated accessibility testing
 - 📊 **Comprehensive Coverage**: Systematic WCAG 2.2 AA compliance checking
 - 🎯 **Smart Input Processing**: Handles URLs, full HTML pages, and component snippets
 - 📦 **Chunking Support**: Automatically handles large HTML inputs
+
+### Issue Management & Reporting
+- 📌 **Issue Collections**: Save, load, edit, and delete collections of accessibility issues
+  - Multi-select issues with keyboard support
+  - Persistent storage with Supabase
+  - Filter by audit, principle, or severity
+- 📄 **Accessibility Statement Generator**: Generate WCAG 2.2 compliant accessibility statements
+  - HTML, Markdown, and Plain Text formats
+  - Groups issues by WCAG principle
+  - Includes conformance assessment and remediation timeline
+- 📋 **Custom Reports**: Export selected issues to Word/PDF format
 
 ## Quick Start
 
