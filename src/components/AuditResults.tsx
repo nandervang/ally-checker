@@ -11,8 +11,11 @@ import { AgentTraceViewer } from "./AgentTraceViewer";
 import { useIssueSelection } from "@/hooks/useIssueSelection";
 import { IssueSelectionToolbar } from "./IssueSelectionToolbar";
 import { SelectableIssueCard } from "./SelectableIssueCard";
-import { generateCustomReport, downloadCustomReport } from "@/services/customReportService";
+import { SaveCollectionDialog } from "./SaveCollectionDialog";
+import { generateCustomReport } from "@/services/customReportService";
+import { saveCollection } from "@/lib/collectionService";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AuditResultsProps {
   result: AuditResult;
@@ -55,8 +58,10 @@ const severityConfig = {
 
 export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResultsProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [selectionMode, setSelectionMode] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   
   const {
     count: selectedCount,
@@ -68,6 +73,34 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
     isSelected,
     selectedIssues,
   } = useIssueSelection(result.issues);
+
+  const handleSaveCollection = async (name: string, description?: string) => {
+    if (selectedCount === 0) {
+      toast.error("Please select at least one issue to save.");
+      return;
+    }
+
+    if (!user) {
+      toast.error("You must be logged in to save collections.");
+      return;
+    }
+
+    try {
+      await saveCollection(
+        result.auditId || `audit-${String(Date.now())}`, // auditId
+        name,
+        selectedIssues.map(i => i.id),
+        description
+      );
+
+      toast.success(`Collection "${name}" saved successfully!`);
+      setSaveDialogOpen(false);
+      setSaveDialogOpen(false);
+    } catch (error) {
+      console.error('Save collection error:', error);
+      toast.error(error instanceof Error ? error.message : "Failed to save collection.");
+    }
+  };
 
   const handleGenerateCustomReport = async () => {
     if (selectedCount === 0) {
@@ -90,8 +123,13 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
 
       // Download the report
       const today = new Date().toISOString().split('T')[0];
-      const filename = `custom-report-${today ?? 'unknown'}`;
-      await downloadCustomReport(blob, filename, 'word');
+      const filename = `custom-report-${today ?? 'unknown'}.docx`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
 
       toast.success(`Custom report with ${String(selectedCount)} issue${selectedCount !== 1 ? 's' : ''} has been downloaded.`);
 
@@ -462,8 +500,17 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
             onSelectAll={selectAll}
             onClear={clear}
             onGenerateReport={handleGenerateCustomReport}
+            onSaveCollection={() => { setSaveDialogOpen(true); }}
           />
         )}
+
+        {/* Save Collection Dialog */}
+        <SaveCollectionDialog
+          open={saveDialogOpen}
+          onOpenChange={setSaveDialogOpen}
+          onSave={handleSaveCollection}
+          selectedCount={selectedCount}
+        />
       </CardContent>
     </Card>
   );

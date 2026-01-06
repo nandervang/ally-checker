@@ -1,5 +1,5 @@
 import { Button } from './ui/button';
-import { Download, X, CheckSquare } from 'lucide-react';
+import { Download, X, CheckSquare, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface IssueSelectionToolbarProps {
@@ -8,6 +8,7 @@ interface IssueSelectionToolbarProps {
   onSelectAll: () => void;
   onClear: () => void;
   onGenerateReport: () => void | Promise<void>;
+  onSaveCollection?: () => void;
   className?: string;
 }
 
@@ -17,6 +18,7 @@ export function IssueSelectionToolbar({
   onSelectAll,
   onClear,
   onGenerateReport,
+  onSaveCollection,
   className,
 }: IssueSelectionToolbarProps) {
   if (count === 0) return null;
@@ -57,6 +59,18 @@ export function IssueSelectionToolbar({
       >
         Select All ({totalIssues})
       </Button>
+
+      {onSaveCollection && (
+        <Button
+          onClick={onSaveCollection}
+          variant="ghost"
+          size="lg"
+          className="gap-2 text-base font-medium hover:bg-primary-foreground/10"
+        >
+          <Save className="h-5 w-5" />
+          Save Collection
+        </Button>
+      )}
 
       <Button
         onClick={onClear}

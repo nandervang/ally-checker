@@ -390,6 +390,8 @@ ${request.content}
 Process:
 1. Use analyze_html to test the snippet
 2. Identify potential accessibility issues
+3. Cross-reference with get_wcag_criterion
+4. Provide focused audit report with specific fixes`;
 
     case "document":
       const docType = request.documentType || "pdf";
@@ -405,7 +407,5 @@ Process:
      : "- Heading hierarchy and structure\n   - Alternative text for images and objects\n   - Table accessibility\n   - Hyperlink descriptiveness"}
 4. Cross-reference findings with WCAG criteria using get_wcag_criterion
 5. Provide comprehensive document accessibility report with ${docType === "pdf" ? "PDF/UA" : "WCAG 2.2 AA"} remediation guidance`;
-3. Cross-reference with get_wcag_criterion
-4. Provide focused audit report with specific fixes`;
   }
 }
