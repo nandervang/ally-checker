@@ -156,12 +156,23 @@ function parseJSONResponse(text: string): Issue[] {
       const criterion = issue.wcag_criterion || issue.criterion || 'Unknown';
       const principleNum = criterion.split('.')[0];
       
+      // Get description - ensure it's a string and not the whole JSON
+      let description = issue.description || issue.message || issue.problem || '';
+      if (typeof description === 'object') {
+        description = issue.title || 'Accessibility Issue';
+      }
+      
+      // Ensure description is reasonable length (not the whole response)
+      if (description.length > 500 && description.includes('{')) {
+        description = issue.title || 'Accessibility Issue';
+      }
+      
       return {
         wcag_criterion: criterion,
         wcag_level: issue.wcag_level || WCAG_LEVEL_MAP[criterion] || 'AA',
         wcag_principle: WCAG_PRINCIPLE_MAP[principleNum] || 'perceivable',
         title: issue.title || issue.name || 'Accessibility Issue',
-        description: issue.description || issue.message || '',
+        description: description.trim(),
         severity: (issue.severity?.toLowerCase() || 'moderate') as IssueSeverity,
         source: issue.source || 'ai-heuristic',
         confidence_score: issue.confidence || issue.confidence_score,
@@ -170,7 +181,7 @@ function parseJSONResponse(text: string): Issue[] {
         element_context: issue.context || issue.element_context,
         how_to_fix: issue.fix || issue.how_to_fix || issue.remediation || '',
         code_example: issue.code_example || issue.example,
-        wcag_url: issue.url || issue.wcag_url,
+        wcag_url: issue.url || issue.wcag_url || `https://www.w3.org/WAI/WCAG22/Understanding/${criterion.replace(/\./g, '')}.html`,
         user_impact: issue.user_impact || issue.impact,
         expert_analysis: issue.expert_analysis || issue.analysis,
         testing_instructions: issue.testing_instructions || issue.test_instructions,

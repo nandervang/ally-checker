@@ -103,20 +103,28 @@ export function SelectableIssueCard({
 
         <Separator />
 
-        {/* User Impact Section - NEW */}
-        {issue.impact && (
+        {/* User Impact Section - Påverkan */}
+        {issue.user_impact && (
           <div className="space-y-2 bg-amber-50 dark:bg-amber-950/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
             <div className="flex items-start gap-2">
               <User className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
               <div className="flex-1">
                 <h4 className="font-semibold text-sm text-amber-900 dark:text-amber-200 mb-1">
-                  Impact on Users
+                  Påverkan (User Impact)
                 </h4>
                 <p className="text-sm text-amber-800 dark:text-amber-300">
-                  {issue.impact}
+                  {issue.user_impact}
                 </p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Element Selector */}
+        {issue.selector && (
+          <div className="space-y-1">
+            <div className="text-sm font-medium">Element:</div>
+            <code className="block bg-muted/50 px-3 py-2 rounded text-sm">{issue.selector}</code>
           </div>
         )}
 
@@ -130,26 +138,23 @@ export function SelectableIssueCard({
             <pre className="bg-red-50 dark:bg-red-950/20 p-3 rounded-lg text-xs overflow-x-auto border-2 border-red-200 dark:border-red-800">
               <code className="text-red-900 dark:text-red-200">{issue.element}</code>
             </pre>
-            {issue.selector && (
-              <p className="text-xs text-muted-foreground">
-                <span className="font-medium">Selector:</span> <code className="bg-muted px-1 py-0.5 rounded">{issue.selector}</code>
-              </p>
-            )}
           </div>
         )}
 
         <Separator />
 
-        {/* How to Fix Section - ENHANCED */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <Lightbulb className="h-4 w-4 text-green-600 dark:text-green-400" />
-            <span>How to Fix:</span>
+        {/* How to Fix Section - Så här fixar du */}
+        {issue.how_to_fix && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Lightbulb className="h-4 w-4 text-green-600 dark:text-green-400" />
+              <span>Så här fixar du (How to Fix):</span>
+            </div>
+            <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+              {issue.how_to_fix}
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
-            {issue.remediation}
-          </p>
-        </div>
+        )}
 
         {/* Corrected Code Example - NEW */}
         {issue.codeExample && (
@@ -164,16 +169,16 @@ export function SelectableIssueCard({
           </div>
         )}
 
-        {/* Learn More Link */}
-        {issue.helpUrl && (
+        {/* Learn More Link - Läs mer */}
+        {issue.wcag_url && (
           <a
-            href={issue.helpUrl}
+            href={issue.wcag_url}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-primary hover:underline text-sm font-medium"
             onClick={(e) => { if (selectionMode) e.stopPropagation(); }}
           >
-            Learn more about WCAG {issue.guideline}
+            Läs mer om WCAG {issue.wcag_criterion} (Read more)
             <ExternalLink className="h-3 w-3" />
           </a>
         )}
