@@ -152,9 +152,12 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
   function applyDesignSettings(s: UserSettings) {
     const root = document.documentElement;
     
+    console.log('Applying design settings:', s);
+    
     // Apply font size
     root.classList.remove('font-size-small', 'font-size-medium', 'font-size-large');
     root.classList.add(`font-size-${s.fontSize}`);
+    console.log('Font size class:', `font-size-${s.fontSize}`);
     
     // Apply reduce motion
     if (s.reduceMotion) {
@@ -170,14 +173,15 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
       root.classList.remove('high-contrast');
     }
     
-    // Apply radius - convert to actual rem values
+    // Apply radius - convert to actual rem values that match shadcn defaults
     const radiusValue = 
-      s.radius === 'none' ? '0' :
+      s.radius === 'none' ? '0rem' :
       s.radius === 'small' ? '0.3rem' :
       s.radius === 'medium' ? '0.5rem' :
       s.radius === 'large' ? '0.75rem' :
       '1rem'; // full
     root.style.setProperty('--radius', radiusValue);
+    console.log('Radius set to:', radiusValue, 'Current value:', getComputedStyle(root).getPropertyValue('--radius'));
     
     // Apply font family
     const fontFamily = 
@@ -186,6 +190,7 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
       s.font === 'geist' ? 'Geist, system-ui, sans-serif' :
       'Manrope, system-ui, sans-serif';
     root.style.setProperty('--font-sans', fontFamily);
+    console.log('Font family set to:', fontFamily);
     
     // Apply style variant
     root.setAttribute('data-style', s.style);
@@ -195,8 +200,20 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
     root.setAttribute('data-theme-color', s.themeColor);
     root.setAttribute('data-base-color', s.baseColor);
     
-    // Force a repaint to ensure changes are visible
+    console.log('Data attributes set:', {
+      style: s.style,
+      componentLibrary: s.componentLibrary,
+      themeColor: s.themeColor,
+      baseColor: s.baseColor
+    });
+    
+    // Force multiple repaints to ensure changes are visible
     void root.offsetHeight;
+    document.body.style.display = 'none';
+    void document.body.offsetHeight;
+    document.body.style.display = '';
+    
+    console.log('Design settings applied successfully');
   }
 
   if (loading) {
@@ -526,6 +543,36 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                       <option value="hugeicons">Huge Icons</option>
                       <option value="phosphor">Phosphor Icons</option>
                     </select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Preview Card */}
+              <Card className="bg-accent/50">
+                <CardHeader>
+                  <CardTitle className="text-sm">Live Preview</CardTitle>
+                  <CardDescription className="text-xs">
+                    See your design changes in real-time
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-2">
+                    <Button className="w-full" size="sm">
+                      Sample Button
+                    </Button>
+                    <Button variant="outline" className="w-full" size="sm">
+                      Outline Button
+                    </Button>
+                  </div>
+                  <Card className="p-3">
+                    <p className="text-sm">
+                      This is a sample card showing the current border radius and font settings.
+                    </p>
+                  </Card>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <div>Radius: {settings.radius}</div>
+                    <div>Font: {settings.font}</div>
+                    <div>Style: {settings.style}</div>
                   </div>
                 </CardContent>
               </Card>
