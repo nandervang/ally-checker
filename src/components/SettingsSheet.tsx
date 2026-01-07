@@ -46,6 +46,8 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
     try {
       const data = await getUserSettings();
       setSettings(data);
+      // Apply settings immediately on load
+      applyDesignSettings(data);
     } catch (error) {
       console.error('Failed to load settings:', error);
       toast.error('Failed to load settings');
@@ -140,7 +142,48 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
 
   function updateSetting<K extends keyof UserSettings>(key: K, value: UserSettings[K]) {
     if (!settings) return;
-    setSettings({ ...settings, [key]: value });
+    const newSettings = { ...settings, [key]: value };
+    setSettings(newSettings);
+    
+    // Apply design changes immediately for preview
+    applyDesignSettings(newSettings);
+  }
+
+  function applyDesignSettings(s: UserSettings) {
+    const root = document.documentElement;
+    
+    // Apply font size
+    root.classList.remove('font-size-small', 'font-size-medium', 'font-size-large');
+    root.classList.add(`font-size-${s.fontSize}`);
+    
+    // Apply reduce motion
+    if (s.reduceMotion) {
+      root.classList.add('reduce-motion');
+    } else {
+      root.classList.remove('reduce-motion');
+    }
+    
+    // Apply high contrast
+    if (s.highContrast) {
+      root.classList.add('high-contrast');
+    } else {
+      root.classList.remove('high-contrast');
+    }
+    
+    // Apply radius
+    root.style.setProperty('--radius', 
+      s.radius === 'none' ? '0px' :
+      s.radius === 'small' ? '0.25rem' :
+      s.radius === 'medium' ? '0.5rem' :
+      s.radius === 'large' ? '0.75rem' :
+      '9999px'
+    );
+    
+    // Apply theme color as CSS variable
+    // In a real implementation, you'd load the full color palette
+    root.setAttribute('data-theme-color', s.themeColor);
+    root.setAttribute('data-base-color', s.baseColor);
+    root.setAttribute('data-style', s.style);
   }
 
   if (loading) {
@@ -304,27 +347,80 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Action Buttons for Audit Tab */}
+              <div className="flex gap-2 pt-4">
+                <Button variant="outline" onClick={() => { void handleReset(); }} className="flex-1">
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Reset to Defaults
+                </Button>
+                <Button onClick={() => { void handleSave(); }} disabled={saving} className="flex-1">
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Save Settings
+                </Button>
+              </div>
             </TabsContent>
 
             {/* Design Settings */}
             <TabsContent value="design" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Theme Colors</CardTitle>
+                  <CardTitle>Style & Appearance</CardTitle>
                   <CardDescription>
-                    Customize the color scheme
+                    Customize the visual design system (changes apply immediately)
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="color-mode">Color Mode</Label>
+                    <Label htmlFor="style">Style</Label>
                     <select
-                      id="color-mode"
-                      value={settings.colorMode}
-                      onChange={(e) => { updateSetting('colorMode', e.target.value as UserSettings['colorMode']); }}
+                      id="style"
+                      value={settings.style}
+                      onChange={(e) => { updateSetting('style', e.target.value as UserSettings['style']); }}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <option value="zinc">Zinc (Default)</option>
+                      <option value="default">Default</option>
+                      <option value="new-york">New York</option>
+                    </select>
+                    <p className="text-sm text-muted-foreground">
+                      Choose between default and New York style variants
+                    </p>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-2">
+                    <Label htmlFor="base-color">Base Color</Label>
+                    <select
+                      id="base-color"
+                      value={settings.baseColor}
+                      onChange={(e) => { updateSetting('baseColor', e.target.value as UserSettings['baseColor']); }}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="gray">Gray</option>
+                      <option value="zinc">Zinc</option>
+                      <option value="slate">Slate</option>
+                      <option value="stone">Stone</option>
+                      <option value="neutral">Neutral</option>
+                    </select>
+                    <p className="text-sm text-muted-foreground">
+                      Base neutral color for backgrounds and borders
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="theme-color">Theme Color</Label>
+                    <select
+                      id="theme-color"
+                      value={settings.themeColor}
+                      onChange={(e) => { updateSetting('themeColor', e.target.value as UserSettings['themeColor']); }}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="zinc">Zinc (Neutral)</option>
                       <option value="slate">Slate</option>
                       <option value="stone">Stone</option>
                       <option value="gray">Gray</option>
@@ -338,31 +434,123 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                       <option value="violet">Violet</option>
                     </select>
                     <p className="text-sm text-muted-foreground">
-                      Changes the accent color throughout the application
+                      Accent color for buttons, links, and highlights
                     </p>
                   </div>
 
+                  <Separator />
+
                   <div className="space-y-2">
-                    <Label htmlFor="border-radius">Border Radius</Label>
+                    <Label htmlFor="radius">Border Radius</Label>
                     <select
-                      id="border-radius"
-                      value={settings.borderRadius}
-                      onChange={(e) => { updateSetting('borderRadius', e.target.value as UserSettings['borderRadius']); }}
+                      id="radius"
+                      value={settings.radius}
+                      onChange={(e) => { updateSetting('radius', e.target.value as UserSettings['radius']); }}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <option value="none">None (Sharp corners)</option>
-                      <option value="sm">Small (2px)</option>
-                      <option value="md">Medium (4px)</option>
-                      <option value="lg">Large (8px)</option>
-                      <option value="xl">Extra Large (12px)</option>
+                      <option value="small">Small</option>
+                      <option value="medium">Medium</option>
+                      <option value="large">Large</option>
                       <option value="full">Full (Pill shape)</option>
                     </select>
                     <p className="text-sm text-muted-foreground">
-                      Adjusts the roundness of buttons, cards, and inputs
+                      Roundness of buttons, cards, and inputs
                     </p>
                   </div>
                 </CardContent>
               </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Typography & Icons</CardTitle>
+                  <CardDescription>
+                    Choose fonts and icon library
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="font">Font Family</Label>
+                    <select
+                      id="font"
+                      value={settings.font}
+                      onChange={(e) => { updateSetting('font', e.target.value as UserSettings['font']); }}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="inter">Inter (Default)</option>
+                      <option value="figtree">Figtree</option>
+                      <option value="geist">Geist</option>
+                      <option value="manrope">Manrope</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="icon-library">Icon Library</Label>
+                    <select
+                      id="icon-library"
+                      value={settings.iconLibrary}
+                      onChange={(e) => { updateSetting('iconLibrary', e.target.value as UserSettings['iconLibrary']); }}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="lucide">Lucide Icons (Default)</option>
+                      <option value="hugeicons">Huge Icons</option>
+                      <option value="phosphor">Phosphor Icons</option>
+                    </select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Menu Customization</CardTitle>
+                  <CardDescription>
+                    Sidebar and navigation styling
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="menu-color">Menu Color</Label>
+                    <select
+                      id="menu-color"
+                      value={settings.menuColor}
+                      onChange={(e) => { updateSetting('menuColor', e.target.value as UserSettings['menuColor']); }}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="default">Default</option>
+                      <option value="inverted">Inverted</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="menu-accent">Menu Accent</Label>
+                    <select
+                      id="menu-accent"
+                      value={settings.menuAccent}
+                      onChange={(e) => { updateSetting('menuAccent', e.target.value as UserSettings['menuAccent']); }}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="subtle">Subtle</option>
+                      <option value="bold">Bold</option>
+                    </select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Action Buttons for Design Tab */}
+              <div className="flex gap-2 pt-4">
+                <Button variant="outline" onClick={() => { void handleReset(); }} className="flex-1">
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Reset to Defaults
+                </Button>
+                <Button onClick={() => { void handleSave(); }} disabled={saving} className="flex-1">
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Save Settings
+                </Button>
+              </div>
             </TabsContent>
 
             {/* AI Model Settings - REMOVED, moved to Audit tab */}
@@ -440,6 +628,22 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Action Buttons for UI Tab */}
+              <div className="flex gap-2 pt-4">
+                <Button variant="outline" onClick={() => { void handleReset(); }} className="flex-1">
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Reset to Defaults
+                </Button>
+                <Button onClick={() => { void handleSave(); }} disabled={saving} className="flex-1">
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Save Settings
+                </Button>
+              </div>
             </TabsContent>
 
             {/* Reports Settings */}
@@ -498,6 +702,22 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Action Buttons for Reports Tab */}
+              <div className="flex gap-2 pt-4">
+                <Button variant="outline" onClick={() => { void handleReset(); }} className="flex-1">
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Reset to Defaults
+                </Button>
+                <Button onClick={() => { void handleSave(); }} disabled={saving} className="flex-1">
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Save Settings
+                </Button>
+              </div>
             </TabsContent>
           </Tabs>
         </div>

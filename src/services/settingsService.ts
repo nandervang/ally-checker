@@ -45,8 +45,14 @@ export interface UserSettings {
   highContrast: boolean;
   
   // Design System (shadcn configurables)
-  colorMode: 'zinc' | 'slate' | 'stone' | 'gray' | 'neutral' | 'red' | 'rose' | 'orange' | 'green' | 'blue' | 'yellow' | 'violet';
-  borderRadius: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  style: 'default' | 'new-york';
+  baseColor: 'gray' | 'zinc' | 'slate' | 'stone' | 'neutral';
+  themeColor: 'red' | 'rose' | 'orange' | 'green' | 'blue' | 'yellow' | 'violet' | 'zinc' | 'slate' | 'stone' | 'gray' | 'neutral';
+  radius: 'none' | 'small' | 'medium' | 'large' | 'full';
+  font: 'inter' | 'figtree' | 'geist' | 'manrope';
+  iconLibrary: 'lucide' | 'hugeicons' | 'phosphor';
+  menuColor: 'default' | 'inverted';
+  menuAccent: 'subtle' | 'bold';
   
   // Audit Preferences
   agentMode: boolean;
@@ -74,8 +80,14 @@ const DEFAULT_SETTINGS: UserSettings = {
   fontSize: 'medium',
   reduceMotion: false,
   highContrast: false,
-  colorMode: 'zinc',
-  borderRadius: 'md',
+  style: 'default',
+  baseColor: 'zinc',
+  themeColor: 'zinc',
+  radius: 'medium',
+  font: 'inter',
+  iconLibrary: 'lucide',
+  menuColor: 'default',
+  menuAccent: 'subtle',
   agentMode: true,
   preferredModel: 'gemini',
   customMcpServers: [],
@@ -106,8 +118,14 @@ function dbToSettings(dbData: Record<string, unknown>): UserSettings {
     fontSize: (dbData.font_size as UserSettings['fontSize']) ?? DEFAULT_SETTINGS.fontSize,
     reduceMotion: dbData.reduce_motion !== undefined ? (dbData.reduce_motion as boolean) : DEFAULT_SETTINGS.reduceMotion,
     highContrast: dbData.high_contrast !== undefined ? (dbData.high_contrast as boolean) : DEFAULT_SETTINGS.highContrast,
-    colorMode: (dbData.color_mode as UserSettings['colorMode']) ?? DEFAULT_SETTINGS.colorMode,
-    borderRadius: (dbData.border_radius as UserSettings['borderRadius']) ?? DEFAULT_SETTINGS.borderRadius,
+    style: (dbData.style as UserSettings['style']) ?? DEFAULT_SETTINGS.style,
+    baseColor: (dbData.base_color as UserSettings['baseColor']) ?? DEFAULT_SETTINGS.baseColor,
+    themeColor: (dbData.theme_color as UserSettings['themeColor']) ?? DEFAULT_SETTINGS.themeColor,
+    radius: (dbData.radius as UserSettings['radius']) ?? DEFAULT_SETTINGS.radius,
+    font: (dbData.font as UserSettings['font']) ?? DEFAULT_SETTINGS.font,
+    iconLibrary: (dbData.icon_library as UserSettings['iconLibrary']) ?? DEFAULT_SETTINGS.iconLibrary,
+    menuColor: (dbData.menu_color as UserSettings['menuColor']) ?? DEFAULT_SETTINGS.menuColor,
+    menuAccent: (dbData.menu_accent as UserSettings['menuAccent']) ?? DEFAULT_SETTINGS.menuAccent,
     agentMode: dbData.agent_mode !== undefined ? (dbData.agent_mode as boolean) : DEFAULT_SETTINGS.agentMode,
     preferredModel: (dbData.preferred_model as UserSettings['preferredModel']) ?? DEFAULT_SETTINGS.preferredModel,
     customMcpServers: (dbData.custom_mcp_servers as MCPServer[]) ?? DEFAULT_SETTINGS.customMcpServers,
@@ -137,8 +155,14 @@ function settingsToDb(settings: UserSettings): Record<string, unknown> {
     font_size: settings.fontSize,
     reduce_motion: settings.reduceMotion,
     high_contrast: settings.highContrast,
-    color_mode: settings.colorMode,
-    border_radius: settings.borderRadius,
+    style: settings.style,
+    base_color: settings.baseColor,
+    theme_color: settings.themeColor,
+    radius: settings.radius,
+    font: settings.font,
+    icon_library: settings.iconLibrary,
+    menu_color: settings.menuColor,
+    menu_accent: settings.menuAccent,
     agent_mode: settings.agentMode,
     preferred_model: settings.preferredModel,
     custom_mcp_servers: settings.customMcpServers,
