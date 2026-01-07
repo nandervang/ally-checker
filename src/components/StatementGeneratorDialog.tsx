@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Download, Loader2, Eye } from 'lucide-react';
 import { generateAccessibilityStatement, downloadStatement } from '@/services/accessibilityStatementService';
@@ -37,6 +38,9 @@ export function StatementGeneratorDialog({
   const [organizationName, setOrganizationName] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [conformanceLevel, setConformanceLevel] = useState<'Full' | 'Partial' | 'Non-conformant'>('Partial');
+  const [knownLimitations, setKnownLimitations] = useState('');
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [statement, setStatement] = useState({ html: '', plainText: '', markdown: '' });
@@ -54,6 +58,9 @@ export function StatementGeneratorDialog({
         organizationName: organizationName.trim(),
         websiteUrl: websiteUrl.trim(),
         contactEmail: contactEmail.trim(),
+        contactPhone: contactPhone.trim() || undefined,
+        conformanceStatus: conformanceLevel,
+        knownLimitations: knownLimitations.trim() || undefined,
         statementDate: new Date().toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'long',
@@ -151,6 +158,52 @@ export function StatementGeneratorDialog({
                   value={contactEmail}
                   onChange={(e) => { setContactEmail(e.target.value); }}
                   placeholder="accessibility@example.com"
+                  disabled={generating}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="contact-phone">
+                  Contact Phone (Optional)
+                </Label>
+                <Input
+                  id="contact-phone"
+                  type="tel"
+                  value={contactPhone}
+                  onChange={(e) => { setContactPhone(e.target.value); }}
+                  placeholder="+46 8 123 456 78"
+                  disabled={generating}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="conformance-level">
+                  Conformance Status
+                </Label>
+                <select
+                  id="conformance-level"
+                  value={conformanceLevel}
+                  onChange={(e) => { setConformanceLevel(e.target.value as typeof conformanceLevel); }}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={generating}
+                  aria-label="Conformance level"
+                >
+                  <option value="Full">Full Conformance (WCAG 2.2 AA)</option>
+                  <option value="Partial">Partial Conformance (Some issues found)</option>
+                  <option value="Non-conformant">Non-conformant (Major issues)</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="limitations">
+                  Known Limitations (Optional)
+                </Label>
+                <Textarea
+                  id="limitations"
+                  value={knownLimitations}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => { setKnownLimitations(e.target.value); }}
+                  placeholder="Describe any known limitations, third-party content issues, or legacy documents..."
+                  rows={3}
                   disabled={generating}
                 />
               </div>
