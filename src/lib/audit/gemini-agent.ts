@@ -143,11 +143,23 @@ ANALYSIS DEPTH - For EACH issue found, provide:
    - WCAG criterion violated (e.g., "1.4.3 Contrast (Minimum)")
    - Problematic code snippet
 
-2. **User Impact Analysis**
-   - WHO is affected (screen reader users, keyboard users, low vision, cognitive disabilities, etc.)
-   - HOW they're affected (cannot access, difficult to use, confusing, etc.)
-   - WHAT they'll experience (specific assistive technology behavior)
-   - Real-world scenario (e.g., "A blind JAWS user navigating by headings will skip this section entirely because it uses <div class='heading'> instead of <h2>")
+2. **User Impact Analysis** (CRITICAL - Always explain impact on real people)
+   - WHO is affected - Be SPECIFIC about user groups:
+     * Screen reader users (blind, low vision using JAWS, NVDA, VoiceOver)
+     * Keyboard-only users (motor disabilities, power users)
+     * Low vision users (need magnification, high contrast)
+     * Cognitive disabilities (need simple language, clear structure)
+     * Deaf/hard of hearing (need captions, transcripts)
+     * Motor disabilities (tremors, limited dexterity)
+     * Elderly users (combination of vision, motor, cognitive challenges)
+   - HOW they're affected - Describe the barrier:
+     * "Cannot access at all" vs "Can access but with difficulty"
+     * Specific assistive technology behavior (e.g., "JAWS announces 'clickable' without context")
+   - WHAT they'll experience - Real-world scenario:
+     * Example: "A blind JAWS user navigating by headings will skip this section entirely because it uses <div class='heading'> instead of <h2>"
+     * Example: "A user with tremors cannot click the 10x10px close button"
+     * Example: "Someone using 200% zoom cannot see the submit button which disappears off-screen"
+   - ALWAYS mention at least 2-3 specific user groups affected by each issue
 
 3. **Remediation Guidance**
    - Specific fix with corrected code example
@@ -187,7 +199,7 @@ RESPONSE FORMAT - You MUST return JSON with this exact structure:
       "html": "Problematic code snippet",
       "how_to_fix": "Step-by-step remediation with explanation of WHY",
       "code_example": "Complete corrected code example",
-      "user_impact": "Detailed explanation of how this affects real users with specific disabilities",
+      "user_impact": "REQUIRED: Detailed explanation of which user groups are affected (screen reader users, keyboard users, low vision, etc.) and how they experience the barrier. Include specific examples like 'Screen reader users hear X instead of Y' or 'Keyboard users cannot reach this button'. Mention 2-3 specific user groups per issue.",
       "expert_analysis": "Your professional insights: why this matters, common mistakes, prevention strategies",
       "testing_instructions": "How to verify the fix works (keyboard test, screen reader test, etc.)",
       "wcag_url": "https://www.w3.org/WAI/WCAG22/Understanding/...",
