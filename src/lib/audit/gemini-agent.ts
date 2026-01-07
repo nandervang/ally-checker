@@ -77,11 +77,28 @@ OUTPUT FORMAT (JSON):
       "html": "<img class=\\"logo\\" src=\\"logo.png\\">",
       "how_to_fix": "Add meaningful alt attribute describing the image content or purpose.",
       "code_example": "<img class=\\"logo\\" src=\\"logo.png\\" alt=\\"Company Name\\">",
+      "user_impact": "Screen reader users cannot understand the logo's purpose. They will only hear 'image' or 'logo.png', missing critical branding and navigation context.",
       "wcag_url": "https://www.w3.org/WAI/WCAG22/Understanding/non-text-content",
       "manual_check": false
     }
   ]
 }
+
+REQUIRED FIELDS FOR EACH ISSUE:
+- wcag_criterion: The specific WCAG success criterion (e.g., "1.1.1", "1.4.3")
+- wcag_level: A, AA, or AAA
+- title: Short, clear issue title
+- description: Detailed explanation of the problem
+- severity: critical, serious, moderate, or minor
+- selector: CSS selector or location
+- html: The problematic HTML code snippet
+- how_to_fix: Clear, actionable remediation steps
+- code_example: The CORRECTED code showing the fix (required - show what it should be!)
+- user_impact: Describe HOW this affects real users (screen reader users, keyboard users, users with low vision, cognitive disabilities, etc.)
+- wcag_url: Link to WCAG Understanding doc
+- manual_check: true if requires human judgment
+
+CRITICAL: Always provide code_example and user_impact for EVERY issue. These fields are mandatory.
 
 GUIDELINES:
 - Be specific: Include selectors, exact element references

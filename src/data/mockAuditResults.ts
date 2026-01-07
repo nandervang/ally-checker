@@ -17,6 +17,7 @@ export interface AuditIssue {
   remediation: string;
   helpUrl: string;
   occurrences: number;
+  codeExample?: string; // Corrected code showing how to fix the issue
 }
 
 export interface AuditResult {
@@ -74,10 +75,11 @@ export const mockHtmlAuditResult: AuditResult = {
       description: "Images must have alternative text for screen readers",
       element: "<img src='logo.png'>",
       selector: "img[src='logo.png']",
-      impact: "Screen reader users cannot understand image content",
-      remediation: "Add descriptive alt text: <img src='logo.png' alt='Company logo'>",
+      impact: "Screen reader users cannot understand image content. They will only hear 'image' or the filename, which provides no meaningful information about the image's purpose.",
+      remediation: "Add descriptive alt text that conveys the purpose and content of the image",
       helpUrl: "https://www.w3.org/WAI/WCAG22/Understanding/non-text-content.html",
       occurrences: 5,
+      codeExample: "<img src='logo.png' alt='Company logo'>",
     },
     {
       id: "issue-2",
@@ -87,12 +89,13 @@ export const mockHtmlAuditResult: AuditResult = {
       severity: "serious",
       title: "Insufficient color contrast",
       description: "Text color contrast ratio is below 4.5:1 minimum",
-      element: "<p style='color: #767676'>",
+      element: "<p style='color: #767676; background: #fff'>",
       selector: ".content p",
-      impact: "Users with low vision cannot read text clearly",
-      remediation: "Use darker text color with 4.5:1 contrast ratio or higher",
+      impact: "Users with low vision, color blindness, or viewing in bright sunlight cannot read the text. This affects approximately 8% of men and 0.5% of women with color vision deficiency.",
+      remediation: "Use a darker text color to achieve at least 4.5:1 contrast ratio against white background",
       helpUrl: "https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html",
       occurrences: 8,
+      codeExample: "<p style='color: #595959; background: #fff'>Text with 7:1 contrast ratio</p>",
     },
     {
       id: "issue-3",
@@ -104,10 +107,11 @@ export const mockHtmlAuditResult: AuditResult = {
       description: "Custom dropdown cannot be operated with keyboard",
       element: "<div class='dropdown' onclick='toggle()'>",
       selector: ".dropdown",
-      impact: "Keyboard users cannot access dropdown functionality",
-      remediation: "Use semantic <select> element or add tabindex='0' and keyboard event handlers",
+      impact: "Keyboard users, including many people with motor disabilities who cannot use a mouse, are completely unable to access the dropdown functionality. This creates a barrier that prevents task completion.",
+      remediation: "Make the element focusable and add keyboard event handlers for Enter and Space keys",
       helpUrl: "https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html",
       occurrences: 3,
+      codeExample: "<button class='dropdown' onclick='toggle()' onkeydown='handleKey(event)'>Options</button>",
     },
     {
       id: "issue-4",
@@ -119,10 +123,11 @@ export const mockHtmlAuditResult: AuditResult = {
       description: "Link text 'Click here' doesn't describe destination",
       element: "<a href='/products'>Click here</a>",
       selector: "a[href='/products']",
-      impact: "Screen reader users cannot understand link purpose",
-      remediation: "Use descriptive link text: <a href='/products'>View our products</a>",
+      impact: "Screen reader users who navigate by links hear only 'Click here' without context about where the link goes. This is especially problematic when using screen reader features that list all links on a page.",
+      remediation: "Use descriptive link text that makes sense out of context",
       helpUrl: "https://www.w3.org/WAI/WCAG22/Understanding/link-purpose-in-context.html",
       occurrences: 4,
+      codeExample: "<a href='/products'>View our products</a>",
     },
     {
       id: "issue-5",
@@ -134,10 +139,11 @@ export const mockHtmlAuditResult: AuditResult = {
       description: "HTML element missing lang attribute",
       element: "<html>",
       selector: "html",
-      impact: "Screen readers cannot determine correct pronunciation",
-      remediation: "Add lang attribute: <html lang='en'>",
+      impact: "Screen readers cannot determine the correct pronunciation and voice to use. This results in garbled speech output, making content incomprehensible to blind users.",
+      remediation: "Add lang attribute with appropriate language code (e.g., 'en' for English, 'sv' for Swedish)",
       helpUrl: "https://www.w3.org/WAI/WCAG22/Understanding/language-of-page.html",
       occurrences: 1,
+      codeExample: "<html lang='en'>",
     },
     {
       id: "issue-6",

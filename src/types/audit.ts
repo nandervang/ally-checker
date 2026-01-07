@@ -25,6 +25,7 @@ export interface Issue {
   how_to_fix: string;
   code_example?: string;
   wcag_url?: string;
+  user_impact?: string;
 }
 
 // Aggregated metrics by category

@@ -1,7 +1,8 @@
 import type { AuditIssue } from '@/data/mockAuditResults';
 import { Badge } from './ui/badge';
-import { Card, CardContent } from './ui/card';
-import { AlertCircle, ExternalLink, Check } from 'lucide-react';
+import { Card, CardContent, CardHeader } from './ui/card';
+import { Separator } from './ui/separator';
+import { AlertCircle, ExternalLink, Check, Code2, User, Lightbulb, FileCode } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SelectableIssueCardProps {
@@ -71,7 +72,8 @@ export function SelectableIssueCard({
         </div>
       )}
 
-      <CardContent className={cn("p-6", selectionMode && "pl-16")}>
+      <CardContent className={cn("p-6 space-y-6", selectionMode && "pl-16")}>
+        {/* Title and Severity */}
         <div className="flex items-start justify-between gap-4 mb-3">
           <h3 id={`issue-${issue.id}-title`} className="text-lg font-semibold flex items-center gap-2">
             <AlertCircle className="h-5 w-5 shrink-0" />
@@ -84,48 +86,97 @@ export function SelectableIssueCard({
           )}
         </div>
 
-        <div className="space-y-2 text-sm">
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="outline" className={principleColor}>
-              {issue.principle}
+        {/* WCAG Info and Metadata */}
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline" className={principleColor}>
+            {issue.principle}
+          </Badge>
+          <Badge variant="outline">
+            {issue.guideline}
+          </Badge>
+          {issue.occurrences > 1 && (
+            <Badge variant="secondary">
+              {issue.occurrences} occurrences
             </Badge>
-            <Badge variant="outline">
-              {issue.guideline}
-            </Badge>
-            {issue.occurrences > 1 && (
-              <Badge variant="secondary">
-                {issue.occurrences} occurrences
-              </Badge>
-            )}
-          </div>
-
-          {issue.element && (
-            <div className="mt-3">
-              <div className="text-sm font-medium mb-1">Code:</div>
-              <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
-                <code>{issue.element}</code>
-              </pre>
-            </div>
-          )}
-
-          <div className="mt-3">
-            <div className="font-medium mb-1">Remediation:</div>
-            <p className="text-muted-foreground">{issue.remediation}</p>
-          </div>
-
-          {issue.helpUrl && (
-            <a
-              href={issue.helpUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-primary hover:underline mt-2"
-              onClick={(e) => { if (selectionMode) e.stopPropagation(); }}
-            >
-              Learn more
-              <ExternalLink className="h-3 w-3" />
-            </a>
           )}
         </div>
+
+        <Separator />
+
+        {/* User Impact Section - NEW */}
+        {issue.impact && (
+          <div className="space-y-2 bg-amber-50 dark:bg-amber-950/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
+            <div className="flex items-start gap-2">
+              <User className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+              <div className="flex-1">
+                <h4 className="font-semibold text-sm text-amber-900 dark:text-amber-200 mb-1">
+                  Impact on Users
+                </h4>
+                <p className="text-sm text-amber-800 dark:text-amber-300">
+                  {issue.impact}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Problematic Code Section - ENHANCED */}
+        {issue.element && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Code2 className="h-4 w-4" />
+              <span>Problematic Code:</span>
+            </div>
+            <pre className="bg-red-50 dark:bg-red-950/20 p-3 rounded-lg text-xs overflow-x-auto border-2 border-red-200 dark:border-red-800">
+              <code className="text-red-900 dark:text-red-200">{issue.element}</code>
+            </pre>
+            {issue.selector && (
+              <p className="text-xs text-muted-foreground">
+                <span className="font-medium">Selector:</span> <code className="bg-muted px-1 py-0.5 rounded">{issue.selector}</code>
+              </p>
+            )}
+          </div>
+        )}
+
+        <Separator />
+
+        {/* How to Fix Section - ENHANCED */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <Lightbulb className="h-4 w-4 text-green-600 dark:text-green-400" />
+            <span>How to Fix:</span>
+          </div>
+          <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+            {issue.remediation}
+          </p>
+        </div>
+
+        {/* Corrected Code Example - NEW */}
+        {issue.codeExample && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium text-green-700 dark:text-green-400">
+              <FileCode className="h-4 w-4" />
+              <span>Corrected Code:</span>
+            </div>
+            <pre className="bg-green-50 dark:bg-green-950/20 p-3 rounded-lg text-xs overflow-x-auto border-2 border-green-200 dark:border-green-800">
+              <code className="text-green-900 dark:text-green-200">{issue.codeExample}</code>
+            </pre>
+          </div>
+        )}
+
+        {/* Learn More Link */}
+        {issue.helpUrl && (
+          <a
+            href={issue.helpUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-primary hover:underline text-sm font-medium"
+            onClick={(e) => { if (selectionMode) e.stopPropagation(); }}
+          >
+            Learn more about WCAG {issue.guideline}
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        )}
       </CardContent>
     </Card>
   );

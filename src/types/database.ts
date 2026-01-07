@@ -135,6 +135,7 @@ export interface Database {
           how_to_fix: string;
           code_example: string | null;
           wcag_url: string | null;
+          user_impact: string | null;
           created_at: string;
         };
         Insert: {
@@ -154,6 +155,7 @@ export interface Database {
           how_to_fix: string;
           code_example?: string | null;
           wcag_url?: string | null;
+          user_impact?: string | null;
           created_at?: string;
         };
         Update: {
@@ -173,6 +175,7 @@ export interface Database {
           how_to_fix?: string;
           code_example?: string | null;
           wcag_url?: string | null;
+          user_impact?: string | null;
           created_at?: string;
         };
       };
