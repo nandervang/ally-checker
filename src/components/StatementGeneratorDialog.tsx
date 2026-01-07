@@ -5,7 +5,7 @@
  * from selected issues in HTML, Markdown, and plain text formats.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -21,6 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Download, Loader2, Eye } from 'lucide-react';
 import { generateAccessibilityStatement, downloadStatement } from '@/services/accessibilityStatementService';
+import { getUserSettings } from '@/services/settingsService';
 import type { AuditIssue } from '@/data/mockAuditResults';
 import { toast } from 'sonner';
 
@@ -45,6 +46,27 @@ export function StatementGeneratorDialog({
   const [generated, setGenerated] = useState(false);
   const [statement, setStatement] = useState({ html: '', plainText: '', markdown: '' });
   const [activeTab, setActiveTab] = useState<'html' | 'markdown' | 'text'>('html');
+
+  // Load settings when dialog opens
+  useEffect(() => {
+    if (open) {
+      void getUserSettings().then((settings) => {
+        if (settings.statementOrganizationName) {
+          setOrganizationName(settings.statementOrganizationName);
+        }
+        if (settings.statementContactEmail) {
+          setContactEmail(settings.statementContactEmail);
+        }
+        if (settings.statementContactPhone) {
+          setContactPhone(settings.statementContactPhone);
+        }
+        setConformanceLevel(settings.statementDefaultConformance);
+      }).catch((error: unknown) => {
+        console.error('Failed to load settings:', error);
+        // Continue with empty form if settings fail to load
+      });
+    }
+  }, [open]);
 
   const handleGenerate = () => {
     if (!organizationName.trim() || !websiteUrl.trim() || !contactEmail.trim()) {
