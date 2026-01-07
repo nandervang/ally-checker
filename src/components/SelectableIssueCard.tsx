@@ -104,16 +104,16 @@ export function SelectableIssueCard({
         <Separator />
 
         {/* User Impact Section - Påverkan */}
-        {issue.user_impact && (
+        {issue.impact && (
           <div className="space-y-2 bg-amber-50 dark:bg-amber-950/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
             <div className="flex items-start gap-2">
               <User className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
               <div className="flex-1">
                 <h4 className="font-semibold text-sm text-amber-900 dark:text-amber-200 mb-1">
-                  Påverkan (User Impact)
+                  Påverkan
                 </h4>
-                <p className="text-sm text-amber-800 dark:text-amber-300">
-                  {issue.user_impact}
+                <p className="text-sm text-amber-800 dark:text-amber-300 whitespace-pre-wrap">
+                  {issue.impact}
                 </p>
               </div>
             </div>
