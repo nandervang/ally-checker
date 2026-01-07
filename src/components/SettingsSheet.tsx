@@ -146,10 +146,10 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
     setSettings(newSettings);
     
     // Apply design changes immediately for preview
-    applyDesignSettings(newSettings);
+    void applyDesignSettings(newSettings);
   }
 
-  function applyDesignSettings(s: UserSettings) {
+  async function applyDesignSettings(s: UserSettings) {
     const root = document.documentElement;
     
     console.log('Applying design settings:', s);
@@ -172,66 +172,41 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
       root.classList.remove('high-contrast');
     }
     
-    // Apply radius
-    const radiusValue = 
-      s.radius === 'none' ? '0rem' :
-      s.radius === 'small' ? '0.3rem' :
-      s.radius === 'medium' ? '0.5rem' :
-      s.radius === 'large' ? '0.75rem' :
-      '1rem';
-    root.style.setProperty('--radius', radiusValue);
+    // Apply radius, fonts, and complete color palettes
+    const { getRadiusValue, getFontFamily, baseColorPalettes, themeColorOverrides } = 
+      await import('../lib/theme-colors');
     
-    // Apply font family to body
-    const fontFamily = 
-      s.font === 'inter' ? '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' :
-      s.font === 'figtree' ? '"Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' :
-      s.font === 'geist' ? '"Geist Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' :
-      '"Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-    document.body.style.fontFamily = fontFamily;
+    root.style.setProperty('--radius', getRadiusValue(s.radius));
     
-    // Apply theme color - update primary color based on selection (oklch format)
-    const themeColors = {
-      zinc: 'oklch(0.205 0 0)', // dark gray
-      slate: 'oklch(0.47 0.03 240)', // blue-gray
-      stone: 'oklch(0.45 0.01 60)', // warm gray
-      gray: 'oklch(0.46 0.01 220)', // cool gray
-      neutral: 'oklch(0.45 0 0)', // pure gray
-      red: 'oklch(0.60 0.22 25)', // red
-      rose: 'oklch(0.60 0.18 0)', // pink-red
-      orange: 'oklch(0.68 0.17 50)', // orange
-      green: 'oklch(0.55 0.18 145)', // green
-      blue: 'oklch(0.55 0.22 250)', // blue
-      yellow: 'oklch(0.75 0.15 90)', // yellow
-      violet: 'oklch(0.55 0.25 285)' // purple
-    };
+    // Apply font family
+    document.body.style.fontFamily = getFontFamily(s.font);
     
-    const primaryColor = themeColors[s.themeColor];
-    if (primaryColor) {
-      root.style.setProperty('--primary', primaryColor);
-      root.style.setProperty('--primary-foreground', 'oklch(0.985 0 0)');
-      root.style.setProperty('--ring', primaryColor);
-      // Also update accent to match theme
-      root.style.setProperty('--accent', primaryColor.replace('0.55', '0.95').replace('0.60', '0.95'));
-      root.style.setProperty('--accent-foreground', primaryColor);
+    // Apply complete color palette using shadcn approach
+    const isDark = root.classList.contains('dark');
+    const mode = isDark ? 'dark' : 'light';
+    
+    // Get base color palette
+    const basePalette = baseColorPalettes[s.baseColor];
+    if (!basePalette) {
+      console.error('Base color palette not found:', s.baseColor);
+      return;
     }
     
-    // Apply base color for backgrounds and borders (oklch format)
-    const baseColors = {
-      gray: { border: 'oklch(0.91 0.01 220)', input: 'oklch(0.91 0.01 220)', muted: 'oklch(0.97 0.01 220)' },
-      zinc: { border: 'oklch(0.90 0.005 240)', input: 'oklch(0.90 0.005 240)', muted: 'oklch(0.96 0.005 240)' },
-      slate: { border: 'oklch(0.91 0.02 220)', input: 'oklch(0.91 0.02 220)', muted: 'oklch(0.96 0.02 220)' },
-      stone: { border: 'oklch(0.90 0.01 60)', input: 'oklch(0.90 0.01 60)', muted: 'oklch(0.96 0.01 60)' },
-      neutral: { border: 'oklch(0.90 0 0)', input: 'oklch(0.90 0 0)', muted: 'oklch(0.96 0 0)' }
+    // Get theme color overrides
+    const themeOverride = themeColorOverrides[s.themeColor] || {};
+    
+    // Merge base palette with theme overrides
+    const finalPalette = {
+      ...basePalette[mode],
+      ...(themeOverride[mode] || {})
     };
     
-    const baseColor = baseColors[s.baseColor];
-    if (baseColor) {
-      root.style.setProperty('--border', baseColor.border);
-      root.style.setProperty('--input', baseColor.input);
-      root.style.setProperty('--muted', baseColor.muted);
-    }
+    // Apply all CSS variables
+    Object.entries(finalPalette).forEach(([key, value]) => {
+      root.style.setProperty(`--${key}`, value);
+    });
     
-    // Apply style variant as class
+    // Apply style variant as class (for potential CSS extensions)
     root.classList.remove('style-default', 'style-new-york', 'style-vega');
     root.classList.add(`style-${s.style}`);
     
