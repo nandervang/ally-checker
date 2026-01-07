@@ -11,6 +11,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { App } from "./App";
 import { AuditHistory } from "./pages/AuditHistory";
 import { AccessibilityStatement } from "./pages/AccessibilityStatement";
+import Settings from "./pages/Settings";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { AuthProvider } from "./contexts/AuthContext";
 import "./i18n/config"; // Initialize i18n
@@ -25,6 +26,7 @@ const app = (
             <Route path="/" element={<App />} />
             <Route path="/history" element={<AuditHistory />} />
             <Route path="/statement" element={<AccessibilityStatement />} />
+            <Route path="/settings" element={<Settings />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

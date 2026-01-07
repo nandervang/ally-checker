@@ -5,7 +5,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Moon, Sun, Home, Clock, FileText, User, LogOut } from "lucide-react";
+import { Moon, Sun, Home, Clock, FileText, User, LogOut, Settings as SettingsIcon } from "lucide-react";
 
 export function Header() {
   const { t } = useTranslation();
@@ -82,7 +82,13 @@ export function Header() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => signOut()} className="gap-2 cursor-pointer">
+              <DropdownMenuItem asChild className="gap-2 cursor-pointer">
+                <Link to="/settings">
+                  <SettingsIcon className="h-4 w-4" />
+                  Settings
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => { signOut(); }} className="gap-2 cursor-pointer">
                 <LogOut className="h-4 w-4" />
                 Sign Out
               </DropdownMenuItem>
