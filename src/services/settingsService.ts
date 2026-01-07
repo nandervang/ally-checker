@@ -46,12 +46,12 @@ export interface UserSettings {
   
   // Design System (shadcn configurables)
   componentLibrary: 'radix-ui' | 'ark-ui';
-  style: 'default' | 'new-york' | 'vega';
+  style: 'vega' | 'nova' | 'maia' | 'lyra' | 'mira';
   baseColor: 'gray' | 'zinc' | 'slate' | 'stone' | 'neutral';
   themeColor: 'red' | 'rose' | 'orange' | 'green' | 'blue' | 'yellow' | 'violet' | 'zinc' | 'slate' | 'stone' | 'gray' | 'neutral';
   radius: 'none' | 'small' | 'medium' | 'large' | 'full';
   font: 'inter' | 'figtree' | 'geist' | 'manrope';
-  iconLibrary: 'lucide' | 'hugeicons' | 'phosphor';
+  iconLibrary: 'lucide' | 'hugeicons' | 'tabler' | 'phosphor';
   menuColor: 'default' | 'inverted';
   menuAccent: 'subtle' | 'bold';
   
@@ -82,9 +82,9 @@ const DEFAULT_SETTINGS: UserSettings = {
   reduceMotion: false,
   highContrast: false,
   componentLibrary: 'radix-ui',
-  style: 'default',
-  baseColor: 'zinc',
-  themeColor: 'zinc',
+  style: 'vega',
+  baseColor: 'neutral',
+  themeColor: 'neutral',
   radius: 'medium',
   font: 'inter',
   iconLibrary: 'lucide',

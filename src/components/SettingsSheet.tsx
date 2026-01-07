@@ -236,8 +236,8 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
       root.style.setProperty(`--${key}`, value);
     });
     
-    // Apply style variant as class (for potential CSS extensions)
-    root.classList.remove('style-default', 'style-new-york', 'style-vega');
+    // Apply style variant as class
+    root.classList.remove('style-vega', 'style-nova', 'style-maia', 'style-lyra', 'style-mira');
     root.classList.add(`style-${s.style}`);
     
     console.log('Design settings applied - radius:', s.radius, 'font:', s.font, 'theme:', s.themeColor);
@@ -432,6 +432,66 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Presets Section */}
+                  <div className="space-y-2">
+                    <Label>Quick Presets</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          updateSetting('style', 'vega');
+                          updateSetting('iconLibrary', 'lucide');
+                          updateSetting('font', 'inter');
+                          updateSetting('baseColor', 'neutral');
+                        }}
+                      >
+                        Vega / Lucide / Inter
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          updateSetting('style', 'nova');
+                          updateSetting('iconLibrary', 'hugeicons');
+                          updateSetting('font', 'inter');
+                          updateSetting('baseColor', 'neutral');
+                        }}
+                      >
+                        Nova / Hugeicons / Inter
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          updateSetting('style', 'maia');
+                          updateSetting('iconLibrary', 'hugeicons');
+                          updateSetting('font', 'figtree');
+                          updateSetting('baseColor', 'neutral');
+                        }}
+                      >
+                        Maia / Hugeicons / Figtree
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          updateSetting('style', 'mira');
+                          updateSetting('iconLibrary', 'hugeicons');
+                          updateSetting('font', 'inter');
+                          updateSetting('baseColor', 'neutral');
+                        }}
+                      >
+                        Mira / Hugeicons / Inter
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Apply popular combinations from shadcn/ui
+                    </p>
+                  </div>
+
+                  <Separator />
+
                   <div className="space-y-2">
                     <Label htmlFor="component-library">Component Library</Label>
                     <select
@@ -456,12 +516,14 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                       onChange={(e) => { updateSetting('style', e.target.value as UserSettings['style']); }}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <option value="default">Default</option>
-                      <option value="new-york">New York</option>
-                      <option value="vega">Vega</option>
+                      <option value="vega">Vega - Classic shadcn/ui look</option>
+                      <option value="nova">Nova - Compact layouts</option>
+                      <option value="maia">Maia - Soft and rounded</option>
+                      <option value="lyra">Lyra - Boxy and sharp</option>
+                      <option value="mira">Mira - Dense interfaces</option>
                     </select>
                     <p className="text-sm text-muted-foreground">
-                      Choose between default and New York style variants
+                      Visual style affects component shapes, spacing, and typography
                     </p>
                   </div>
 
@@ -482,7 +544,7 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                       <option value="neutral">Neutral</option>
                     </select>
                     <p className="text-sm text-muted-foreground">
-                      Base neutral color for backgrounds and borders
+                      Base color affects ALL UI elements - backgrounds, cards, borders, text
                     </p>
                   </div>
 
@@ -566,9 +628,10 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                       onChange={(e) => { updateSetting('iconLibrary', e.target.value as UserSettings['iconLibrary']); }}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <option value="lucide">Lucide Icons (Default)</option>
-                      <option value="hugeicons">Huge Icons</option>
-                      <option value="phosphor">Phosphor Icons</option>
+                      <option value="lucide">Lucide - Default React icons</option>
+                      <option value="hugeicons">Hugeicons - Modern stroke icons</option>
+                      <option value="tabler">Tabler Icons - Customizable icons</option>
+                      <option value="phosphor">Phosphor - Versatile icon family</option>
                     </select>
                   </div>
                 </CardContent>
