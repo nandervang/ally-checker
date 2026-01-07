@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,7 @@ import {
   type Issue 
 } from "@/lib/audit";
 import { useAuth } from "@/contexts/AuthContext";
+import { getUserSettings, type UserSettings } from "@/services/settingsService";
 
 type InputMode = "url" | "html" | "snippet" | "document";
 
@@ -52,9 +53,13 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [auditStep, setAuditStep] = useState<AuditStep>("idle");
   const [auditError, setAuditError] = useState<string | null>(null);
-  const [agentMode, setAgentMode] = useState<boolean>(true); // Default to AI mode
-  const [selectedModel, setSelectedModel] = useState<"claude" | "gemini" | "gpt4">("gemini"); // Use Gemini (implemented)
+  const [settings, setSettings] = useState<UserSettings | null>(null);
   const [progressMessage, setProgressMessage] = useState<string>("");
+
+  // Load settings on mount
+  useEffect(() => {
+    void getUserSettings().then(setSettings);
+  }, []);
 
   const validateUrl = (value: string): boolean => {
     try {
@@ -174,7 +179,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
     while (attempt < maxRetries) {
       try {
         // Use new audit service
-        if (agentMode) {
+        if (settings?.agentMode) {
           // Set initial loading state
           setAuditStep("fetching");
           setProgressMessage("🔧 Initializing AI accessibility audit...");
@@ -447,57 +452,6 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
           />
         </div>
       )}
-
-      {/* Agent Mode Toggle */}
-      <div className="bg-card border rounded-lg p-6 shadow-elevation-2">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            {agentMode ? (
-              <Brain className="h-6 w-6 text-primary" />
-            ) : (
-              <Zap className="h-6 w-6 text-muted-foreground" />
-            )}
-            <div>
-              <h3 className="text-lg font-semibold">
-                {agentMode ? "AI Agent Mode" : "Quick Mode"}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {agentMode 
-                  ? "AI-powered comprehensive analysis with heuristics" 
-                  : "Instant automated testing with axe-core"}
-              </p>
-            </div>
-          </div>
-          <Switch
-            checked={agentMode}
-            onCheckedChange={setAgentMode}
-            aria-label="Toggle AI Agent Mode"
-          />
-        </div>
-
-        {agentMode && (
-          <div className="mt-4 pt-4 border-t">
-            <Label htmlFor="model-select" className="text-sm font-medium mb-2 block">
-              AI Model
-            </Label>
-            <Select value={selectedModel} onValueChange={(value) => { setSelectedModel(value as typeof selectedModel); }}>
-              <SelectTrigger id="model-select" className="w-full">
-                <SelectValue placeholder="Select AI model" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="claude">Claude (Anthropic) - Recommended</SelectItem>
-                <SelectItem value="gemini">Gemini (Google)</SelectItem>
-                <SelectItem value="gpt4">GPT-4 (OpenAI)</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground mt-2">
-              {selectedModel === "claude" && "Best for accessibility analysis with MCP tools"}
-              {selectedModel === "gemini" && "Fast analysis with multimodal capabilities"}
-              {selectedModel === "gpt4" && "Reliable and comprehensive evaluation"}
-            </p>
-          </div>
-        )}
-      </div>
 
       <Tabs value={mode} onValueChange={(value) => { setMode(value as InputMode); }} className="w-full">`
         <TabsList className="grid w-full grid-cols-4 h-auto">

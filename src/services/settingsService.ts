@@ -44,6 +44,14 @@ export interface UserSettings {
   reduceMotion: boolean;
   highContrast: boolean;
   
+  // Design System (shadcn configurables)
+  colorMode: 'zinc' | 'slate' | 'stone' | 'gray' | 'neutral' | 'red' | 'rose' | 'orange' | 'green' | 'blue' | 'yellow' | 'violet';
+  borderRadius: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  
+  // Audit Preferences
+  agentMode: boolean;
+  preferredModel: 'claude' | 'gemini' | 'gpt4';
+  
   // MCP Server Configuration
   customMcpServers: MCPServer[];
   
@@ -66,6 +74,10 @@ const DEFAULT_SETTINGS: UserSettings = {
   fontSize: 'medium',
   reduceMotion: false,
   highContrast: false,
+  colorMode: 'zinc',
+  borderRadius: 'md',
+  agentMode: true,
+  preferredModel: 'gemini',
   customMcpServers: [],
 };
 
@@ -94,6 +106,10 @@ function dbToSettings(dbData: Record<string, unknown>): UserSettings {
     fontSize: (dbData.font_size as UserSettings['fontSize']) ?? DEFAULT_SETTINGS.fontSize,
     reduceMotion: dbData.reduce_motion !== undefined ? (dbData.reduce_motion as boolean) : DEFAULT_SETTINGS.reduceMotion,
     highContrast: dbData.high_contrast !== undefined ? (dbData.high_contrast as boolean) : DEFAULT_SETTINGS.highContrast,
+    colorMode: (dbData.color_mode as UserSettings['colorMode']) ?? DEFAULT_SETTINGS.colorMode,
+    borderRadius: (dbData.border_radius as UserSettings['borderRadius']) ?? DEFAULT_SETTINGS.borderRadius,
+    agentMode: dbData.agent_mode !== undefined ? (dbData.agent_mode as boolean) : DEFAULT_SETTINGS.agentMode,
+    preferredModel: (dbData.preferred_model as UserSettings['preferredModel']) ?? DEFAULT_SETTINGS.preferredModel,
     customMcpServers: (dbData.custom_mcp_servers as MCPServer[]) ?? DEFAULT_SETTINGS.customMcpServers,
     createdAt: dbData.created_at as string | undefined,
     updatedAt: dbData.updated_at as string | undefined,
@@ -121,6 +137,10 @@ function settingsToDb(settings: UserSettings): Record<string, unknown> {
     font_size: settings.fontSize,
     reduce_motion: settings.reduceMotion,
     high_contrast: settings.highContrast,
+    color_mode: settings.colorMode,
+    border_radius: settings.borderRadius,
+    agent_mode: settings.agentMode,
+    preferred_model: settings.preferredModel,
     custom_mcp_servers: settings.customMcpServers,
   };
 }

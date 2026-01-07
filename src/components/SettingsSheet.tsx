@@ -205,39 +205,69 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
           <Separator />
 
           {/* Settings Tabs */}
-          <Tabs defaultValue="ai" className="space-y-4">
-            <TabsList className="grid grid-cols-3 w-full">
-              <TabsTrigger value="ai">AI</TabsTrigger>
+          <Tabs defaultValue="audit" className="space-y-4">
+            <TabsList className="grid grid-cols-4 w-full">
+              <TabsTrigger value="audit">Audit</TabsTrigger>
+              <TabsTrigger value="design">Design</TabsTrigger>
               <TabsTrigger value="ui">UI</TabsTrigger>
               <TabsTrigger value="reports">Reports</TabsTrigger>
             </TabsList>
 
-            {/* AI Model Settings */}
-            <TabsContent value="ai" className="space-y-4">
+            {/* Audit Settings */}
+            <TabsContent value="audit" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>AI Model</CardTitle>
+                  <CardTitle>Analysis Mode</CardTitle>
                   <CardDescription>
-                    Choose which AI model to use for accessibility analysis
+                    Choose between AI-powered comprehensive analysis or quick automated testing
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="ai-model">Model</Label>
-                    <select
-                      id="ai-model"
-                      value={settings.aiModel}
-                      onChange={(e) => { updateSetting('aiModel', e.target.value as UserSettings['aiModel']); }}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      <option value="gemini-pro">Google Gemini Pro</option>
-                      <option value="gpt-4">OpenAI GPT-4</option>
-                      <option value="claude-3">Anthropic Claude 3</option>
-                      <option value="groq-llama">Groq (Llama 3)</option>
-                      <option value="ollama-local">Ollama (Local)</option>
-                    </select>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="agent-mode">AI Agent Mode</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {settings.agentMode 
+                          ? "AI-powered comprehensive analysis with heuristics" 
+                          : "Quick automated testing with axe-core only"}
+                      </p>
+                    </div>
+                    <Switch
+                      id="agent-mode"
+                      checked={settings.agentMode}
+                      onCheckedChange={(checked) => { updateSetting('agentMode', checked); }}
+                    />
                   </div>
 
+                  {settings.agentMode && (
+                    <>
+                      <Separator />
+                      <div className="space-y-2">
+                        <Label htmlFor="preferred-model">Preferred AI Model</Label>
+                        <select
+                          id="preferred-model"
+                          value={settings.preferredModel}
+                          onChange={(e) => { updateSetting('preferredModel', e.target.value as UserSettings['preferredModel']); }}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <option value="gemini">Gemini (Google) - Fast with multimodal</option>
+                          <option value="claude">Claude (Anthropic) - Best for MCP tools</option>
+                          <option value="gpt4">GPT-4 (OpenAI) - Reliable evaluation</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>AI Model Configuration</CardTitle>
+                  <CardDescription>
+                    Advanced settings for AI analysis behavior
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="temperature">
                       Temperature ({settings.aiTemperature})
@@ -275,6 +305,67 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* Design Settings */}
+            <TabsContent value="design" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Theme Colors</CardTitle>
+                  <CardDescription>
+                    Customize the color scheme
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="color-mode">Color Mode</Label>
+                    <select
+                      id="color-mode"
+                      value={settings.colorMode}
+                      onChange={(e) => { updateSetting('colorMode', e.target.value as UserSettings['colorMode']); }}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="zinc">Zinc (Default)</option>
+                      <option value="slate">Slate</option>
+                      <option value="stone">Stone</option>
+                      <option value="gray">Gray</option>
+                      <option value="neutral">Neutral</option>
+                      <option value="red">Red</option>
+                      <option value="rose">Rose</option>
+                      <option value="orange">Orange</option>
+                      <option value="green">Green</option>
+                      <option value="blue">Blue</option>
+                      <option value="yellow">Yellow</option>
+                      <option value="violet">Violet</option>
+                    </select>
+                    <p className="text-sm text-muted-foreground">
+                      Changes the accent color throughout the application
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="border-radius">Border Radius</Label>
+                    <select
+                      id="border-radius"
+                      value={settings.borderRadius}
+                      onChange={(e) => { updateSetting('borderRadius', e.target.value as UserSettings['borderRadius']); }}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="none">None (Sharp corners)</option>
+                      <option value="sm">Small (2px)</option>
+                      <option value="md">Medium (4px)</option>
+                      <option value="lg">Large (8px)</option>
+                      <option value="xl">Extra Large (12px)</option>
+                      <option value="full">Full (Pill shape)</option>
+                    </select>
+                    <p className="text-sm text-muted-foreground">
+                      Adjusts the roundness of buttons, cards, and inputs
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* AI Model Settings - REMOVED, moved to Audit tab */}
 
             {/* UI Settings */}
             <TabsContent value="ui" className="space-y-4">
