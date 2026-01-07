@@ -167,6 +167,8 @@ export async function getUserSettings(): Promise<UserSettings> {
       .from('user_settings')
       .select('*')
       .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
     
     if (error) {
