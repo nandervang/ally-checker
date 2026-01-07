@@ -26,6 +26,8 @@ export interface Issue {
   code_example?: string;
   wcag_url?: string;
   user_impact?: string;
+  expert_analysis?: string;
+  testing_instructions?: string;
 }
 
 // Aggregated metrics by category
@@ -58,6 +60,22 @@ export interface AgentTrace {
   duration_ms?: number;
 }
 
+// Executive summary from AI expert analysis
+export interface ExecutiveSummary {
+  overall_assessment: string;
+  compliance_level: string;
+  top_priorities: string[];
+  estimated_effort: string;
+  risk_level: string;
+}
+
+// Pattern analysis identifying systemic issues
+export interface PatternAnalysis {
+  systemic_issues: string[];
+  positive_patterns: string[];
+  recommendations: string[];
+}
+
 // Complete audit result
 export interface AuditResult {
   issues: Issue[];
@@ -65,6 +83,8 @@ export interface AuditResult {
   ai_model: string;
   url?: string;
   agent_trace?: AgentTrace;
+  executive_summary?: ExecutiveSummary;
+  pattern_analysis?: PatternAnalysis;
 }
 
 // Input for running an audit

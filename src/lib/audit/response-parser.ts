@@ -172,6 +172,8 @@ function parseJSONResponse(text: string): Issue[] {
         code_example: issue.code_example || issue.example,
         wcag_url: issue.url || issue.wcag_url,
         user_impact: issue.user_impact || issue.impact,
+        expert_analysis: issue.expert_analysis || issue.analysis,
+        testing_instructions: issue.testing_instructions || issue.test_instructions,
       };
     });
   } catch {
