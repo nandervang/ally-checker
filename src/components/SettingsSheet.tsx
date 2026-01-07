@@ -157,7 +157,6 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
     // Apply font size
     root.classList.remove('font-size-small', 'font-size-medium', 'font-size-large');
     root.classList.add(`font-size-${s.fontSize}`);
-    console.log('Font size class:', `font-size-${s.fontSize}`);
     
     // Apply reduce motion
     if (s.reduceMotion) {
@@ -173,47 +172,70 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
       root.classList.remove('high-contrast');
     }
     
-    // Apply radius - convert to actual rem values that match shadcn defaults
+    // Apply radius
     const radiusValue = 
       s.radius === 'none' ? '0rem' :
       s.radius === 'small' ? '0.3rem' :
       s.radius === 'medium' ? '0.5rem' :
       s.radius === 'large' ? '0.75rem' :
-      '1rem'; // full
+      '1rem';
     root.style.setProperty('--radius', radiusValue);
-    console.log('Radius set to:', radiusValue, 'Current value:', getComputedStyle(root).getPropertyValue('--radius'));
     
-    // Apply font family
+    // Apply font family to body
     const fontFamily = 
-      s.font === 'inter' ? 'Inter, system-ui, sans-serif' :
-      s.font === 'figtree' ? 'Figtree, system-ui, sans-serif' :
-      s.font === 'geist' ? 'Geist, system-ui, sans-serif' :
-      'Manrope, system-ui, sans-serif';
-    root.style.setProperty('--font-sans', fontFamily);
-    console.log('Font family set to:', fontFamily);
+      s.font === 'inter' ? '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' :
+      s.font === 'figtree' ? '"Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' :
+      s.font === 'geist' ? '"Geist Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' :
+      '"Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    document.body.style.fontFamily = fontFamily;
     
-    // Apply style variant
-    root.setAttribute('data-style', s.style);
-    root.setAttribute('data-component-library', s.componentLibrary);
+    // Apply theme color - update primary color based on selection (oklch format)
+    const themeColors = {
+      zinc: 'oklch(0.205 0 0)', // dark gray
+      slate: 'oklch(0.47 0.03 240)', // blue-gray
+      stone: 'oklch(0.45 0.01 60)', // warm gray
+      gray: 'oklch(0.46 0.01 220)', // cool gray
+      neutral: 'oklch(0.45 0 0)', // pure gray
+      red: 'oklch(0.60 0.22 25)', // red
+      rose: 'oklch(0.60 0.18 0)', // pink-red
+      orange: 'oklch(0.68 0.17 50)', // orange
+      green: 'oklch(0.55 0.18 145)', // green
+      blue: 'oklch(0.55 0.22 250)', // blue
+      yellow: 'oklch(0.75 0.15 90)', // yellow
+      violet: 'oklch(0.55 0.25 285)' // purple
+    };
     
-    // Apply theme color and base color as data attributes
-    root.setAttribute('data-theme-color', s.themeColor);
-    root.setAttribute('data-base-color', s.baseColor);
+    const primaryColor = themeColors[s.themeColor];
+    if (primaryColor) {
+      root.style.setProperty('--primary', primaryColor);
+      root.style.setProperty('--primary-foreground', 'oklch(0.985 0 0)');
+      root.style.setProperty('--ring', primaryColor);
+      // Also update accent to match theme
+      root.style.setProperty('--accent', primaryColor.replace('0.55', '0.95').replace('0.60', '0.95'));
+      root.style.setProperty('--accent-foreground', primaryColor);
+    }
     
-    console.log('Data attributes set:', {
-      style: s.style,
-      componentLibrary: s.componentLibrary,
-      themeColor: s.themeColor,
-      baseColor: s.baseColor
-    });
+    // Apply base color for backgrounds and borders (oklch format)
+    const baseColors = {
+      gray: { border: 'oklch(0.91 0.01 220)', input: 'oklch(0.91 0.01 220)', muted: 'oklch(0.97 0.01 220)' },
+      zinc: { border: 'oklch(0.90 0.005 240)', input: 'oklch(0.90 0.005 240)', muted: 'oklch(0.96 0.005 240)' },
+      slate: { border: 'oklch(0.91 0.02 220)', input: 'oklch(0.91 0.02 220)', muted: 'oklch(0.96 0.02 220)' },
+      stone: { border: 'oklch(0.90 0.01 60)', input: 'oklch(0.90 0.01 60)', muted: 'oklch(0.96 0.01 60)' },
+      neutral: { border: 'oklch(0.90 0 0)', input: 'oklch(0.90 0 0)', muted: 'oklch(0.96 0 0)' }
+    };
     
-    // Force multiple repaints to ensure changes are visible
-    void root.offsetHeight;
-    document.body.style.display = 'none';
-    void document.body.offsetHeight;
-    document.body.style.display = '';
+    const baseColor = baseColors[s.baseColor];
+    if (baseColor) {
+      root.style.setProperty('--border', baseColor.border);
+      root.style.setProperty('--input', baseColor.input);
+      root.style.setProperty('--muted', baseColor.muted);
+    }
     
-    console.log('Design settings applied successfully');
+    // Apply style variant as class
+    root.classList.remove('style-default', 'style-new-york', 'style-vega');
+    root.classList.add(`style-${s.style}`);
+    
+    console.log('Design settings applied - radius:', radiusValue, 'font:', s.font, 'theme:', s.themeColor);
   }
 
   if (loading) {
