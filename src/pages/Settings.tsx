@@ -21,6 +21,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Save, RotateCcw, Download, Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTheme } from '@/hooks/useTheme';
 import {
   getUserSettings,
   updateUserSettings,
@@ -32,6 +33,7 @@ import {
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { setTheme } = useTheme();
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -58,7 +60,25 @@ export default function Settings() {
     
     setSaving(true);
     try {
-      await updateUserSettings(settings);
+      const updated = await updateUserSettings(settings);
+      setSettings(updated);
+      
+      // Apply settings immediately
+      document.documentElement.classList.remove('font-size-small', 'font-size-medium', 'font-size-large');
+      document.documentElement.classList.add(`font-size-${updated.fontSize}`);
+      
+      if (updated.reduceMotion) {
+        document.documentElement.classList.add('reduce-motion');
+      } else {
+        document.documentElement.classList.remove('reduce-motion');
+      }
+      
+      if (updated.highContrast) {
+        document.documentElement.classList.add('high-contrast');
+      } else {
+        document.documentElement.classList.remove('high-contrast');
+      }
+      
       toast.success('Settings saved successfully');
     } catch (error) {
       console.error('Failed to save settings:', error);
@@ -143,10 +163,10 @@ export default function Settings() {
   }
 
   return (
-    <div className="container max-w-4xl mx-auto py-8 space-y-6">
+    <div className="container max-w-[1600px] mx-auto py-12 px-8 lg:px-12 space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
+        <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -156,14 +176,14 @@ export default function Settings() {
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-3xl font-bold">Settings</h1>
+            <h1 className="text-4xl font-bold">Settings</h1>
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-lg text-muted-foreground">
             Manage your preferences and application configuration
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
             Export
@@ -438,7 +458,11 @@ export default function Settings() {
                 <select
                   id="theme"
                   value={settings.theme}
-                  onChange={(e) => { updateSetting('theme', e.target.value as UserSettings['theme']); }}
+                  onChange={(e) => { 
+                    const newTheme = e.target.value as UserSettings['theme'];
+                    updateSetting('theme', newTheme);
+                    setTheme(newTheme);
+                  }}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label="Theme"
                 >
