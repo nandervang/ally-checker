@@ -234,12 +234,38 @@ export async function updateUserSettings(settings: Partial<UserSettings>): Promi
     
     const settingsData = settingsToDb({ ...DEFAULT_SETTINGS, ...settings });
     
-    const { data, error } = await supabase
+    // First check if settings exist
+    const { data: existing } = await supabase
       .from('user_settings')
-      .update(settingsData as Record<string, never>)
+      .select('id')
       .eq('user_id', user.id)
-      .select()
+      .order('created_at', { ascending: false })
+      .limit(1)
       .single();
+
+    let data;
+    let error;
+    
+    if (existing) {
+      // Update existing record
+      const result = await supabase
+        .from('user_settings')
+        .update(settingsData as Record<string, never>)
+        .eq('id', existing.id)
+        .select()
+        .single();
+      data = result.data;
+      error = result.error;
+    } else {
+      // Create new record if none exists
+      const result = await supabase
+        .from('user_settings')
+        .insert({ ...settingsData as Record<string, never>, user_id: user.id })
+        .select()
+        .single();
+      data = result.data;
+      error = result.error;
+    }
     
     if (error) throw error;
     
