@@ -10,6 +10,7 @@ import { AuditInputForm } from "@/components/AuditInputForm";
 import { AuditResults } from "@/components/AuditResults";
 import { AuthForm } from "@/components/AuthForm";
 import { ActionBanner } from "@/components/ActionBanner";
+import { SettingsSheet } from "@/components/SettingsSheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/hooks/useTheme";
 import { Settings, FileText, Database, ChevronRight, Menu, Sparkles, Zap } from "lucide-react";
