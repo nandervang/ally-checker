@@ -240,7 +240,7 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
     root.classList.remove('style-default', 'style-new-york', 'style-vega');
     root.classList.add(`style-${s.style}`);
     
-    console.log('Design settings applied - radius:', radiusValue, 'font:', s.font, 'theme:', s.themeColor);
+    console.log('Design settings applied - radius:', s.radius, 'font:', s.font, 'theme:', s.themeColor);
   }
 
   if (loading) {
