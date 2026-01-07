@@ -2,7 +2,8 @@
 
 ALTER TABLE user_settings
   -- Design System (shadcn configurables)
-  ADD COLUMN IF NOT EXISTS style text DEFAULT 'default' CHECK (style IN ('default', 'new-york')),
+  ADD COLUMN IF NOT EXISTS component_library text DEFAULT 'radix-ui' CHECK (component_library IN ('radix-ui', 'ark-ui')),
+  ADD COLUMN IF NOT EXISTS style text DEFAULT 'default' CHECK (style IN ('default', 'new-york', 'vega')),
   ADD COLUMN IF NOT EXISTS base_color text DEFAULT 'zinc' CHECK (base_color IN ('gray', 'zinc', 'slate', 'stone', 'neutral')),
   ADD COLUMN IF NOT EXISTS theme_color text DEFAULT 'zinc' CHECK (theme_color IN ('red', 'rose', 'orange', 'green', 'blue', 'yellow', 'violet', 'zinc', 'slate', 'stone', 'gray', 'neutral')),
   ADD COLUMN IF NOT EXISTS radius text DEFAULT 'medium' CHECK (radius IN ('none', 'small', 'medium', 'large', 'full')),
@@ -15,8 +16,9 @@ ALTER TABLE user_settings
   ADD COLUMN IF NOT EXISTS agent_mode boolean DEFAULT true,
   ADD COLUMN IF NOT EXISTS preferred_model text DEFAULT 'gemini' CHECK (preferred_model IN ('claude', 'gemini', 'gpt4'));
 
--- Add comment explaining the new columns
-COMMENT ON COLUMN user_settings.style IS 'shadcn/ui style variant: default or new-york';
+-- Add comments explaining the new columns
+COMMENT ON COLUMN user_settings.component_library IS 'Component library: radix-ui or ark-ui';
+COMMENT ON COLUMN user_settings.style IS 'shadcn/ui style variant: default, new-york, or vega';
 COMMENT ON COLUMN user_settings.base_color IS 'Base neutral color palette';
 COMMENT ON COLUMN user_settings.theme_color IS 'Accent/theme color';
 COMMENT ON COLUMN user_settings.radius IS 'Border radius for UI elements';

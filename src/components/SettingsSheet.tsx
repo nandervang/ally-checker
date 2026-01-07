@@ -170,20 +170,33 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
       root.classList.remove('high-contrast');
     }
     
-    // Apply radius
-    root.style.setProperty('--radius', 
-      s.radius === 'none' ? '0px' :
-      s.radius === 'small' ? '0.25rem' :
+    // Apply radius - convert to actual rem values
+    const radiusValue = 
+      s.radius === 'none' ? '0' :
+      s.radius === 'small' ? '0.3rem' :
       s.radius === 'medium' ? '0.5rem' :
       s.radius === 'large' ? '0.75rem' :
-      '9999px'
-    );
+      '1rem'; // full
+    root.style.setProperty('--radius', radiusValue);
     
-    // Apply theme color as CSS variable
-    // In a real implementation, you'd load the full color palette
+    // Apply font family
+    const fontFamily = 
+      s.font === 'inter' ? 'Inter, system-ui, sans-serif' :
+      s.font === 'figtree' ? 'Figtree, system-ui, sans-serif' :
+      s.font === 'geist' ? 'Geist, system-ui, sans-serif' :
+      'Manrope, system-ui, sans-serif';
+    root.style.setProperty('--font-sans', fontFamily);
+    
+    // Apply style variant
+    root.setAttribute('data-style', s.style);
+    root.setAttribute('data-component-library', s.componentLibrary);
+    
+    // Apply theme color and base color as data attributes
     root.setAttribute('data-theme-color', s.themeColor);
     root.setAttribute('data-base-color', s.baseColor);
-    root.setAttribute('data-style', s.style);
+    
+    // Force a repaint to ensure changes are visible
+    void root.offsetHeight;
   }
 
   if (loading) {
@@ -376,6 +389,22 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
+                    <Label htmlFor="component-library">Component Library</Label>
+                    <select
+                      id="component-library"
+                      value={settings.componentLibrary}
+                      onChange={(e) => { updateSetting('componentLibrary', e.target.value as UserSettings['componentLibrary']); }}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="radix-ui">Radix UI (Default)</option>
+                      <option value="ark-ui">Ark UI</option>
+                    </select>
+                    <p className="text-sm text-muted-foreground">
+                      Underlying component library
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="style">Style</Label>
                     <select
                       id="style"
@@ -385,6 +414,7 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                     >
                       <option value="default">Default</option>
                       <option value="new-york">New York</option>
+                      <option value="vega">Vega</option>
                     </select>
                     <p className="text-sm text-muted-foreground">
                       Choose between default and New York style variants

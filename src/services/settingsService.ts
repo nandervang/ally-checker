@@ -45,7 +45,8 @@ export interface UserSettings {
   highContrast: boolean;
   
   // Design System (shadcn configurables)
-  style: 'default' | 'new-york';
+  componentLibrary: 'radix-ui' | 'ark-ui';
+  style: 'default' | 'new-york' | 'vega';
   baseColor: 'gray' | 'zinc' | 'slate' | 'stone' | 'neutral';
   themeColor: 'red' | 'rose' | 'orange' | 'green' | 'blue' | 'yellow' | 'violet' | 'zinc' | 'slate' | 'stone' | 'gray' | 'neutral';
   radius: 'none' | 'small' | 'medium' | 'large' | 'full';
@@ -80,6 +81,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   fontSize: 'medium',
   reduceMotion: false,
   highContrast: false,
+  componentLibrary: 'radix-ui',
   style: 'default',
   baseColor: 'zinc',
   themeColor: 'zinc',
@@ -118,6 +120,7 @@ function dbToSettings(dbData: Record<string, unknown>): UserSettings {
     fontSize: (dbData.font_size as UserSettings['fontSize']) ?? DEFAULT_SETTINGS.fontSize,
     reduceMotion: dbData.reduce_motion !== undefined ? (dbData.reduce_motion as boolean) : DEFAULT_SETTINGS.reduceMotion,
     highContrast: dbData.high_contrast !== undefined ? (dbData.high_contrast as boolean) : DEFAULT_SETTINGS.highContrast,
+    componentLibrary: (dbData.component_library as UserSettings['componentLibrary']) ?? DEFAULT_SETTINGS.componentLibrary,
     style: (dbData.style as UserSettings['style']) ?? DEFAULT_SETTINGS.style,
     baseColor: (dbData.base_color as UserSettings['baseColor']) ?? DEFAULT_SETTINGS.baseColor,
     themeColor: (dbData.theme_color as UserSettings['themeColor']) ?? DEFAULT_SETTINGS.themeColor,
@@ -155,6 +158,7 @@ function settingsToDb(settings: UserSettings): Record<string, unknown> {
     font_size: settings.fontSize,
     reduce_motion: settings.reduceMotion,
     high_contrast: settings.highContrast,
+    component_library: settings.componentLibrary,
     style: settings.style,
     base_color: settings.baseColor,
     theme_color: settings.themeColor,
