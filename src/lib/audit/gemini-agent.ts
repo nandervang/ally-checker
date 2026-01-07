@@ -454,11 +454,12 @@ export async function runGeminiAudit(input: AuditInput): Promise<AuditResult> {
     issues = sortIssues(issues);
 
     // Calculate metrics
+    const metrics = calculateMetrics(issues);
+    
     addTraceStep('📊 Calculating WCAG compliance metrics', {
       reasoning: 'Analyzing issues by WCAG principle (Perceivable, Operable, Understandable, Robust) and severity level. These metrics provide strategic overview of accessibility maturity and help identify systemic patterns (e.g., "Most issues are Perceivable suggests problems with visual design" or "High Operable issues indicate keyboard/interaction problems").',
       output: `${metrics.critical_issues} critical, ${metrics.serious_issues} serious, ${metrics.moderate_issues} moderate, ${metrics.minor_issues} minor`
     });
-    const metrics = calculateMetrics(issues);
 
     // Add trace duration
     trace.duration_ms = Date.now() - startTime;

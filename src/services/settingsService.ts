@@ -167,14 +167,16 @@ export async function getUserSettings(): Promise<UserSettings> {
       .from('user_settings')
       .select('*')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
     
     if (error) {
-      if (error.code === 'PGRST116') {
-        // No settings found - create default
-        return await createUserSettings(DEFAULT_SETTINGS);
-      }
-      throw error;
+      console.error('Error fetching settings:', error);
+      return getLocalSettings();
+    }
+    
+    if (!data) {
+      // No settings found - create default
+      return await createUserSettings(DEFAULT_SETTINGS);
     }
     
     return dbToSettings(data as Record<string, unknown>);
@@ -235,13 +237,13 @@ export async function updateUserSettings(settings: Partial<UserSettings>): Promi
     const settingsData = settingsToDb({ ...DEFAULT_SETTINGS, ...settings });
     
     // First check if settings exist
-    const { data: existing } = await supabase
+    const { data: existing, error: checkError } = await supabase
       .from('user_settings')
       .select('id')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     let data;
     let error;
