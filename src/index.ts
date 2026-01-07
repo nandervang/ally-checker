@@ -122,6 +122,8 @@ const server = serve({
               .update({
                 status: 'complete',
                 ai_model: result.ai_model,
+                agent_trace: result.agent_trace,
+                tools_used: result.agent_trace?.tools_used || [],
                 total_issues: result.metrics.total_issues,
                 critical_issues: result.metrics.critical_issues,
                 serious_issues: result.metrics.serious_issues,
