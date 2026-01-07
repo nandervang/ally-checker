@@ -29,7 +29,7 @@ export function AgentTraceViewer({ trace }: AgentTraceViewerProps) {
     <Card className="mt-6">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <CheckCircle2 className="h-5 w-5 text-green-600" />
+          <CheckCircle2 className="h-5 w-5 text-accent-foreground" />
           Agent Audit Trail
         </CardTitle>
         <CardDescription>
@@ -39,29 +39,29 @@ export function AgentTraceViewer({ trace }: AgentTraceViewerProps) {
       <CardContent>
         {/* Summary Stats */}
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
-            <Clock className="h-5 w-5 text-blue-600" />
+          <div className="flex items-center gap-2 p-3 bg-primary/10 dark:bg-primary/20 rounded-lg">
+            <Clock className="h-5 w-5 text-primary" />
             <div>
-              <div className="text-sm font-medium text-blue-900 dark:text-blue-100">Duration</div>
-              <div className="text-lg font-semibold text-blue-700 dark:text-blue-300">
+              <div className="text-sm font-medium text-foreground">Duration</div>
+              <div className="text-lg font-semibold text-primary">
                 {formatDuration(trace.duration_ms)}
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
-            <Wrench className="h-5 w-5 text-purple-600" />
+          <div className="flex items-center gap-2 p-3 bg-secondary dark:bg-secondary/50 rounded-lg">
+            <Wrench className="h-5 w-5 text-secondary-foreground" />
             <div>
-              <div className="text-sm font-medium text-purple-900 dark:text-purple-100">Tools Used</div>
-              <div className="text-lg font-semibold text-purple-700 dark:text-purple-300">
+              <div className="text-sm font-medium text-foreground">Tools Used</div>
+              <div className="text-lg font-semibold text-secondary-foreground">
                 {trace.tools_used.length}
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
-            <BookOpen className="h-5 w-5 text-green-600" />
+          <div className="flex items-center gap-2 p-3 bg-accent/50 dark:bg-accent/30 rounded-lg">
+            <BookOpen className="h-5 w-5 text-accent-foreground" />
             <div>
-              <div className="text-sm font-medium text-green-900 dark:text-green-100">Sources</div>
-              <div className="text-lg font-semibold text-green-700 dark:text-green-300">
+              <div className="text-sm font-medium text-foreground">Sources</div>
+              <div className="text-lg font-semibold text-accent-foreground">
                 {trace.sources_consulted.length}
               </div>
             </div>

@@ -41,6 +41,31 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
     }
   }, [open]);
 
+  // Watch for dark mode changes and re-apply colors
+  useEffect(() => {
+    if (!settings) return;
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          const root = document.documentElement;
+          if (root.classList.contains('dark') !== (mutation.oldValue?.includes('dark') ?? false)) {
+            console.log('Dark mode toggled, re-applying theme colors');
+            void applyDesignSettings(settings);
+          }
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeOldValue: true,
+      attributeFilter: ['class'],
+    });
+
+    return () => observer.disconnect();
+  }, [settings]);
+
   async function loadSettings() {
     setLoading(true);
     try {
@@ -173,7 +198,7 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
     }
     
     // Apply radius, fonts, and complete color palettes
-    const { getRadiusValue, getFontFamily, baseColorPalettes, themeColorOverrides } = 
+    const { getRadiusValue, getFontFamily, baseColorPalettes, themeColorOverrides, highContrastPalettes } = 
       await import('../lib/theme-colors');
     
     root.style.setProperty('--radius', getRadiusValue(s.radius));
@@ -186,10 +211,15 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
     const mode = isDark ? 'dark' : 'light';
     
     // Get base color palette
-    const basePalette = baseColorPalettes[s.baseColor];
+    let basePalette = baseColorPalettes[s.baseColor];
     if (!basePalette) {
       console.error('Base color palette not found:', s.baseColor);
       return;
+    }
+    
+    // Use high contrast palette if enabled (WCAG AAA compliant)
+    if (s.highContrast) {
+      basePalette = highContrastPalettes[mode];
     }
     
     // Get theme color overrides

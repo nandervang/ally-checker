@@ -135,8 +135,8 @@ export function SelectableIssueCard({
               <Code2 className="h-4 w-4" />
               <span>Problematic Code:</span>
             </div>
-            <pre className="bg-red-50 dark:bg-red-950/20 p-3 rounded-lg text-xs overflow-x-auto border-2 border-red-200 dark:border-red-800">
-              <code className="text-red-900 dark:text-red-200">{issue.element}</code>
+            <pre className="bg-destructive/10 dark:bg-destructive/20 p-3 rounded-lg text-xs overflow-x-auto border-2 border-destructive/30">
+              <code className="text-destructive">{issue.element}</code>
             </pre>
           </div>
         )}
@@ -147,7 +147,7 @@ export function SelectableIssueCard({
         {issue.how_to_fix && (
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm font-medium">
-              <Lightbulb className="h-4 w-4 text-green-600 dark:text-green-400" />
+              <Lightbulb className="h-4 w-4 text-accent-foreground" />
               <span>Så här fixar du (How to Fix):</span>
             </div>
             <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
@@ -159,12 +159,12 @@ export function SelectableIssueCard({
         {/* Corrected Code Example - NEW */}
         {issue.codeExample && (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-green-700 dark:text-green-400">
+            <div className="flex items-center gap-2 text-sm font-medium text-accent-foreground">
               <FileCode className="h-4 w-4" />
               <span>Corrected Code:</span>
             </div>
-            <pre className="bg-green-50 dark:bg-green-950/20 p-3 rounded-lg text-xs overflow-x-auto border-2 border-green-200 dark:border-green-800">
-              <code className="text-green-900 dark:text-green-200">{issue.codeExample}</code>
+            <pre className="bg-accent/50 dark:bg-accent/30 p-3 rounded-lg text-xs overflow-x-auto border-2 border-accent">
+              <code className="text-accent-foreground">{issue.codeExample}</code>
             </pre>
           </div>
         )}

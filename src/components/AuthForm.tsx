@@ -143,7 +143,7 @@ export function AuthForm() {
                   </div>
                 )}
                 {success && (
-                  <div className="text-sm text-green-600" role="status">
+                  <div className="text-sm text-accent-foreground" role="status">
                     {success}
                   </div>
                 )}

@@ -33,28 +33,32 @@ const principleIcons: Record<string, string> = {
 };
 
 const principleColors: Record<string, string> = {
-  perceivable: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-300",
-  operable: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-300",
-  understandable: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-300",
-  robust: "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border-indigo-300",
+  perceivable: "bg-primary/10 dark:bg-primary/20 text-primary border-primary/30",
+  operable: "bg-accent/50 dark:bg-accent/30 text-accent-foreground border-accent",
+  understandable: "bg-secondary dark:bg-secondary/50 text-secondary-foreground border-secondary-foreground/30",
+  robust: "bg-muted dark:bg-muted/80 text-foreground border-border",
 };
 
 const severityConfig = {
   critical: {
-    color: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-300",
+    color: "bg-destructive/10 dark:bg-destructive/20 text-destructive border-destructive/30",
     label: "Critical",
+    iconColor: "text-destructive",
   },
   serious: {
-    color: "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-300",
+    color: "bg-primary/10 dark:bg-primary/20 text-primary border-primary/30",
     label: "Serious",
+    iconColor: "text-primary",
   },
   moderate: {
-    color: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-300",
+    color: "bg-accent/50 dark:bg-accent/30 text-accent-foreground border-accent",
     label: "Moderate",
+    iconColor: "text-accent-foreground",
   },
   minor: {
-    color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-300",
+    color: "bg-muted dark:bg-muted/80 text-muted-foreground border-border",
     label: "Minor",
+    iconColor: "text-muted-foreground",
   },
 };
 
@@ -191,9 +195,9 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
       <CardHeader>
         <CardTitle className="text-2xl md:text-3xl flex items-center gap-3">
           {result.summary.failed === 0 ? (
-            <CheckCircle className="h-8 w-8 text-green-500" />
+            <CheckCircle className="h-8 w-8 text-accent-foreground" />
           ) : (
-            <AlertCircle className="h-8 w-8 text-orange-500" />
+            <AlertCircle className="h-8 w-8 text-destructive" />
           )}
           {t("results.title")}
         </CardTitle>
@@ -250,17 +254,17 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
 
         {/* Pass/Fail Overview */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 bg-green-100 dark:bg-green-900/30 rounded-lg border-2 border-green-300">
-            <div className="text-2xl font-bold text-green-700 dark:text-green-400">
+          <div className="p-4 bg-accent/50 dark:bg-accent/30 rounded-lg border-2 border-accent">
+            <div className="text-2xl font-bold text-accent-foreground">
               {result.summary.passed}
             </div>
-            <div className="text-sm font-medium text-green-600 dark:text-green-300">{t("results.passed")}</div>
+            <div className="text-sm font-medium text-accent-foreground/80">{t("results.passed")}</div>
           </div>
-          <div className="p-4 bg-red-100 dark:bg-red-900/30 rounded-lg border-2 border-red-300">
-            <div className="text-2xl font-bold text-red-700 dark:text-red-400">
+          <div className="p-4 bg-destructive/10 dark:bg-destructive/20 rounded-lg border-2 border-destructive/30">
+            <div className="text-2xl font-bold text-destructive">
               {result.summary.failed}
             </div>
-            <div className="text-sm font-medium text-red-600 dark:text-red-300">{t("results.failed")}</div>
+            <div className="text-sm font-medium text-destructive/80">{t("results.failed")}</div>
           </div>
         </div>
 

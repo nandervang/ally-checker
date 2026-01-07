@@ -521,7 +521,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
                 className="text-base md:text-lg h-auto py-3 focus-ring cursor-pointer"
               />
               {file && !getFieldError("file") && (
-                <p id="file-success" className="text-sm md:text-base text-green-600 dark:text-green-400" role="status">
+                <p id="file-success" className="text-sm md:text-base text-accent-foreground" role="status">
                   ✓ {t("audit.fileSuccess", { name: file.name, size: (file.size / 1024).toFixed(1) })}
                 </p>
               )}
@@ -552,7 +552,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
                 className="text-base md:text-lg h-auto py-3 focus-ring cursor-pointer"
               />
               {file && mode === "document" && !getFieldError("document") && (
-                <p id="document-success" className="text-sm md:text-base text-green-600 dark:text-green-400" role="status">
+                <p id="document-success" className="text-sm md:text-base text-accent-foreground" role="status">
                   ✓ {t("audit.fileSuccess", { name: file.name, size: (file.size / 1024).toFixed(1) })}
                   {file.name.endsWith(".pdf") ? " (PDF)" : " (DOCX)"}
                 </p>
