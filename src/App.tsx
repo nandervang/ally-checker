@@ -24,6 +24,7 @@ export function App() {
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
   const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Load user settings and apply them
   useEffect(() => {
@@ -75,7 +76,7 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <Header />
+      <Header onOpenSettings={() => setSettingsOpen(true)} />
 
       <Main>
         <div className="max-w-[1600px] mx-auto w-full px-8 lg:px-12 py-12">
@@ -405,6 +406,9 @@ export function App() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Settings Sheet */}
+      <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }
