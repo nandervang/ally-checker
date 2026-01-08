@@ -252,6 +252,7 @@ export async function runAudit(
     
     // Add API key if configured
     const apiKey = import.meta.env?.VITE_REPORT_SERVICE_KEY;
+    console.log('[DEBUG] VITE_REPORT_SERVICE_KEY:', apiKey ? 'SET' : 'NOT SET', apiKey?.substring(0, 10));
     if (apiKey) {
       headers['X-Report-Service-Key'] = apiKey;
     }
