@@ -245,12 +245,20 @@ export async function runAudit(
     };
 
     // Call Netlify function for AI agent audit
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.access_token}`,
+    };
+    
+    // Add API key if configured
+    const apiKey = import.meta.env.VITE_REPORT_SERVICE_KEY;
+    if (apiKey) {
+      headers['X-Report-Service-Key'] = apiKey;
+    }
+
     const response = await fetch('/.netlify/functions/ai-agent-audit', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`,
-      },
+      headers,
       body: JSON.stringify(agentRequest),
     });
 
