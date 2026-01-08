@@ -89,7 +89,7 @@ export async function generateCustomReport(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Report-Service-Key': import.meta.env.VITE_REPORT_SERVICE_KEY || '',
+        'X-Report-Service-Key': import.meta.env?.VITE_REPORT_SERVICE_KEY || '',
       },
       body: JSON.stringify(reportPayload),
     });
