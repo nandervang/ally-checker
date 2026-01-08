@@ -1,6 +1,7 @@
 import type { Handler, HandlerEvent } from "@netlify/functions";
 import Anthropic from "@anthropic-ai/sdk";
 import { runGeminiAudit } from "./gemini-agent";
+import { validateApiKey, getCorsHeaders, createAuthErrorResponse } from "./lib/auth";
 
 interface AuditRequest {
   mode: "url" | "html" | "snippet" | "document";
@@ -24,14 +25,11 @@ interface MCPToolResult {
  * 1. MCP servers for tool execution (fetch, wcag-docs, axe-core)
  * 2. AI models (Claude, Gemini, GPT-4) for intelligent analysis
  * 3. Heuristic evaluation beyond automated testing
+ * 
+ * Authentication: Requires X-Report-Service-Key header (if REPORT_SERVICE_KEY env var is set)
  */
 export const handler: Handler = async (event: HandlerEvent) => {
-  // CORS headers
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-  };
+  const headers = getCorsHeaders();
 
   // Handle preflight
   if (event.httpMethod === "OPTIONS") {
@@ -45,6 +43,12 @@ export const handler: Handler = async (event: HandlerEvent) => {
       headers,
       body: JSON.stringify({ error: "Method not allowed" }),
     };
+  }
+
+  // Validate authentication
+  const auth = validateApiKey(event);
+  if (!auth.isAuthenticated) {
+    return createAuthErrorResponse(auth.error!);
   }
 
   try {
