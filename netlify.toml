@@ -11,9 +11,16 @@
   directory = "netlify/functions"
   node_bundler = "esbuild"
 
-# Configure timeout and memory for all functions
-[[functions]]
-  name = "*"
+# Configure individual functions with timeout and memory
+[functions."ai-agent-audit"]
+  timeout = 30
+  memory = 1024
+
+[functions."gemini-agent"]
+  timeout = 30
+  memory = 1024
+
+[functions."upload-document"]
   timeout = 30
   memory = 1024
 
