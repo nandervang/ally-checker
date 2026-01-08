@@ -5,9 +5,13 @@ import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Moon, Sun, Home, Clock, FileText, User, LogOut } from "lucide-react";
+import { Moon, Sun, Home, Clock, FileText, User, LogOut, Settings as SettingsIcon } from "lucide-react";
 
-export function Header() {
+interface HeaderProps {
+  onOpenSettings: () => void;
+}
+
+export function Header({ onOpenSettings }: HeaderProps) {
   const { t } = useTranslation();
   const { theme, setTheme } = useTheme();
   const { user, signOut } = useAuth();
@@ -16,7 +20,7 @@ export function Header() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-elevation-1">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/98 backdrop-blur-md supports-[backdrop-filter]:bg-background/95 shadow-md">
       {/* Skip to main content link - visible on focus for keyboard users */}
       <a
         href="#main-content"
@@ -25,7 +29,7 @@ export function Header() {
         {t("nav.skipToMain")}
       </a>
 
-      <div className="flex h-16 items-center px-6 gap-6">
+      <div className="flex h-20 items-center px-8 gap-8 max-w-[1600px] mx-auto">
         <Link to="/" className="hover:opacity-80 transition-opacity">
           <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold">
             {t("app.title")}
@@ -33,7 +37,7 @@ export function Header() {
         </Link>
 
         {/* Navigation Links */}
-        <nav className="hidden md:flex gap-2 ml-6" aria-label="Main navigation">
+        <nav className="hidden md:flex gap-3 ml-8" aria-label="Main navigation">
           <Button
             asChild
             variant={isActive("/") ? "default" : "ghost"}
@@ -82,7 +86,11 @@ export function Header() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => signOut()} className="gap-2 cursor-pointer">
+              <DropdownMenuItem onClick={onOpenSettings} className="gap-2 cursor-pointer">
+                <SettingsIcon className="h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => { signOut(); }} className="gap-2 cursor-pointer">
                 <LogOut className="h-4 w-4" />
                 Sign Out
               </DropdownMenuItem>

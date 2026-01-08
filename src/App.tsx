@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,10 +9,14 @@ import { Footer } from "@/components/Footer";
 import { AuditInputForm } from "@/components/AuditInputForm";
 import { AuditResults } from "@/components/AuditResults";
 import { AuthForm } from "@/components/AuthForm";
+import { ActionBanner } from "@/components/ActionBanner";
+import { SettingsSheet } from "@/components/SettingsSheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/hooks/useTheme";
-import { Settings, FileText, Database, ChevronRight, Menu } from "lucide-react";
+import { Settings, FileText, Database, ChevronRight, Menu, Sparkles, Zap } from "lucide-react";
 import type { AuditResult } from "@/data/mockAuditResults";
+import { getUserSettings, type UserSettings } from "@/services/settingsService";
+import { applyDesignSettings } from "@/lib/apply-design-settings";
 import "./index.css";
 
 export function App() {
@@ -21,9 +25,25 @@ export function App() {
   const { user, loading } = useAuth();
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
+  const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsLoading, setSettingsLoading] = useState(true);
 
-  // Show loading state while checking auth
-  if (loading) {
+  // Load user settings and apply them
+  useEffect(() => {
+    void getUserSettings()
+      .then(async (userSettings) => {
+        setSettings(userSettings);
+        // Apply all design settings
+        await applyDesignSettings(userSettings);
+      })
+      .finally(() => {
+        setSettingsLoading(false);
+      });
+  }, []);
+
+  // Show loading state while checking auth or loading settings
+  if (loading || settingsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -47,14 +67,14 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <Header />
+      <Header onOpenSettings={() => setSettingsOpen(true)} />
 
       <Main>
-        <div className="h-full w-full px-6 py-8">
+        <div className="max-w-[1600px] mx-auto w-full px-8 lg:px-12 py-12">
           {/* Mobile Menu Sheet */}
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" className="focus-ring md:hidden mb-6">
+              <Button variant="outline" className="focus-ring md:hidden mb-8">
                 <Menu className="h-5 w-5 mr-2" />
                 {t("nav.menu")}
               </Button>
@@ -82,12 +102,12 @@ export function App() {
             </SheetContent>
           </Sheet>
           {/* Quick Actions Bar */}
-          <div className="flex gap-3 mb-8 overflow-x-auto pb-2">
+          <div className="flex gap-4 mb-12 overflow-x-auto pb-2">
             {menuItems.map((item) => (
               <Button
                 key={item.id}
                 variant="outline"
-                className="gap-2 whitespace-nowrap focus-ring shadow-elevation-1 hover:shadow-elevation-2 transition-all text-base md:text-lg lg:text-xl h-auto py-3 px-6"
+                className="gap-2 whitespace-nowrap focus-ring shadow-elevation-1 hover:shadow-elevation-2 transition-all text-base md:text-lg lg:text-xl h-auto py-4 px-8"
                 onClick={() => setActivePanel(item.id)}
               >
                 <item.icon className="h-5 w-5 md:h-6 md:w-6" />
@@ -98,11 +118,11 @@ export function App() {
           </div>
 
           {/* Audit Input Form - Main Feature */}
-          <div className="mt-12 mb-8">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2 text-center">
+          <div className="mt-16 mb-12">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 text-center">
               {t("app.title")}
             </h2>
-            <p className="text-lg md:text-xl text-muted-foreground text-center mb-8">
+            <p className="text-lg md:text-xl text-muted-foreground text-center mb-10">
               {t("app.subtitle")}
             </p>
             <AuditInputForm onAuditComplete={setAuditResult} />
@@ -110,7 +130,7 @@ export function App() {
 
           {/* Display Audit Results */}
           {auditResult && (
-            <div className="mb-8">
+            <div className="mb-12">
               <AuditResults 
                 result={auditResult} 
                 onNewAudit={() => setAuditResult(null)}
@@ -118,9 +138,33 @@ export function App() {
               />
             </div>
           )}
+        </div>
+      </Main>
 
+      {/* Action Banner - Swedbank-style full-width section */}
+      <ActionBanner variant="primary">
+        <h2 className="text-3xl md:text-4xl font-bold">
+          {t("banners.aiPowered.title") ?? "AI-Powered Accessibility Insights"}
+        </h2>
+        <p className="text-lg md:text-xl opacity-90">
+          {t("banners.aiPowered.description") ?? "Get expert-level accessibility analysis powered by advanced AI. Combining automated testing with intelligent pattern recognition."}
+        </p>
+        <div className="flex gap-4 justify-center flex-wrap mt-8">
+          <Button size="lg" variant="secondary" className="gap-2 h-auto py-4 px-8 text-lg">
+            <Sparkles className="h-5 w-5" />
+            {t("banners.aiPowered.tryNow") ?? "Try AI Analysis"}
+          </Button>
+          <Button size="lg" variant="outline" className="gap-2 h-auto py-4 px-8 text-lg bg-background/10 border-primary-foreground/20 hover:bg-background/20">
+            <Zap className="h-5 w-5" />
+            {t("banners.aiPowered.learnMore") ?? "Learn More"}
+          </Button>
+        </div>
+      </ActionBanner>
+
+      <Main>
+        <div className="max-w-[1600px] mx-auto w-full px-8 lg:px-12 py-12">
           {/* Content Grid - Responsive */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 w-full">
             <Card className="shadow-elevation-2 hover:shadow-elevation-3 transition-all cursor-pointer" onClick={() => setActivePanel("overview")}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-xl md:text-2xl lg:text-3xl">
@@ -353,6 +397,9 @@ export function App() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Settings Sheet */}
+      <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }

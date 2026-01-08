@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -13,12 +13,22 @@ import { LoadingSpinner } from "./LoadingSpinner";
 import { ErrorDisplay } from "./ErrorDisplay";
 import { ProgressIndicator } from "./ProgressIndicator";
 import { runAxeAnalysisOnUrl, runAxeAnalysisOnSnippet, runAxeAnalysis } from "@/services/axeService";
-import { runAIAgentAudit, isAIAgentAvailable } from "@/services/aiAgentService";
 import { 
   mockPdfAuditResult, 
   mockDocxAuditResult,
   type AuditResult 
 } from "@/data/mockAuditResults";
+import { 
+  runAudit, 
+  getAudit, 
+  getAuditIssues, 
+  uploadDocumentForAudit,
+  type AuditInput, 
+  type AuditProgress, 
+  type Issue 
+} from "@/lib/audit";
+import { useAuth } from "@/contexts/AuthContext";
+import { getUserSettings, type UserSettings } from "@/services/settingsService";
 
 type InputMode = "url" | "html" | "snippet" | "document";
 
@@ -35,6 +45,7 @@ interface AuditInputFormProps {
 
 export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [mode, setMode] = useState<InputMode>("url");
   const [url, setUrl] = useState("");
   const [snippet, setSnippet] = useState("");
@@ -42,8 +53,13 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [auditStep, setAuditStep] = useState<AuditStep>("idle");
   const [auditError, setAuditError] = useState<string | null>(null);
-  const [agentMode, setAgentMode] = useState<boolean>(false);
-  const [selectedModel, setSelectedModel] = useState<"claude" | "gemini" | "gpt4">("claude");
+  const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [progressMessage, setProgressMessage] = useState<string>("");
+
+  // Load settings on mount
+  useEffect(() => {
+    void getUserSettings().then(setSettings);
+  }, []);
 
   const validateUrl = (value: string): boolean => {
     try {
@@ -152,94 +168,220 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
   };
 
   const performAudit = async () => {
+    if (!user) {
+      setAuditError("You must be logged in to run audits");
+      return;
+    }
+
     const maxRetries = 3;
     let attempt = 0;
 
     while (attempt < maxRetries) {
       try {
-        let result: AuditResult;
-
-        // Use AI Agent mode if enabled and available
-        if (agentMode && isAIAgentAvailable()) {
+        // Use new audit service
+        if (settings?.agentMode) {
+          // Set initial loading state
           setAuditStep("fetching");
+          setProgressMessage("🔧 Initializing AI accessibility audit...");
           
-          // Prepare content for AI agent
-          let content = "";
-          let agentMode: "url" | "html" | "snippet" = "html";
+          // Prepare input for audit service
+          let inputType: "url" | "html" | "snippet" | "document" = "html";
+          let inputValue = "";
+          let documentPath: string | undefined = undefined;
+          let documentType: "pdf" | "docx" | undefined = undefined;
           
           if (mode === "url") {
-            content = url;
-            agentMode = "url";
+            inputType = "url";
+            inputValue = url;
+            setProgressMessage("🌐 Fetching web page content and resources...");
           } else if (mode === "html" && file) {
-            content = await file.text();
-            agentMode = "html";
+            inputType = "html";
+            setProgressMessage("📄 Reading HTML file content...");
+            inputValue = await file.text();
+            setProgressMessage("✅ HTML loaded, preparing for AI analysis...");
           } else if (mode === "snippet") {
-            content = snippet;
-            agentMode = "snippet";
+            inputType = "snippet";
+            inputValue = snippet;
+            setProgressMessage("🔍 Preparing code snippet for analysis...");
+          } else if (mode === "document" && file) {
+            inputType = "document";
+            
+            // Upload document to Supabase Storage
+            setProgressMessage(`📤 Uploading ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB) to secure storage...`);
+            const uploadResult = await uploadDocumentForAudit(file, user.id);
+            
+            documentPath = uploadResult.documentPath;
+            documentType = uploadResult.documentType;
+            inputValue = file.name;
+            
+            setProgressMessage("✅ Document uploaded, initializing accessibility checker...");
+            setAuditStep("analyzing");
+            setProgressMessage(`🔬 AI agent inspecting ${documentType?.toUpperCase()} structure and metadata...`);
           } else {
-            // For documents, fall back to quick mode
-            throw new Error("AI Agent mode not yet supported for PDF/DOCX");
+            throw new Error("Invalid audit mode or missing input");
           }
-          
-          setAuditStep("analyzing");
-          // Run AI agent audit with MCP tools
-          result = await runAIAgentAudit({
-            mode: agentMode,
-            content,
-            model: selectedModel,
-          });
-        }
-        // Quick mode - use client-side axe-core
-        else if (mode === "url") {
-          setAuditStep("fetching");
-          // Run real axe-core analysis on URL
-          result = await runAxeAnalysisOnUrl(url);
-        } else if (mode === "html" && file) {
-          setAuditStep("fetching");
-          // Read HTML file content
-          const htmlContent = await file.text();
-          
-          setAuditStep("analyzing");
-          // Run axe-core analysis on HTML content
-          result = await runAxeAnalysis(htmlContent, { 
-            fileName: file.name, 
-            documentType: "html" 
-          });
-        } else if (mode === "snippet") {
-          setAuditStep("analyzing");
-          // Run axe-core analysis on snippet
-          result = await runAxeAnalysisOnSnippet(snippet);
-        } else if (mode === "document" && file) {
-          setAuditStep("fetching");
-          // For PDF/DOCX, still use mock data (document analysis will be implemented later)
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          
-          setAuditStep("analyzing");
-          await new Promise((resolve) => setTimeout(resolve, 1500));
-          
-          result = file.name.endsWith(".pdf") 
-            ? { ...mockPdfAuditResult, fileName: file.name }
-            : { ...mockDocxAuditResult, fileName: file.name };
-        } else {
-          throw new Error("Invalid audit mode or missing input");
-        }
 
-        setAuditStep("generating");
-        await new Promise((resolve) => setTimeout(resolve, 500));
+          const auditInput: AuditInput = {
+            input_type: inputType,
+            input_value: inputValue,
+            user_id: user.id,
+            document_path: documentPath,
+            document_type: documentType,
+          };
 
-        setAuditStep("complete");
-        
-        // Notify parent component
-        onAuditComplete?.(result);
-        
-        console.log("Audit complete:", result);
-        
-        // Reset after 2 seconds
-        setTimeout(() => {
-          setAuditStep("idle");
-        }, 2000);
-        
-        return;
+          // Progress callback
+          const onProgress = (progress: AuditProgress) => {
+            setProgressMessage(progress.message);
+            
+            switch (progress.status) {
+              case "queued":
+                setProgressMessage("⏳ Audit queued, connecting to AI agent...");
+                setAuditStep("analyzing");
+                break;
+              case "analyzing":
+                // Provide detailed messages based on input type
+                if (inputType === "url") {
+                  setProgressMessage("🤖 AI agent analyzing page structure, semantics, and ARIA patterns...");
+                } else if (inputType === "html") {
+                  setProgressMessage("🤖 AI agent checking WCAG 2.2 compliance and accessibility patterns...");
+                } else if (inputType === "snippet") {
+                  setProgressMessage("🤖 AI agent evaluating component accessibility and best practices...");
+                } else if (inputType === "document") {
+                  const docType = documentType?.toUpperCase();
+                  setProgressMessage(`🤖 AI agent validating ${docType} against ${documentType === 'pdf' ? 'PDF/UA standards' : 'WCAG document guidelines'}...`);
+                }
+                setAuditStep("analyzing");
+                break;
+              case "complete":
+                setProgressMessage("✨ Analysis complete, compiling findings into report...");
+                setAuditStep("generating");
+                break;
+              case "failed":
+                setAuditStep("idle");
+                break;
+            }
+          };
+
+          // Run audit and get ID
+          const auditId = await runAudit(auditInput, onProgress);
+
+          setProgressMessage("📊 Retrieving audit results from database...");
+          setAuditStep("generating");
+          
+          // Fetch complete audit with issues
+          const audit = await getAudit(auditId);
+          const issues = (await getAuditIssues(auditId)) as Issue[];
+
+          if (!audit) {
+            throw new Error("Failed to retrieve audit results");
+          }
+
+          // Convert to AuditResult format (using mock type for now)
+          const result: AuditResult = {
+            auditId: audit.id,
+            url: audit.input_type === 'url' ? audit.input_value : undefined,
+            fileName: audit.input_type === 'snippet' ? 'HTML Snippet' : audit.input_type === 'html' ? 'HTML Document' : undefined,
+            documentType: audit.input_type === 'url' ? 'html' : audit.input_type as 'html' | 'snippet',
+            timestamp: audit.created_at,
+            summary: {
+              totalIssues: audit.total_issues || 0,
+              critical: audit.critical_issues || 0,
+              serious: audit.serious_issues || 0,
+              moderate: audit.moderate_issues || 0,
+              minor: audit.minor_issues || 0,
+              passed: 0, // Not tracked yet
+              failed: audit.total_issues || 0, // Same as total for now
+            },
+            issues: issues.map(issue => ({
+              id: `issue-${issue.wcag_criterion}`,
+              principle: issue.wcag_principle,
+              guideline: `${issue.wcag_criterion} ${issue.title}`,
+              wcagLevel: issue.wcag_level,
+              severity: issue.severity,
+              title: issue.title,
+              description: issue.description,
+              element: issue.element_html || '',
+              selector: issue.element_selector || '',
+              impact: issue.user_impact || issue.severity,
+              remediation: issue.how_to_fix || '',
+              helpUrl: issue.wcag_url || `https://www.w3.org/WAI/WCAG22/Understanding/${issue.wcag_criterion.replace(/\./g, '')}.html`,
+              occurrences: 1,
+              codeExample: issue.code_example,
+            })),
+            agent_trace: audit.agent_trace ? {
+              steps: (audit.agent_trace as any).steps || [],
+              tools_used: audit.tools_used || [],
+              sources_consulted: (audit.agent_trace as any).sources_consulted || [],
+              duration_ms: (audit.agent_trace as any).duration_ms,
+            } : (audit.ai_model ? {
+              // Fallback trace if agent ran but didn't populate trace
+              steps: [
+                {
+                  timestamp: audit.created_at,
+                  action: "ai_agent_analysis",
+                  reasoning: `Analyzed ${audit.input_type} using ${audit.ai_model || 'AI agent'}`,
+                  output: `Found ${audit.total_issues} accessibility issues across ${audit.perceivable_issues + audit.operable_issues + audit.understandable_issues + audit.robust_issues} WCAG principles`
+                }
+              ],
+              tools_used: audit.tools_used || (audit.ai_model ? [audit.ai_model] : []),
+              sources_consulted: ["WCAG 2.2 Guidelines", "axe-core analysis"],
+              duration_ms: undefined
+            } : undefined),
+          };
+
+          setProgressMessage("🎉 Audit complete! Displaying results...");
+          setAuditStep("complete");
+          onAuditComplete?.(result);
+          
+          setTimeout(() => {
+            setAuditStep("idle");
+            setProgressMessage("");
+          }, 2000);
+          
+          return;
+        }
+        // Fallback to axe-core (quick mode)
+        else {
+          let result: AuditResult;
+          
+          if (mode === "url") {
+            setAuditStep("fetching");
+            result = await runAxeAnalysisOnUrl(url);
+          } else if (mode === "html" && file) {
+            setAuditStep("fetching");
+            const htmlContent = await file.text();
+            setAuditStep("analyzing");
+            result = await runAxeAnalysis(htmlContent, { 
+              fileName: file.name, 
+              documentType: "html" 
+            });
+          } else if (mode === "snippet") {
+            setAuditStep("analyzing");
+            result = await runAxeAnalysisOnSnippet(snippet);
+          } else if (mode === "document" && file) {
+            setAuditStep("fetching");
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            setAuditStep("analyzing");
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+            result = file.name.endsWith(".pdf") 
+              ? { ...mockPdfAuditResult, fileName: file.name }
+              : { ...mockDocxAuditResult, fileName: file.name };
+          } else {
+            throw new Error("Invalid audit mode or missing input");
+          }
+
+          setAuditStep("generating");
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
+          setAuditStep("complete");
+          onAuditComplete?.(result);
+          
+          setTimeout(() => {
+            setAuditStep("idle");
+          }, 2000);
+          
+          return;
+        }
       } catch (error) {
         attempt++;
 
@@ -302,65 +444,14 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
       {/* Show progress if audit is running */}
       {isProcessing && (
         <div className="space-y-4">
-          <LoadingSpinner message={getStepLabel()} />
+          <LoadingSpinner message={progressMessage || getStepLabel()} />
           <ProgressIndicator
             currentStep={getStepNumber()}
             totalSteps={3}
-            stepLabel={getStepLabel()}
+            stepLabel={progressMessage || getStepLabel()}
           />
         </div>
       )}
-
-      {/* Agent Mode Toggle */}
-      <div className="bg-card border rounded-lg p-6 shadow-elevation-2">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            {agentMode ? (
-              <Brain className="h-6 w-6 text-primary" />
-            ) : (
-              <Zap className="h-6 w-6 text-muted-foreground" />
-            )}
-            <div>
-              <h3 className="text-lg font-semibold">
-                {agentMode ? "AI Agent Mode" : "Quick Mode"}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {agentMode 
-                  ? "AI-powered comprehensive analysis with heuristics" 
-                  : "Instant automated testing with axe-core"}
-              </p>
-            </div>
-          </div>
-          <Switch
-            checked={agentMode}
-            onCheckedChange={setAgentMode}
-            aria-label="Toggle AI Agent Mode"
-          />
-        </div>
-
-        {agentMode && (
-          <div className="mt-4 pt-4 border-t">
-            <Label htmlFor="model-select" className="text-sm font-medium mb-2 block">
-              AI Model
-            </Label>
-            <Select value={selectedModel} onValueChange={(value) => { setSelectedModel(value as typeof selectedModel); }}>
-              <SelectTrigger id="model-select" className="w-full">
-                <SelectValue placeholder="Select AI model" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="claude">Claude (Anthropic) - Recommended</SelectItem>
-                <SelectItem value="gemini">Gemini (Google)</SelectItem>
-                <SelectItem value="gpt4">GPT-4 (OpenAI)</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground mt-2">
-              {selectedModel === "claude" && "Best for accessibility analysis with MCP tools"}
-              {selectedModel === "gemini" && "Fast analysis with multimodal capabilities"}
-              {selectedModel === "gpt4" && "Reliable and comprehensive evaluation"}
-            </p>
-          </div>
-        )}
-      </div>
 
       <Tabs value={mode} onValueChange={(value) => { setMode(value as InputMode); }} className="w-full">`
         <TabsList className="grid w-full grid-cols-4 h-auto">
@@ -430,7 +521,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
                 className="text-base md:text-lg h-auto py-3 focus-ring cursor-pointer"
               />
               {file && !getFieldError("file") && (
-                <p id="file-success" className="text-sm md:text-base text-green-600 dark:text-green-400" role="status">
+                <p id="file-success" className="text-sm md:text-base text-accent-foreground" role="status">
                   ✓ {t("audit.fileSuccess", { name: file.name, size: (file.size / 1024).toFixed(1) })}
                 </p>
               )}
@@ -461,7 +552,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
                 className="text-base md:text-lg h-auto py-3 focus-ring cursor-pointer"
               />
               {file && mode === "document" && !getFieldError("document") && (
-                <p id="document-success" className="text-sm md:text-base text-green-600 dark:text-green-400" role="status">
+                <p id="document-success" className="text-sm md:text-base text-accent-foreground" role="status">
                   ✓ {t("audit.fileSuccess", { name: file.name, size: (file.size / 1024).toFixed(1) })}
                   {file.name.endsWith(".pdf") ? " (PDF)" : " (DOCX)"}
                 </p>

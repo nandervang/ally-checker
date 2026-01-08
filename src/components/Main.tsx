@@ -8,7 +8,7 @@ export function Main({ children }: MainProps) {
   return (
     <main
       id="main-content"
-      className="flex-1 w-full"
+      className="flex-1 w-full bg-background"
       role="main"
       aria-label="Main content"
     >

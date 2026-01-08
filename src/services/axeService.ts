@@ -60,6 +60,96 @@ const extractGuideline = (tags: string[]): string => {
   return "WCAG 2.2";
 };
 
+// Helper function to generate user impact description
+const generateUserImpact = (violationId: string, severity: string): string => {
+  const impactMap: Record<string, string> = {
+    'image-alt': 'Screen reader users cannot understand image content. They will only hear "image" or the filename without meaningful information.',
+    'color-contrast': 'Users with low vision, color blindness, or viewing in bright sunlight cannot read the text clearly.',
+    'button-name': 'Screen reader users cannot identify the button\'s purpose, making it impossible to understand what will happen when activated.',
+    'link-name': 'Screen reader users cannot identify where the link leads, preventing informed navigation decisions.',
+    'label': 'Screen reader users cannot identify the purpose of form fields, leading to errors and confusion.',
+    'input-button-name': 'Screen reader users cannot identify what the button does, preventing effective form interaction.',
+    'html-has-lang': 'Screen readers cannot determine correct pronunciation and voice, resulting in garbled or incomprehensible speech output.',
+    'valid-lang': 'Screen readers may use incorrect pronunciation, making content difficult or impossible to understand.',
+    'document-title': 'Screen reader users and users navigating browser tabs cannot identify the page content or purpose.',
+    'landmark-one-main': 'Screen reader users cannot quickly navigate to the main content, forcing them to tab through all navigation elements.',
+    'region': 'Screen reader users cannot efficiently navigate page sections, making it difficult to find and access content.',
+    'page-has-heading-one': 'Screen reader users may not understand the page hierarchy and main topic.',
+    'heading-order': 'Screen reader users may be confused by the document structure and unable to navigate efficiently.',
+    'list': 'Screen reader users may not understand that items are part of a group, losing important context.',
+    'listitem': 'Screen reader users may not understand the relationship between list items and their parent list.',
+    'meta-viewport': 'Users with low vision cannot zoom the page to read content, preventing access for users who need magnification.',
+    'tabindex': 'Keyboard users may encounter unexpected focus order, making navigation confusing or impossible.',
+    'aria-*': 'Screen reader users may receive incorrect information about the element\'s role, state, or properties.',
+    'table': 'Screen reader users cannot understand table relationships, making complex data incomprehensible.',
+  };
+
+  // Find matching pattern
+  for (const [pattern, impact] of Object.entries(impactMap)) {
+    if (violationId.includes(pattern) || pattern.includes(violationId)) {
+      return impact;
+    }
+  }
+
+  // Default impact based on severity
+  if (severity === 'critical') {
+    return 'This issue prevents users with disabilities from accessing essential content or functionality.';
+  } else if (severity === 'serious') {
+    return 'This issue creates significant barriers for users with disabilities, making content difficult to access.';
+  } else if (severity === 'moderate') {
+    return 'This issue makes content less accessible for users with disabilities, though workarounds may exist.';
+  }
+  return 'This issue may cause inconvenience for some users with disabilities.';
+};
+
+// Helper function to generate code example fix
+const generateCodeExample = (violationId: string, element: string): string | undefined => {
+  const fixes: Record<string, (html: string) => string> = {
+    'image-alt': (html) => {
+      if (html.includes('alt=')) return undefined; // Already has alt
+      return html.replace(/<img([^>]*?)>/i, '<img$1 alt="Descriptive text">');
+    },
+    'button-name': (html) => {
+      if (html.includes('<button></button>')) {
+        return '<button>Click me</button>';
+      }
+      if (html.includes('aria-label')) return undefined;
+      return html.replace(/<button([^>]*?)>/i, '<button$1 aria-label="Descriptive label">');
+    },
+    'link-name': (html) => {
+      if (html.includes('</a>') && !html.includes('>  <')) {
+        return html; // Has text content
+      }
+      return html.replace(/<a([^>]*?)>([^<]*)<\/a>/i, '<a$1>Descriptive link text</a>');
+    },
+    'label': (html) => {
+      const id = (html.match(/id="([^"]+)"/) || [])[1] || 'input-id';
+      return `<label for="${id}">Field label</label>\\n${html.includes('id=') ? html : html.replace(/<input/i, `<input id="${id}"`)}`;
+    },
+    'html-has-lang': () => '<html lang="en">',
+    'valid-lang': (html) => html.replace(/lang="[^"]*"/i, 'lang="en"'),
+    'document-title': () => '<title>Page Title</title>',
+    'color-contrast': (html) => {
+      if (html.includes('color:')) {
+        return html.replace(/color:\s*#[0-9a-f]{6}/i, 'color: #000');
+      }
+      return html.replace(/<([a-z]+)([^>]*?)>/i, '<$1$2 style="color: #000">');
+    },
+  };
+
+  for (const [pattern, fixFn] of Object.entries(fixes)) {
+    if (violationId.includes(pattern)) {
+      try {
+        return fixFn(element);
+      } catch {
+        return undefined;
+      }
+    }
+  }
+
+  return undefined;
+};
+
 // Convert axe violation to our AuditIssue format
 const convertAxeViolation = (violation: Result, index: number): AuditIssue => {
   const principle = wcagToPrinciple(violation.tags);
@@ -72,6 +162,10 @@ const convertAxeViolation = (violation: Result, index: number): AuditIssue => {
   const element = firstNode?.html || "<unknown>";
   const selector = firstNode?.target.join(" > ") || "unknown";
 
+  // Generate user impact and code example
+  const userImpact = generateUserImpact(violation.id, severity);
+  const codeExample = generateCodeExample(violation.id, element);
+
   return {
     id: `axe-${violation.id}-${String(index)}`,
     principle,
@@ -82,10 +176,11 @@ const convertAxeViolation = (violation: Result, index: number): AuditIssue => {
     description: violation.description,
     element,
     selector,
-    impact: violation.help,
+    impact: userImpact,
     remediation: firstNode?.failureSummary || "Review and fix the accessibility issue according to WCAG guidelines.",
     helpUrl: violation.helpUrl,
     occurrences: violation.nodes.length,
+    codeExample,
   };
 };
 

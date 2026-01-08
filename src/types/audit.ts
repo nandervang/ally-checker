@@ -25,6 +25,17 @@ export interface Issue {
   how_to_fix: string;
   code_example?: string;
   wcag_url?: string;
+  user_impact?: string;
+  expert_analysis?: string;
+  testing_instructions?: string;
+  // Magenta A11y-style testing guidance
+  how_to_reproduce?: string; // Step-by-step reproduction instructions
+  keyboard_testing?: string; // Keyboard interaction testing steps (Tab, Enter, Space, Arrow keys)
+  screen_reader_testing?: string; // Screen reader testing (Name, Role, State, Value)
+  visual_testing?: string; // Visual inspection testing steps
+  expected_behavior?: string; // How it should work according to WCAG success criteria
+  // Swedish ETU-style formatted report
+  report_text?: string; // Complete formatted report text in Swedish following ETU template
 }
 
 // Aggregated metrics by category
@@ -40,12 +51,48 @@ export interface AuditMetrics {
   robust_issues: number;
 }
 
+// Audit trail tracking
+export interface AgentTraceStep {
+  timestamp: string;
+  action: string;
+  tool?: string;
+  input?: Record<string, unknown>;
+  output?: string;
+  reasoning?: string;
+}
+
+export interface AgentTrace {
+  steps: AgentTraceStep[];
+  tools_used: string[];
+  sources_consulted: string[];
+  duration_ms?: number;
+}
+
+// Executive summary from AI expert analysis
+export interface ExecutiveSummary {
+  overall_assessment: string;
+  compliance_level: string;
+  top_priorities: string[];
+  estimated_effort: string;
+  risk_level: string;
+}
+
+// Pattern analysis identifying systemic issues
+export interface PatternAnalysis {
+  systemic_issues: string[];
+  positive_patterns: string[];
+  recommendations: string[];
+}
+
 // Complete audit result
 export interface AuditResult {
   issues: Issue[];
   metrics: AuditMetrics;
   ai_model: string;
   url?: string;
+  agent_trace?: AgentTrace;
+  executive_summary?: ExecutiveSummary;
+  pattern_analysis?: PatternAnalysis;
 }
 
 // Input for running an audit
@@ -55,6 +102,8 @@ export interface AuditInput {
   suspected_issue?: string;
   user_id: string;
   session_id?: string;
+  document_path?: string;
+  document_type?: 'pdf' | 'docx';
 }
 
 // Progress callback for streaming updates

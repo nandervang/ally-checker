@@ -9,9 +9,9 @@
  */
 
 import { supabase } from '../supabase';
+import { uploadDocument } from '../storage';
 import type { Database } from '@/types/database';
 import type { AuditInput, AuditResult, AuditProgressCallback } from '@/types/audit';
-import { runGeminiAudit } from './gemini-agent';
 
 type AuditRow = Database['public']['Tables']['audits']['Row'];
 type AuditInsert = Database['public']['Tables']['audits']['Insert'];
@@ -19,15 +19,72 @@ type AuditUpdate = Database['public']['Tables']['audits']['Update'];
 type IssueInsert = Database['public']['Tables']['issues']['Insert'];
 
 /**
- * Create a new audit record in the database
+ * Upload document and create audit record
  */
-async function createAudit(input: AuditInput): Promise<string> {
+export async function uploadDocumentForAudit(
+  file: File,
+  userId: string,
+  sessionId?: string
+): Promise<{ auditId: string; documentPath: string; documentType: 'pdf' | 'docx' }> {
+  // Upload document to storage
+  const uploadResult = await uploadDocument(file, userId);
+  
+  if (uploadResult.error || !uploadResult.path) {
+    throw new Error(`Document upload failed: ${uploadResult.error || 'Unknown error'}`);
+  }
+
+  const documentType = file.name.endsWith('.pdf') ? 'pdf' : 'docx';
+
+  // Create audit record with document reference
+  const auditData: AuditInsert = {
+    user_id: userId,
+    session_id: sessionId,
+    input_type: 'document',
+    input_value: file.name,
+    document_path: uploadResult.path,
+    document_type: documentType,
+    status: 'queued',
+    total_issues: 0,
+    critical_issues: 0,
+    serious_issues: 0,
+    moderate_issues: 0,
+    minor_issues: 0,
+    perceivable_issues: 0,
+    operable_issues: 0,
+    understandable_issues: 0,
+    robust_issues: 0,
+  };
+
+  const { data, error } = await supabase
+    .from('audits')
+    .insert(auditData)
+    .select('id')
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to create audit: ${error.message}`);
+  }
+
+  return {
+    auditId: data.id,
+    documentPath: uploadResult.path,
+    documentType,
+  };
+}
+
+/**
+ * Create a new audit record in the database
+ * Exported for server-side use in API endpoints
+ */
+export async function createAudit(input: AuditInput): Promise<string> {
   const auditData: AuditInsert = {
     user_id: input.user_id,
     session_id: input.session_id,
     input_type: input.input_type,
     input_value: input.input_value,
     url: input.input_type === 'url' ? input.input_value : null,
+    document_path: input.document_path,
+    document_type: input.document_type,
     suspected_issue: input.suspected_issue,
     status: 'queued',
     total_issues: 0,
@@ -56,8 +113,9 @@ async function createAudit(input: AuditInput): Promise<string> {
 
 /**
  * Update audit status
+ * Exported for server-side use in API endpoints
  */
-async function updateAuditStatus(
+export async function updateAuditStatus(
   auditId: string,
   status: AuditRow['status'],
   errorMessage?: string
@@ -87,8 +145,9 @@ async function updateAuditStatus(
 
 /**
  * Save audit results to database
+ * Exported for server-side use in API endpoints
  */
-async function saveAuditResults(
+export async function saveAuditResults(
   auditId: string,
   result: AuditResult
 ): Promise<void> {
@@ -105,6 +164,9 @@ async function saveAuditResults(
     operable_issues: result.metrics.operable_issues,
     understandable_issues: result.metrics.understandable_issues,
     robust_issues: result.metrics.robust_issues,
+    agent_trace: result.agent_trace as Record<string, unknown> | null | undefined,
+    tools_used: result.agent_trace?.tools_used,
+    analysis_steps: result.agent_trace?.steps.map(s => s.action),
     completed_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
@@ -136,6 +198,12 @@ async function saveAuditResults(
       how_to_fix: issue.how_to_fix,
       code_example: issue.code_example,
       wcag_url: issue.wcag_url,
+      user_impact: issue.user_impact,
+      how_to_reproduce: issue.how_to_reproduce,
+      keyboard_testing: issue.keyboard_testing,
+      screen_reader_testing: issue.screen_reader_testing,
+      visual_testing: issue.visual_testing,
+      expected_behavior: issue.expected_behavior,
     }));
 
     const { error: issuesError } = await supabase
@@ -150,35 +218,66 @@ async function saveAuditResults(
 
 /**
  * Run a complete accessibility audit with database tracking
+ * Calls server-side API endpoint to avoid exposing API keys
  */
 export async function runAudit(
   input: AuditInput,
   onProgress?: AuditProgressCallback
 ): Promise<string> {
-  // Create audit record
-  const auditId = await createAudit(input);
+  onProgress?.({ status: 'queued', message: 'Starting audit...' });
 
   try {
-    // Update status to analyzing
-    await updateAuditStatus(auditId, 'analyzing');
-    onProgress?.({ status: 'analyzing', message: 'Running accessibility analysis...' });
+    // Get current session for authentication
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      throw new Error('You must be logged in to run audits');
+    }
 
-    // Run Gemini audit
-    const result = await runGeminiAudit(input);
+    // Transform AuditInput to match AI agent function's expected format
+    const agentRequest = {
+      mode: input.input_type, // 'url' | 'html' | 'snippet' | 'document'
+      content: input.input_value,
+      model: 'gemini' as const, // Default to Gemini
+      language: 'en',
+      documentType: input.document_type,
+      filePath: input.document_path,
+    };
 
-    // Save results
-    await saveAuditResults(auditId, result);
+    // Call Netlify function for AI agent audit
+    const response = await fetch('/.netlify/functions/ai-agent-audit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify(agentRequest),
+    });
+
+    if (!response.ok) {
+      let errorMessage = `Audit failed with status ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorData.details || errorMessage;
+        console.error('Audit Error:', errorData);
+      } catch {
+        const textError = await response.text();
+        console.error('Audit Error Response:', textError);
+        errorMessage = textError || errorMessage;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const { auditId } = await response.json();
+
     onProgress?.({
       status: 'complete',
       message: 'Audit complete!',
-      issues_found: result.metrics.total_issues,
     });
 
     return auditId;
   } catch (error) {
-    // Mark as failed
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    await updateAuditStatus(auditId, 'failed', errorMessage);
     onProgress?.({ status: 'failed', message: errorMessage });
     throw error;
   }

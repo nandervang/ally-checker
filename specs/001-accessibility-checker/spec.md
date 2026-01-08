@@ -2,8 +2,85 @@
 
 **Feature Branch**: `001-accessibility-checker`  
 **Created**: 2025-12-30  
-**Status**: Draft  
+**Status**: In Development  
 **Input**: User description: "A11y checker app with URL/HTML input, axe-core + AI analysis, WCAG-organized output"
+
+## Development Workflow *(mandatory)*
+
+**Git & Branch Strategy:**
+
+This feature uses a **long-lived feature branch** workflow with beads (bd) for issue tracking:
+
+1. **All development happens on `001-accessibility-checker` branch**
+   - Do NOT work directly on `main` 
+   - Keep all commits on the feature branch during development
+   
+2. **Issue tracking syncs to `main` via bd**
+   - Run `bd sync` to synchronize issue database (not code)
+   - Issues are tracked in `.beads/*.jsonl` files on the `main` branch
+   - Code stays on the feature branch, issues sync across branches
+
+3. **Merge to `main` at major milestones only**
+   - When significant features are complete and tested
+   - After quality gates pass (tests, linters, builds)
+   - Use merge commits to preserve feature branch history:
+     ```bash
+     git checkout main
+     git merge --no-ff 001-accessibility-checker
+     git push
+     ```
+
+4. **Continue development on feature branch after merge**
+   - Stay on `001-accessibility-checker` for ongoing work
+   - The feature branch remains active until fully complete
+   - Multiple merges to main are expected during development
+
+**Critical Rules:**
+- ✅ Work on feature branch: `git checkout 001-accessibility-checker`
+- ✅ Sync issues: `bd sync` (syncs to main automatically)
+- ✅ Merge to main only at milestones
+- ❌ Do NOT delete feature branch after merging
+- ❌ Do NOT work directly on main during active development
+
+## Testing & Verification *(mandatory)*
+
+**BEFORE marking any task as complete, you MUST:**
+
+1. **Write tests** - Create unit tests for the functionality
+2. **Run tests** - Execute tests and verify they pass
+3. **Manual verification** - Test the feature in the running app
+4. **Check errors** - Run `get_errors` tool to verify no type errors
+5. **Document results** - Record test output and verification steps
+
+**Verification Checklist:**
+
+```markdown
+## Task: [TASK-ID] - [Task Name]
+
+### Implementation
+- [ ] Code written
+- [ ] Types defined
+- [ ] Edge cases handled
+
+### Testing
+- [ ] Unit tests written
+- [ ] Tests pass (attach output)
+- [ ] Manual test performed
+- [ ] No TypeScript errors
+- [ ] No runtime errors
+
+### Evidence
+```
+[Paste test output here]
+```
+
+### Verification Steps
+1. [What you tested]
+2. [How you verified it works]
+3. [Edge cases checked]
+```
+
+**Never say "mostly complete" or "should work" - either it's verified and complete, or it's not done.**
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -128,27 +205,37 @@ A non-technical user (e.g., content writer) wants to understand if something mig
 
 **Output & Reporting**
 - **FR-018**: System MUST organize all findings into four primary sections: Perceivable, Operable, Understandable, Robust
-- **FR-019**: Each reported issue MUST include: (1) description, (2) affected WCAG success criterion, (3) severity level, (4) location in code, (5) suggested remediation
+- **FR-019**: Each reported issue MUST include: (1) description, (2) affected WCAG success criterion, (3) severity level, (4) location in code, (5) suggested remediation, (6) **[NEW]** how to reproduce, (7) **[NEW]** keyboard testing instructions, (8) **[NEW]** screen reader testing instructions, (9) **[NEW]** visual testing instructions, (10) **[NEW]** expected behavior, (11) **[NEW]** formatted report text
+- **FR-019a**: **[NEW]** Testing instructions MUST follow Magenta A11y format with clear step-by-step procedures for manual verification
+- **FR-019b**: **[NEW]** Report text MUST be generated according to user's selected report template (ETU Swedish, WCAG International, VPAT US, Simple, or Technical)
 - **FR-020**: When no issues are found, system MUST display a clear success message confirming accessibility compliance
 - **FR-021**: System MUST distinguish between automated findings (axe-core) and AI heuristic findings in the report
 - **FR-022**: When a suspected issue is investigated, system MUST include a dedicated section addressing that concern
 - **FR-023**: Report MUST use minimum 18px font size and maintain 4.5:1 color contrast for all text
 - **FR-024**: Issues MUST be sortable and filterable by severity, WCAG principle, and success criterion
+- **FR-025**: **[NEW]** System MUST provide collapsible testing sections (keyboard, screen reader, visual) for each issue in the UI
+- **FR-026**: **[NEW]** System MUST provide copy-to-clipboard functionality for formatted report text
 
 **User Interface**
-- **FR-025**: UI MUST be modern, simple, and desktop-optimized while remaining fully responsive
-- **FR-026**: UI MUST feature a large "Analyze" button (minimum 44x44px) as the primary call-to-action
-- **FR-027**: Input area MUST be the visual focal point with ample space for pasting code
-- **FR-028**: UI MUST provide clear visual feedback during analysis (loading state)
-- **FR-029**: UI MUST be fully keyboard accessible with visible focus indicators (3px outline, 3:1 contrast minimum)
-- **FR-030**: UI MUST follow Material Design 3 design tokens and ShadCN 2.0 component patterns
-- **FR-031**: UI MUST support both light and dark themes while maintaining WCAG AA contrast ratios
-- **FR-032**: UI MUST support Swedish (sv-SE) localization for all user-facing text
+- **FR-027**: UI MUST be modern, simple, and desktop-optimized while remaining fully responsive
+- **FR-028**: UI MUST feature a large "Analyze" button (minimum 44x44px) as the primary call-to-action
+- **FR-029**: Input area MUST be the visual focal point with ample space for pasting code
+- **FR-030**: UI MUST provide clear visual feedback during analysis (loading state)
+- **FR-031**: UI MUST be fully keyboard accessible with visible focus indicators (3px outline, 3:1 contrast minimum)
+- **FR-032**: UI MUST follow Material Design 3 design tokens and ShadCN 2.0 component patterns
+- **FR-033**: UI MUST support both light and dark themes while maintaining WCAG AA contrast ratios
+- **FR-034**: UI MUST support Swedish (sv-SE) localization for all user-facing text
+
+**Settings & Configuration**
+- **FR-035**: **[NEW]** System MUST allow users to select default report template from 5 options: ETU Swedish, WCAG International, VPAT US, Simple, Technical
+- **FR-036**: **[NEW]** Settings UI MUST provide clear descriptions of each report template's purpose and target audience
+- **FR-037**: **[NEW]** Report template selection MUST persist in user settings (localStorage) across sessions
+- **FR-038**: **[NEW]** Default report template MUST be "WCAG International" for new users
 
 **Error Handling**
-- **FR-033**: System MUST provide clear, actionable error messages for invalid HTML syntax
-- **FR-034**: System MUST gracefully handle analysis failures and explain what went wrong
-- **FR-035**: System MUST validate that at least one input field (URL, HTML, or issue description) is provided before allowing analysis
+- **FR-039**: System MUST provide clear, actionable error messages for invalid HTML syntax
+- **FR-040**: System MUST gracefully handle analysis failures and explain what went wrong
+- **FR-041**: System MUST validate that at least one input field (URL, HTML, or issue description) is provided before allowing analysis
 
 ### Key Entities
 
@@ -156,7 +243,14 @@ A non-technical user (e.g., content writer) wants to understand if something mig
 
 - **Audit Report**: Comprehensive results of accessibility analysis, organized by WCAG principles. Contains collections of violations, warnings, and passes. Includes metadata like analysis timestamp, input type, and total issue count.
 
-- **Accessibility Issue**: Individual violation or warning identified during analysis. Contains: description, WCAG success criterion reference (e.g., 1.4.3), severity level (critical/serious/moderate/minor), code location, affected HTML element, detection source (axe-core or AI heuristic), suggested remediation steps.
+- **Accessibility Issue**: Individual violation or warning identified during analysis. Contains: description, WCAG success criterion reference (e.g., 1.4.3), severity level (critical/serious/moderate/minor), code location, affected HTML element, detection source (axe-core or AI heuristic), suggested remediation steps, **[NEW]** how_to_reproduce (step-by-step reproduction instructions), **[NEW]** keyboard_testing (keyboard-specific testing procedures), **[NEW]** screen_reader_testing (screen reader testing instructions), **[NEW]** visual_testing (visual verification steps), **[NEW]** expected_behavior (description of correct accessible behavior), **[NEW]** report_text (formatted report text according to selected template).
+
+- **Report Template**: **[NEW]** Configurable format for generating structured accessibility reports. Five templates available:
+  - **ETU Swedish**: Professional reports for Swedish public sector compliance (Webbriktlinjer, EN 301 549)
+  - **WCAG International**: International standard format referencing WCAG 2.1/2.2 (default)
+  - **VPAT US**: Section 508 compliance format for US federal procurement
+  - **Simple**: Concise format for agile development teams with before/after code examples
+  - **Technical**: Detailed technical analysis with DOM paths and implementation details
 
 - **WCAG Principle Category**: Organizational container for issues, corresponding to one of four WCAG principles (Perceivable, Operable, Understandable, Robust). Each category contains related issues and displays summary statistics.
 

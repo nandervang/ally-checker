@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Figtree:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -117,4 +118,40 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Font Size Settings */
+:root.font-size-small {
+  font-size: 14px;
+}
+
+:root.font-size-medium {
+  font-size: 16px; /* default */
+}
+
+:root.font-size-large {
+  font-size: 18px;
+}
+
+/* Reduce Motion */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* High Contrast Mode */
+.high-contrast {
+  --contrast-boost: 1.2;
+}
+
+.high-contrast * {
+  font-weight: 500;
+}
+
+.high-contrast button,
+.high-contrast a {
+  font-weight: 600;
 }

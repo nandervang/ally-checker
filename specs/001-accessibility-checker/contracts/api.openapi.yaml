@@ -441,6 +441,54 @@ components:
           type: string
           enum: [user, developer, legal]
           nullable: true
+        # NEW: Magenta A11y Testing Fields
+        how_to_reproduce:
+          type: string
+          nullable: true
+          description: "Step-by-step instructions to reproduce the issue"
+          example: "1. Navigate to page\n2. Inspect image element\n3. Verify alt attribute is missing"
+        keyboard_testing:
+          type: string
+          nullable: true
+          description: "Keyboard-specific testing procedures following Magenta A11y format"
+          example: "1. Use Tab key to navigate\n2. Verify focus indicator visible\n3. Press Enter to activate"
+        screen_reader_testing:
+          type: string
+          nullable: true
+          description: "Screen reader testing instructions"
+          example: "1. Start NVDA/JAWS/VoiceOver\n2. Navigate to element\n3. Verify announcement is meaningful"
+        visual_testing:
+          type: string
+          nullable: true
+          description: "Visual verification steps"
+          example: "1. Inspect element visually\n2. Verify color contrast\n3. Check focus indicator visibility"
+        expected_behavior:
+          type: string
+          nullable: true
+          description: "Description of correct accessible behavior"
+          example: "Image should have descriptive alt text that conveys content/purpose"
+        # NEW: Report Template Field
+        report_text:
+          type: string
+          nullable: true
+          description: "Formatted report text according to user's selected template (ETU Swedish, WCAG International, VPAT US, Simple, Technical)"
+          example: |
+            **WCAG 2.1 Nivå A: 1.1.1 Innehåll som inte är text**
+            
+            **Klassificering:** Bör åtgärdas
+            
+            **Problem:**
+            Bild saknar alt-attribut.
+            
+            **Kodexempel (före):**
+            ```html
+            <img src="cat.jpg">
+            ```
+            
+            **Kodexempel (efter):**
+            ```html
+            <img src="cat.jpg" alt="Orange katt som sover">
+            ```
 
     AnalysisRequest:
       type: object

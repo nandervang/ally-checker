@@ -33,9 +33,11 @@ export interface Database {
           id: string;
           user_id: string;
           session_id: string | null;
-          input_type: 'url' | 'html' | 'snippet';
+          input_type: 'url' | 'html' | 'snippet' | 'document';
           input_value: string;
           url: string | null;
+          document_path: string | null;
+          document_type: 'pdf' | 'docx' | null;
           suspected_issue: string | null;
           status: 'queued' | 'analyzing' | 'complete' | 'failed';
           ai_model: string | null;
@@ -49,6 +51,9 @@ export interface Database {
           understandable_issues: number;
           robust_issues: number;
           error_message: string | null;
+          agent_trace: Record<string, unknown> | null;
+          tools_used: string[] | null;
+          analysis_steps: string[] | null;
           created_at: string;
           updated_at: string;
           completed_at: string | null;
@@ -57,9 +62,11 @@ export interface Database {
           id?: string;
           user_id: string;
           session_id?: string | null;
-          input_type: 'url' | 'html' | 'snippet';
+          input_type: 'url' | 'html' | 'snippet' | 'document';
           input_value: string;
           url?: string | null;
+          document_path?: string | null;
+          document_type?: 'pdf' | 'docx' | null;
           suspected_issue?: string | null;
           status?: 'queued' | 'analyzing' | 'complete' | 'failed';
           ai_model?: string | null;
@@ -73,6 +80,9 @@ export interface Database {
           understandable_issues?: number;
           robust_issues?: number;
           error_message?: string | null;
+          agent_trace?: Record<string, unknown> | null;
+          tools_used?: string[] | null;
+          analysis_steps?: string[] | null;
           created_at?: string;
           updated_at?: string;
           completed_at?: string | null;
@@ -81,9 +91,11 @@ export interface Database {
           id?: string;
           user_id?: string;
           session_id?: string | null;
-          input_type?: 'url' | 'html' | 'snippet';
+          input_type?: 'url' | 'html' | 'snippet' | 'document';
           input_value?: string;
           url?: string | null;
+          document_path?: string | null;
+          document_type?: 'pdf' | 'docx' | null;
           suspected_issue?: string | null;
           status?: 'queued' | 'analyzing' | 'complete' | 'failed';
           ai_model?: string | null;
@@ -97,6 +109,9 @@ export interface Database {
           understandable_issues?: number;
           robust_issues?: number;
           error_message?: string | null;
+          agent_trace?: Record<string, unknown> | null;
+          tools_used?: string[] | null;
+          analysis_steps?: string[] | null;
           created_at?: string;
           updated_at?: string;
           completed_at?: string | null;
@@ -120,6 +135,13 @@ export interface Database {
           how_to_fix: string;
           code_example: string | null;
           wcag_url: string | null;
+          user_impact: string | null;
+          how_to_reproduce: string | null;
+          keyboard_testing: string | null;
+          screen_reader_testing: string | null;
+          visual_testing: string | null;
+          expected_behavior: string | null;
+          report_text: string | null;
           created_at: string;
         };
         Insert: {
@@ -139,6 +161,13 @@ export interface Database {
           how_to_fix: string;
           code_example?: string | null;
           wcag_url?: string | null;
+          user_impact?: string | null;
+          how_to_reproduce?: string | null;
+          keyboard_testing?: string | null;
+          screen_reader_testing?: string | null;
+          visual_testing?: string | null;
+          expected_behavior?: string | null;
+          report_text?: string | null;
           created_at?: string;
         };
         Update: {
@@ -158,6 +187,59 @@ export interface Database {
           how_to_fix?: string;
           code_example?: string | null;
           wcag_url?: string | null;
+          user_impact?: string | null;
+          how_to_reproduce?: string | null;
+          keyboard_testing?: string | null;
+          screen_reader_testing?: string | null;
+          visual_testing?: string | null;
+          expected_behavior?: string | null;
+          report_text?: string | null;
+          created_at?: string;
+        };
+      };
+      issue_collections: {
+        Row: {
+          id: string;
+          user_id: string;
+          audit_id: string;
+          name: string;
+          description: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          audit_id: string;
+          name: string;
+          description?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          audit_id?: string;
+          name?: string;
+          description?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      collection_issues: {
+        Row: {
+          collection_id: string;
+          issue_id: string;
+          created_at: string;
+        };
+        Insert: {
+          collection_id: string;
+          issue_id: string;
+          created_at?: string;
+        };
+        Update: {
+          collection_id?: string;
+          issue_id?: string;
           created_at?: string;
         };
       };

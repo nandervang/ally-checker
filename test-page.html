@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessibility Test Page</title>
+</head>
+<body>
+    <h1>Test Page for Accessibility Checker</h1>
+    
+    <!-- Missing alt text - triggers Issue #1 with new features -->
+    <img src="/images/logo.png" alt="">
+    
+    <!-- Low contrast - triggers Issue #2 -->
+    <p style="color: #767676; background: #fff">
+        This text has insufficient color contrast
+    </p>
+    
+    <!-- Non-keyboard accessible - triggers Issue #3 -->
+    <div onclick="alert('clicked')">
+        Click me (but I'm not keyboard accessible!)
+    </div>
+</body>
+</html>

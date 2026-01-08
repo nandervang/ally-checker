@@ -226,6 +226,53 @@ const result = await analyzeURL({
 });
 ```
 
+### **[NEW]** Configure Report Template
+
+```typescript
+// User can select from 5 professional report templates
+import { updateSettings } from '@/services/settingsService';
+
+// ETU Swedish - Professional Swedish accessibility reports
+await updateSettings({ defaultReportTemplate: 'etu-swedish' });
+
+// WCAG International - International standard format (default)
+await updateSettings({ defaultReportTemplate: 'wcag-international' });
+
+// VPAT US - Section 508 federal compliance format
+await updateSettings({ defaultReportTemplate: 'vpat-us' });
+
+// Simple - Concise format with before/after code
+await updateSettings({ defaultReportTemplate: 'simple' });
+
+// Technical - Detailed technical analysis
+await updateSettings({ defaultReportTemplate: 'technical' });
+```
+
+### **[NEW]** View Testing Instructions
+
+Each accessibility issue includes comprehensive testing instructions following Magenta A11y format:
+
+```typescript
+// Issue includes these testing fields:
+{
+  how_to_reproduce: "Step-by-step reproduction instructions",
+  keyboard_testing: "Keyboard-only testing procedures",
+  screen_reader_testing: "Screen reader testing instructions",
+  visual_testing: "Visual verification steps",
+  expected_behavior: "Description of correct accessible behavior",
+  report_text: "Formatted report text (ETU/WCAG/VPAT/Simple/Technical)"
+}
+```
+
+In the UI:
+1. Each issue card displays collapsible accordion sections for testing
+2. Click "How to Reproduce" to see reproduction steps
+3. Click "Keyboard Testing" to see keyboard-specific tests
+4. Click "Screen Reader Testing" to see screen reader instructions
+5. Click "Visual Testing" to see visual verification steps
+6. Click "Expected Behavior" to see correct behavior description
+7. Click "Report Text" section to view formatted report (with copy button)
+
 ### Generate Report
 
 ```typescript
