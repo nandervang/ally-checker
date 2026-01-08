@@ -160,6 +160,12 @@ Represents individual accessibility violations or warnings found during an audit
 | remediation | text | NOT NULL | Suggested fix/remediation steps |
 | wcag_reference_url | text | NULLABLE | Link to WCAG documentation (from WCAG MCP) |
 | impact | varchar(20) | NULLABLE | Impact level: 'user', 'developer', 'legal' |
+| **how_to_reproduce** | text | NULLABLE | **[NEW]** Step-by-step instructions to reproduce the issue (Magenta A11y-style) |
+| **keyboard_testing** | text | NULLABLE | **[NEW]** Keyboard navigation testing instructions (Tab, Enter, Space, Arrow keys) |
+| **screen_reader_testing** | text | NULLABLE | **[NEW]** Screen reader testing guidance (Name, Role, State, Value) |
+| **visual_testing** | text | NULLABLE | **[NEW]** Visual inspection testing steps (contrast, focus indicators, spacing) |
+| **expected_behavior** | text | NULLABLE | **[NEW]** How the element should work according to WCAG success criteria |
+| **report_text** | text | NULLABLE | **[NEW]** Complete formatted accessibility report (template-based: ETU Swedish, WCAG International, VPAT US, Simple, Technical) |
 | created_at | timestamptz | NOT NULL, DEFAULT now() | Issue detection timestamp |
 
 **Validation Rules**:
@@ -170,6 +176,8 @@ Represents individual accessibility violations or warnings found during an audit
 - `impact` must be one of: 'user', 'developer', 'legal' when NOT NULL
 - `element_snippet` truncated to 500 characters max
 - `description` and `remediation` must be non-empty strings
+- **NEW**: Testing fields (`how_to_reproduce`, `keyboard_testing`, `screen_reader_testing`, `visual_testing`, `expected_behavior`) follow Magenta A11y format
+- **NEW**: `report_text` format determined by user's `defaultReportTemplate` setting (etu-swedish, wcag-international, vpat-us, simple, technical)
 
 **Indexes**:
 - `idx_issues_audit_id` on `audit_id`
@@ -425,6 +433,12 @@ export interface Database {
           remediation: string
           wcag_reference_url: string | null
           impact: 'user' | 'developer' | 'legal' | null
+          how_to_reproduce: string | null
+          keyboard_testing: string | null
+          screen_reader_testing: string | null
+          visual_testing: string | null
+          expected_behavior: string | null
+          report_text: string | null
           created_at: string
         }
         Insert: {
@@ -440,6 +454,12 @@ export interface Database {
           remediation: string
           wcag_reference_url?: string | null
           impact?: 'user' | 'developer' | 'legal' | null
+          how_to_reproduce?: string | null
+          keyboard_testing?: string | null
+          screen_reader_testing?: string | null
+          visual_testing?: string | null
+          expected_behavior?: string | null
+          report_text?: string | null
           created_at?: string
         }
         Update: {
@@ -459,6 +479,148 @@ export interface Database {
 - **Archiving**: Audits older than 90 days moved to cold storage (separate table) before deletion
 - **Indexes**: Monitor query performance and add composite indexes as needed
 - **Connection Pooling**: Supabase handles this automatically (PgBouncer)
+
+---
+
+## Report Template System
+
+**Feature**: Multi-Template Accessibility Reports  
+**Added**: January 2026
+
+### Overview
+
+The system supports 5 professional report templates to serve different audiences and compliance requirements. Each issue's `report_text` field is generated using the user's selected `defaultReportTemplate` setting.
+
+### Available Templates
+
+| Template ID | Name | Language | Target Audience | Standards |
+|------------|------|----------|----------------|-----------|
+| `etu-swedish` | ETU Swedish | Swedish | Swedish public sector organizations | WCAG 2.1, EN 301 549, Webbriktlinjer |
+| `wcag-international` | WCAG International | English | International projects (default) | WCAG 2.1/2.2, EN 301 549 |
+| `vpat-us` | VPAT US | English | US federal contractors | Section 508, WCAG 2.1 |
+| `simple` | Simple | English | Agile development teams | WCAG 2.1 (minimal) |
+| `technical` | Technical | English | Technical analysis teams | WCAG 2.1, ARIA specifications |
+
+### Template Structure
+
+**ETU Swedish**:
+```
+## [WCAG X.X.X] [Title in Swedish]
+Kategori: [Uppfattbar/Hanterbar/Begriplig/Robust]
+WCAG-kriterium: [Criterion]
+EN 301 549 Kapitel: [References]
+Webbriktlinjer: [Link]
+Beskrivning av felet: [Description]
+Hur man återskapar felet: [Steps]
+Konsekvens för användaren: [User impact]
+Åtgärda:
+  Bör: [Primary fix]
+  Kan: [Optional fix]
+Kodexempel: [Code]
+Relaterade krav: [Standards]
+```
+
+**WCAG International** (Default):
+```
+## [WCAG X.X.X] [Title]
+WCAG Success Criterion: [X.X.X Name (Level A/AA/AAA)]
+WCAG Principle: [Perceivable/Operable/Understandable/Robust]
+Severity: [Critical/Serious/Moderate/Minor]
+Issue Description: [Description]
+How to Reproduce: [Steps]
+User Impact: [Impact on users with disabilities]
+Remediation:
+  Required: [Must fix]
+  Recommended: [Should fix]
+Code Example: [Code]
+WCAG Resources: [Links]
+```
+
+**VPAT US**:
+```
+## [WCAG X.X.X] - [Title]
+Section 508 Reference: [Reference]
+Conformance Level: [Does Not Support/Partially Supports/Supports]
+Issue Summary: [Brief description]
+Steps to Reproduce: [Steps]
+Impact on Users with Disabilities: [Impact]
+Remediation Strategy:
+  Priority: [High/Medium/Low]
+  Effort: [Small/Medium/Large]
+  Action Items: [List]
+Conformant Code Example: [Code]
+Applicable Standards: [Section 508, WCAG, EN 301 549]
+```
+
+**Simple**:
+```
+## [Title]
+Problem: [One sentence]
+WCAG: [X.X.X] | Severity: [Level]
+What's Wrong: [2-3 sentences]
+How to Fix: [Direct steps]
+Code:
+  ❌ Before: [Broken code]
+  ✅ After: [Fixed code]
+Reference: [WCAG link]
+```
+
+**Technical**:
+```
+## [WCAG X.X.X] [Technical Title]
+Violation: [Technical description]
+WCAG Criterion: [X.X.X Name (Level)]
+Detection Method: [Automated/Manual/Heuristic]
+Affected Elements:
+  Selector: [CSS selector]
+  DOM Path: [Path]
+Assistive Technology Impact:
+  Screen Readers: [Impact]
+  Keyboard Navigation: [Impact]
+  Voice Control: [Impact]
+Implementation Requirements:
+  Must: [Required changes]
+  Should: [Recommended changes]
+Code Implementation:
+  Current: [Problematic code]
+  Compliant: [Fixed code]
+Testing Criteria: [Checklist]
+Technical References: [ARIA, WCAG techniques]
+```
+
+### User Settings
+
+Report template configured in `user_sessions.preferences`:
+
+```json
+{
+  "defaultReportTemplate": "wcag-international"
+}
+```
+
+Or in user settings table (for authenticated users):
+
+```sql
+UPDATE user_settings 
+SET default_report_template = 'etu-swedish' 
+WHERE user_id = ?;
+```
+
+### AI Integration
+
+The AI agent (Gemini 2.5 Flash) receives template selection in system prompt:
+
+```typescript
+const template = userSettings.defaultReportTemplate || 'wcag-international';
+const prompt = `Generate report_text using ${template} template format...`;
+```
+
+### UI Display
+
+Report text displayed in issue cards with:
+- Copy button ("Kopiera" for Swedish, "Copy" for English)
+- Monospace font for code examples
+- Syntax highlighting (future enhancement)
 
 ---
 

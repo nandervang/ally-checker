@@ -23,6 +23,7 @@ import {
   importSettings,
   type UserSettings,
 } from '@/services/settingsService';
+import { applyDesignSettings } from '@/lib/apply-design-settings';
 
 interface SettingsSheetProps {
   open: boolean;
@@ -172,75 +173,6 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
     
     // Apply design changes immediately for preview
     void applyDesignSettings(newSettings);
-  }
-
-  async function applyDesignSettings(s: UserSettings) {
-    const root = document.documentElement;
-    
-    console.log('Applying design settings:', s);
-    
-    // Apply font size
-    root.classList.remove('font-size-small', 'font-size-medium', 'font-size-large');
-    root.classList.add(`font-size-${s.fontSize}`);
-    
-    // Apply reduce motion
-    if (s.reduceMotion) {
-      root.classList.add('reduce-motion');
-    } else {
-      root.classList.remove('reduce-motion');
-    }
-    
-    // Apply high contrast
-    if (s.highContrast) {
-      root.classList.add('high-contrast');
-    } else {
-      root.classList.remove('high-contrast');
-    }
-    
-    // Apply radius, fonts, and complete color palettes
-    const { getRadiusValue, getFontFamily, baseColorPalettes, themeColorOverrides, highContrastPalettes } = 
-      await import('../lib/theme-colors');
-    
-    root.style.setProperty('--radius', getRadiusValue(s.radius));
-    
-    // Apply font family
-    document.body.style.fontFamily = getFontFamily(s.font);
-    
-    // Apply complete color palette using shadcn approach
-    const isDark = root.classList.contains('dark');
-    const mode = isDark ? 'dark' : 'light';
-    
-    // Get base color palette
-    let basePalette = baseColorPalettes[s.baseColor];
-    if (!basePalette) {
-      console.error('Base color palette not found:', s.baseColor);
-      return;
-    }
-    
-    // Use high contrast palette if enabled (WCAG AAA compliant)
-    if (s.highContrast) {
-      basePalette = highContrastPalettes[mode];
-    }
-    
-    // Get theme color overrides
-    const themeOverride = themeColorOverrides[s.themeColor] || {};
-    
-    // Merge base palette with theme overrides
-    const finalPalette = {
-      ...basePalette[mode],
-      ...(themeOverride[mode] || {})
-    };
-    
-    // Apply all CSS variables
-    Object.entries(finalPalette).forEach(([key, value]) => {
-      root.style.setProperty(`--${key}`, value);
-    });
-    
-    // Apply style variant as class
-    root.classList.remove('style-vega', 'style-nova', 'style-maia', 'style-lyra', 'style-mira');
-    root.classList.add(`style-${s.style}`);
-    
-    console.log('Design settings applied - radius:', s.radius, 'font:', s.font, 'theme:', s.themeColor);
   }
 
   if (loading) {
@@ -824,18 +756,22 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="report-template">Template</Label>
+                    <Label htmlFor="report-template">Report Template</Label>
                     <select
                       id="report-template"
                       value={settings.defaultReportTemplate}
                       onChange={(e) => { updateSetting('defaultReportTemplate', e.target.value as UserSettings['defaultReportTemplate']); }}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <option value="etu-standard">ETU Standard</option>
-                      <option value="minimal">Minimal</option>
-                      <option value="detailed">Detailed</option>
-                      <option value="custom">Custom</option>
+                      <option value="etu-swedish">ETU Swedish - Professional Swedish accessibility reports</option>
+                      <option value="wcag-international">WCAG International - Standard English reports</option>
+                      <option value="vpat-us">VPAT US - Section 508 compliance format</option>
+                      <option value="simple">Simple - Concise developer-focused format</option>
+                      <option value="technical">Technical - Detailed technical documentation</option>
                     </select>
+                    <p className="text-xs text-muted-foreground">
+                      Choose the format for accessibility issue reports. ETU Swedish follows Swedish standards, WCAG International uses English with WCAG guidelines.
+                    </p>
                   </div>
 
                   <Separator />

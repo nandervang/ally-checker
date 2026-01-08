@@ -185,6 +185,13 @@ function parseJSONResponse(text: string): Issue[] {
         user_impact: issue.user_impact || issue.impact,
         expert_analysis: issue.expert_analysis || issue.analysis,
         testing_instructions: issue.testing_instructions || issue.test_instructions,
+        // Magenta A11y-style testing fields
+        how_to_reproduce: issue.how_to_reproduce,
+        keyboard_testing: issue.keyboard_testing,
+        screen_reader_testing: issue.screen_reader_testing,
+        visual_testing: issue.visual_testing,
+        expected_behavior: issue.expected_behavior,
+        report_text: issue.report_text,
       };
     });
   } catch {

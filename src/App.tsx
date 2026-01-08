@@ -16,6 +16,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Settings, FileText, Database, ChevronRight, Menu, Sparkles, Zap } from "lucide-react";
 import type { AuditResult } from "@/data/mockAuditResults";
 import { getUserSettings, type UserSettings } from "@/services/settingsService";
+import { applyDesignSettings } from "@/lib/apply-design-settings";
 import "./index.css";
 
 export function App() {
@@ -26,34 +27,23 @@ export function App() {
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsLoading, setSettingsLoading] = useState(true);
 
   // Load user settings and apply them
   useEffect(() => {
-    void getUserSettings().then((userSettings) => {
-      setSettings(userSettings);
-      
-      // Apply font size class to document
-      document.documentElement.classList.remove('font-size-small', 'font-size-medium', 'font-size-large');
-      document.documentElement.classList.add(`font-size-${userSettings.fontSize}`);
-      
-      // Apply reduce motion preference
-      if (userSettings.reduceMotion) {
-        document.documentElement.classList.add('reduce-motion');
-      } else {
-        document.documentElement.classList.remove('reduce-motion');
-      }
-      
-      // Apply high contrast
-      if (userSettings.highContrast) {
-        document.documentElement.classList.add('high-contrast');
-      } else {
-        document.documentElement.classList.remove('high-contrast');
-      }
-    });
+    void getUserSettings()
+      .then(async (userSettings) => {
+        setSettings(userSettings);
+        // Apply all design settings
+        await applyDesignSettings(userSettings);
+      })
+      .finally(() => {
+        setSettingsLoading(false);
+      });
   }, []);
 
-  // Show loading state while checking auth
-  if (loading) {
+  // Show loading state while checking auth or loading settings
+  if (loading || settingsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">

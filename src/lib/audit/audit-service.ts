@@ -198,6 +198,12 @@ export async function saveAuditResults(
       how_to_fix: issue.how_to_fix,
       code_example: issue.code_example,
       wcag_url: issue.wcag_url,
+      user_impact: issue.user_impact,
+      how_to_reproduce: issue.how_to_reproduce,
+      keyboard_testing: issue.keyboard_testing,
+      screen_reader_testing: issue.screen_reader_testing,
+      visual_testing: issue.visual_testing,
+      expected_behavior: issue.expected_behavior,
     }));
 
     const { error: issuesError } = await supabase
@@ -228,19 +234,38 @@ export async function runAudit(
       throw new Error('You must be logged in to run audits');
     }
 
-    // Call server-side API endpoint with auth token
-    const response = await fetch('/api/run-audit', {
+    // Transform AuditInput to match AI agent function's expected format
+    const agentRequest = {
+      mode: input.input_type, // 'url' | 'html' | 'snippet' | 'document'
+      content: input.input_value,
+      model: 'gemini' as const, // Default to Gemini
+      language: 'en',
+      documentType: input.document_type,
+      filePath: input.document_path,
+    };
+
+    // Call Netlify function for AI agent audit
+    const response = await fetch('/.netlify/functions/ai-agent-audit', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify(input),
+      body: JSON.stringify(agentRequest),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Audit failed');
+      let errorMessage = `Audit failed with status ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorData.details || errorMessage;
+        console.error('Audit Error:', errorData);
+      } catch {
+        const textError = await response.text();
+        console.error('Audit Error Response:', textError);
+        errorMessage = textError || errorMessage;
+      }
+      throw new Error(errorMessage);
     }
 
     const { auditId } = await response.json();

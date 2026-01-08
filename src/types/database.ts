@@ -136,6 +136,12 @@ export interface Database {
           code_example: string | null;
           wcag_url: string | null;
           user_impact: string | null;
+          how_to_reproduce: string | null;
+          keyboard_testing: string | null;
+          screen_reader_testing: string | null;
+          visual_testing: string | null;
+          expected_behavior: string | null;
+          report_text: string | null;
           created_at: string;
         };
         Insert: {
@@ -156,6 +162,12 @@ export interface Database {
           code_example?: string | null;
           wcag_url?: string | null;
           user_impact?: string | null;
+          how_to_reproduce?: string | null;
+          keyboard_testing?: string | null;
+          screen_reader_testing?: string | null;
+          visual_testing?: string | null;
+          expected_behavior?: string | null;
+          report_text?: string | null;
           created_at?: string;
         };
         Update: {
@@ -176,6 +188,12 @@ export interface Database {
           code_example?: string | null;
           wcag_url?: string | null;
           user_impact?: string | null;
+          how_to_reproduce?: string | null;
+          keyboard_testing?: string | null;
+          screen_reader_testing?: string | null;
+          visual_testing?: string | null;
+          expected_behavior?: string | null;
+          report_text?: string | null;
           created_at?: string;
         };
       };

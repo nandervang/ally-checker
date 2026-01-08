@@ -28,6 +28,14 @@ export interface Issue {
   user_impact?: string;
   expert_analysis?: string;
   testing_instructions?: string;
+  // Magenta A11y-style testing guidance
+  how_to_reproduce?: string; // Step-by-step reproduction instructions
+  keyboard_testing?: string; // Keyboard interaction testing steps (Tab, Enter, Space, Arrow keys)
+  screen_reader_testing?: string; // Screen reader testing (Name, Role, State, Value)
+  visual_testing?: string; // Visual inspection testing steps
+  expected_behavior?: string; // How it should work according to WCAG success criteria
+  // Swedish ETU-style formatted report
+  report_text?: string; // Complete formatted report text in Swedish following ETU template
 }
 
 // Aggregated metrics by category

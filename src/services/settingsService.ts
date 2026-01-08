@@ -24,7 +24,7 @@ export interface UserSettings {
   aiMaxTokens: number;
   
   // Report Configuration
-  defaultReportTemplate: 'etu-standard' | 'minimal' | 'detailed' | 'custom';
+  defaultReportTemplate: 'etu-swedish' | 'wcag-international' | 'vpat-us' | 'simple' | 'technical';
   includeScreenshots: boolean;
   includeCodeSnippets: boolean;
   
@@ -71,7 +71,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   aiModel: 'gemini-pro',
   aiTemperature: 0.7,
   aiMaxTokens: 4000,
-  defaultReportTemplate: 'etu-standard',
+  defaultReportTemplate: 'wcag-international',
   includeScreenshots: true,
   includeCodeSnippets: true,
   statementDefaultConformance: 'Partial',

@@ -18,6 +18,18 @@ export interface AuditIssue {
   helpUrl: string;
   occurrences: number;
   codeExample?: string; // Corrected code showing how to fix the issue
+  // Compatibility fields for Issue type
+  wcag_criterion?: string; // Same as guideline
+  wcag_url?: string; // Same as helpUrl
+  how_to_fix?: string; // Same as remediation
+  // Magenta A11y-style testing fields
+  how_to_reproduce?: string;
+  keyboard_testing?: string;
+  screen_reader_testing?: string;
+  visual_testing?: string;
+  expected_behavior?: string;
+  // Swedish ETU-style report
+  report_text?: string;
 }
 
 export interface AuditResult {
@@ -69,6 +81,7 @@ export const mockHtmlAuditResult: AuditResult = {
       id: "issue-1",
       principle: "perceivable",
       guideline: "1.1.1 Non-text Content",
+      wcag_criterion: "1.1.1",
       wcagLevel: "A",
       severity: "critical",
       title: "Images missing alt text",
@@ -77,14 +90,45 @@ export const mockHtmlAuditResult: AuditResult = {
       selector: "img[src='logo.png']",
       impact: "Screen reader users cannot understand image content. They will only hear 'image' or the filename, which provides no meaningful information about the image's purpose.",
       remediation: "Add descriptive alt text that conveys the purpose and content of the image",
+      how_to_fix: "Add descriptive alt text that conveys the purpose and content of the image",
       helpUrl: "https://www.w3.org/WAI/WCAG22/Understanding/non-text-content.html",
+      wcag_url: "https://www.w3.org/WAI/WCAG22/Understanding/non-text-content.html",
       occurrences: 5,
       codeExample: "<img src='logo.png' alt='Company logo'>",
+      how_to_reproduce: "1. Navigate to the homepage\n2. Locate the logo image at the top of the page\n3. Inspect the image element in browser DevTools\n4. Notice the missing alt attribute",
+      keyboard_testing: "N/A - Decorative images should not be focusable. This image should have alt=\"\" if decorative, or descriptive alt text if informative.",
+      screen_reader_testing: "Test with NVDA/JAWS/VoiceOver:\n• Navigate to image with screen reader\n• Expected: Announces image purpose (e.g., 'Company logo, image')\n• Current: Announces only 'image' or filename 'logo.png'\n• Missing: Accessible name describing the image",
+      visual_testing: "• Verify image loads correctly\n• Check if image conveys essential information\n• Determine if decorative (alt=\"\") or informative (needs descriptive alt)",
+      expected_behavior: "WCAG 1.1.1 Non-text Content (Level A): All non-text content that is presented to the user has a text alternative that serves the equivalent purpose. Images must have alt attributes that describe their purpose and content for users who cannot see them.",
+      report_text: `## 1.1.1 Images missing alt text
+
+**Problem:** Images lack alternative text for screen readers
+**WCAG:** 1.1.1 | **Severity:** Critical
+
+### What's Wrong
+The logo image and 4 other images on the page are missing alt attributes. Screen reader users will only hear "image" or the filename instead of understanding the image's purpose.
+
+### How to Fix
+Add descriptive alt attributes to all informative images. For decorative images, use alt="".
+
+### Code
+❌ **Before:**
+\`\`\`html
+<img src='logo.png'>
+\`\`\`
+
+✅ **After:**
+\`\`\`html
+<img src='logo.png' alt='Company logo'>
+\`\`\`
+
+**Reference:** https://www.w3.org/WAI/WCAG22/Understanding/non-text-content.html`,
     },
     {
       id: "issue-2",
       principle: "perceivable",
       guideline: "1.4.3 Contrast (Minimum)",
+      wcag_criterion: "1.4.3",
       wcagLevel: "AA",
       severity: "serious",
       title: "Insufficient color contrast",
@@ -93,14 +137,61 @@ export const mockHtmlAuditResult: AuditResult = {
       selector: ".content p",
       impact: "Users with low vision, color blindness, or viewing in bright sunlight cannot read the text. This affects approximately 8% of men and 0.5% of women with color vision deficiency.",
       remediation: "Use a darker text color to achieve at least 4.5:1 contrast ratio against white background",
+      how_to_fix: "Use a darker text color to achieve at least 4.5:1 contrast ratio against white background",
       helpUrl: "https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html",
+      wcag_url: "https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html",
       occurrences: 8,
       codeExample: "<p style='color: #595959; background: #fff'>Text with 7:1 contrast ratio</p>",
+      how_to_reproduce: "1. Navigate to the main content area\n2. Observe the paragraph text styling\n3. Use browser DevTools to inspect computed color values\n4. Calculate contrast ratio using a contrast checker tool",
+      visual_testing: "• Use browser DevTools color picker to check contrast\n• Test: Foreground #767676 on Background #FFFFFF\n• Result: 4.54:1 ratio (fails for normal text, needs 4.5:1)\n• Zoom page to 200% to verify text remains readable\n• Test in bright sunlight or low-light conditions",
+      expected_behavior: "WCAG 1.4.3 Contrast (Minimum) Level AA: Text should have a contrast ratio of at least 4.5:1 for normal text and 3:1 for large text (18pt+ or 14pt+ bold). Current ratio of 3.2:1 fails this requirement.",
+      report_text: `## 1.4.3 Insufficient color contrast
+
+**WCAG Success Criterion:** 1.4.3 Contrast (Minimum) (Level AA)
+**WCAG Principle:** Perceivable
+**Severity:** Serious
+
+### Issue Description
+Text in the main content area uses a color combination (#767676 on #FFFFFF) that produces a contrast ratio of only 3.2:1, which fails to meet the WCAG AA minimum requirement of 4.5:1 for normal-sized text.
+
+### How to Reproduce
+1. Navigate to the main content area
+2. Use browser DevTools to inspect paragraph text
+3. Use the color picker to identify foreground and background colors
+4. Calculate contrast ratio using a contrast checker tool
+5. Verify the ratio is below 4.5:1
+
+### User Impact
+Users with low vision, color blindness, or those viewing content in bright sunlight will have difficulty reading the text. This affects approximately 8% of men and 0.5% of women with color vision deficiency, as well as older users with age-related vision changes.
+
+### Remediation
+**Required:** Increase text color contrast to at least 4.5:1 by darkening the text color to #595959 or darker.
+**Recommended:** Aim for 7:1 contrast ratio (AAA level) for improved readability: use #4D4D4D or darker.
+
+### Code Example
+\`\`\`css
+/* Current - FAILS WCAG AA */
+.content p {
+  color: #767676; /* 3.2:1 contrast */
+  background: #fff;
+}
+
+/* Fixed - PASSES WCAG AA */
+.content p {
+  color: #595959; /* 7:1 contrast */
+  background: #fff;
+}
+\`\`\`
+
+### WCAG Resources
+- Understanding 1.4.3: https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum
+- Techniques: G18, G145`,
     },
     {
       id: "issue-3",
       principle: "operable",
       guideline: "2.1.1 Keyboard",
+      wcag_criterion: "2.1.1",
       wcagLevel: "A",
       severity: "critical",
       title: "Interactive elements not keyboard accessible",
@@ -109,9 +200,72 @@ export const mockHtmlAuditResult: AuditResult = {
       selector: ".dropdown",
       impact: "Keyboard users, including many people with motor disabilities who cannot use a mouse, are completely unable to access the dropdown functionality. This creates a barrier that prevents task completion.",
       remediation: "Make the element focusable and add keyboard event handlers for Enter and Space keys",
+      how_to_fix: "Make the element focusable and add keyboard event handlers for Enter and Space keys",
       helpUrl: "https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html",
+      wcag_url: "https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html",
       occurrences: 3,
       codeExample: "<button class='dropdown' onclick='toggle()' onkeydown='handleKey(event)'>Options</button>",
+      how_to_reproduce: "1. Navigate to the settings page\n2. Try to access the language dropdown using only your keyboard\n3. Press Tab key to move focus through interactive elements\n4. Notice the dropdown is not reachable or cannot be opened with Enter/Space",
+      keyboard_testing: "Test keyboard-only navigation:\n• Tab: Focus should move visibly to the dropdown with a clear focus indicator (3:1 contrast minimum)\n• Enter or Space: Should open/close the dropdown menu\n• Arrow keys (↑/↓): Should navigate through dropdown options when open\n• Esc: Should close dropdown and return focus to trigger button\n• Tab when open: Should close dropdown and move to next element\n\nCurrent behavior:\n• Tab: Dropdown is skipped (not in tab order)\n• Enter/Space: No effect - keyboard users cannot open dropdown",
+      screen_reader_testing: "Test with NVDA/JAWS/VoiceOver:\n• Name: Should announce 'Language selector' or similar descriptive name\n• Role: Should identify as 'button' or 'combobox'\n• State: Should announce 'collapsed' when closed, 'expanded' when open\n• Value: Should announce currently selected option\n\nCurrent behavior:\n• Role: Announces as 'group' or 'clickable' (incorrect)\n• Missing: Proper ARIA role and state attributes\n• No keyboard interaction possible",
+      visual_testing: "• Verify visible focus indicator appears when dropdown receives focus\n• Focus ring should have minimum 3:1 contrast against background\n• Focus indicator should be at least 2px thick or have clear visual distinction\n• Test with keyboard navigation to ensure focus is always visible",
+      expected_behavior: "WCAG 2.1.1 Keyboard (Level A): All functionality must be operable through a keyboard interface without requiring specific timings for individual keystrokes. The dropdown must be reachable via Tab, openable with Enter or Space, navigable with arrow keys, and closable with Escape.",
+      report_text: `## 2.1.1 Dropdown – Tangentbordsåtkomst saknas
+
+Anpassad dropdown kan inte nås eller användas med enbart tangentbord
+
+Kategori: Hanterbar (Operable)
+
+WCAG-kriterium:
+2.1.1 Keyboard (nivå A)
+2.4.7 Focus Visible (nivå AA)
+
+EN 301 549 Kapitel: 9.2.1.1, 9.2.4.7
+
+Webbriktlinjer:
+https://webbriktlinjer.se/riktlinjer/66-gor-alla-funktioner-tillgangliga-fran-tangentbordet/
+https://webbriktlinjer.se/riktlinjer/68-markera-vilket-element-som-har-fokus/
+
+WCAG-förklaring: All funktionalitet måste kunna användas med tangentbord utan att kräva specifika tidsinställningar för enskilda tangenttryckningar. Fokusindikatorer måste vara tydligt synliga.
+
+### Beskrivning av felet
+
+Språkväljaren är implementerad som en <div> med onclick-hanterare, vilket gör den oåtkomlig för tangentbordsanvändare. Elementet är inte i tabordningen och kan därför inte nås med Tab-tangenten. Dessutom saknas ARIA-roller och attribut som skulle göra komponenten förståelig för skärmläsare.
+
+### Hur man återskapar felet
+1. Navigera till inställningssidan där språkväljaren finns
+2. Försök använda endast tangentbordet för att nå dropdown-menyn
+3. Tryck på Tab-tangenten för att förflytta fokus genom interaktiva element
+4. Observera att dropdown-menyn hoppas över och inte kan nås eller öppnas med Enter/Space
+
+### Konsekvens för användaren:
+
+Användare som förlitar sig på tangentbordnavigering, inklusive många med motoriska funktionsnedsättningar som inte kan använda mus, är helt utestängda från att ändra språkinställningar. Detta skapar en barriär som förhindrar uppgiftsutförande och bryter mot grundläggande tillgänglighetskrav.
+
+### Åtgärda:
+Bör        Byt ut <div>-elementet mot ett semantiskt <button>-element med korrekt ARIA-attribut (role="combobox", aria-expanded, aria-haspopup)
+Kan        Lägg till tangentbordshanterare för Enter, Space (öppna/stänga), piltangenter (navigera alternativ) och Escape (stäng dropdown)
+
+### Kodexempel
+\`\`\`html
+<button 
+  class="dropdown" 
+  role="combobox"
+  aria-expanded="false"
+  aria-haspopup="listbox"
+  aria-label="Välj språk"
+  onclick="toggle()"
+  onkeydown="handleKey(event)">
+  Svenska
+</button>
+<ul role="listbox" aria-label="Språkalternativ" hidden>
+  <li role="option" tabindex="0">Svenska</li>
+  <li role="option" tabindex="0">English</li>
+</ul>
+\`\`\`
+
+### Relaterade krav
+WCAG 2.1: 2.1.1 (Level A), 2.4.7 (Level AA), EN 301 549: 9.2.1.1, 9.2.4.7`,
     },
     {
       id: "issue-4",

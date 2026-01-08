@@ -1,8 +1,9 @@
 import type { AuditIssue } from '@/data/mockAuditResults';
 import { Badge } from './ui/badge';
-import { Card, CardContent, CardHeader } from './ui/card';
+import { Card, CardContent } from './ui/card';
 import { Separator } from './ui/separator';
-import { AlertCircle, ExternalLink, Check, Code2, User, Lightbulb, FileCode } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
+import { AlertCircle, ExternalLink, Check, Code2, User, Lightbulb, FileCode, Keyboard, AudioLines, Eye, CheckCircle2, PlayCircle, FileText, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SelectableIssueCardProps {
@@ -169,8 +170,135 @@ export function SelectableIssueCard({
           </div>
         )}
 
+        <Separator />
+
+        {/* Magenta A11y-Style Testing Section */}
+        {(issue.how_to_reproduce || issue.keyboard_testing || issue.screen_reader_testing || issue.visual_testing || issue.expected_behavior) && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+              <PlayCircle className="h-5 w-5" />
+              <span>How to Test & Reproduce</span>
+            </div>
+            
+            <Accordion type="single" collapsible className="w-full">
+              {/* How to Reproduce */}
+              {issue.how_to_reproduce && (
+                <AccordionItem value="reproduce" className="border border-border rounded-lg px-3 mb-2">
+                  <AccordionTrigger className="text-sm hover:no-underline py-3">
+                    <div className="flex items-center gap-2">
+                      <PlayCircle className="h-4 w-4 text-primary" />
+                      <span className="font-medium">How to Reproduce</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground pb-3">
+                    <div className="bg-muted/30 p-3 rounded-md whitespace-pre-wrap">
+                      {issue.how_to_reproduce}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {/* Keyboard Testing */}
+              {issue.keyboard_testing && (
+                <AccordionItem value="keyboard" className="border border-border rounded-lg px-3 mb-2">
+                  <AccordionTrigger className="text-sm hover:no-underline py-3">
+                    <div className="flex items-center gap-2">
+                      <Keyboard className="h-4 w-4 text-primary" />
+                      <span className="font-medium">Keyboard Testing</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground pb-3">
+                    <div className="bg-muted/30 p-3 rounded-md whitespace-pre-wrap">
+                      {issue.keyboard_testing}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {/* Screen Reader Testing */}
+              {issue.screen_reader_testing && (
+                <AccordionItem value="screenreader" className="border border-border rounded-lg px-3 mb-2">
+                  <AccordionTrigger className="text-sm hover:no-underline py-3">
+                    <div className="flex items-center gap-2">
+                      <AudioLines className="h-4 w-4 text-primary" />
+                      <span className="font-medium">Screen Reader Testing</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground pb-3">
+                    <div className="bg-muted/30 p-3 rounded-md whitespace-pre-wrap">
+                      {issue.screen_reader_testing}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {/* Visual Testing */}
+              {issue.visual_testing && (
+                <AccordionItem value="visual" className="border border-border rounded-lg px-3 mb-2">
+                  <AccordionTrigger className="text-sm hover:no-underline py-3">
+                    <div className="flex items-center gap-2">
+                      <Eye className="h-4 w-4 text-primary" />
+                      <span className="font-medium">Visual Testing</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-muted-foreground pb-3">
+                    <div className="bg-muted/30 p-3 rounded-md whitespace-pre-wrap">
+                      {issue.visual_testing}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {/* Expected Behavior (WCAG Success Criteria) */}
+              {issue.expected_behavior && (
+                <AccordionItem value="expected" className="border border-accent rounded-lg px-3 mb-2 bg-accent/5">
+                  <AccordionTrigger className="text-sm hover:no-underline py-3">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-accent-foreground" />
+                      <span className="font-medium text-accent-foreground">Expected Behavior (WCAG)</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm pb-3">
+                    <div className="bg-accent/10 p-3 rounded-md whitespace-pre-wrap text-accent-foreground">
+                      {issue.expected_behavior}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+            </Accordion>
+          </div>
+        )}
+
+        {/* Swedish ETU Report Text */}
+        {issue.report_text && (
+          <div className="space-y-3">
+            <Separator />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                <FileText className="h-5 w-5" />
+                <span>Rapport (Swedish Report)</span>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void navigator.clipboard.writeText(issue.report_text || '');
+                  // Could add toast notification here
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
+                aria-label="Kopiera rapport till urklipp"
+              >
+                <Copy className="h-3.5 w-3.5" />
+                Kopiera
+              </button>
+            </div>
+            <div className="bg-muted/30 border-2 border-border rounded-lg p-4 font-mono text-xs">
+              <pre className="whitespace-pre-wrap text-foreground overflow-x-auto">{issue.report_text}</pre>
+            </div>
+          </div>
+        )}
+
         {/* Learn More Link - Läs mer */}
-        {issue.wcag_url && (
+        {issue.wcag_url && typeof issue.wcag_url === 'string' && (
           <a
             href={issue.wcag_url}
             target="_blank"
