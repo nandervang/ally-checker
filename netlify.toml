@@ -10,9 +10,11 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  # AI agent functions may take longer to process
+
+# Configure timeout and memory for all functions
+[[functions]]
+  name = "*"
   timeout = 30
-  # Increase memory for AI processing
   memory = 1024
 
 [dev]
