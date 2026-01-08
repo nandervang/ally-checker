@@ -222,7 +222,8 @@ export async function saveAuditResults(
  */
 export async function runAudit(
   input: AuditInput,
-  onProgress?: AuditProgressCallback
+  onProgress?: AuditProgressCallback,
+  preferredModel?: 'claude' | 'gemini-2.5-flash' | 'gemini-2.5-pro' | 'gpt4'
 ): Promise<string> {
   onProgress?.({ status: 'queued', message: 'Starting audit...' });
 
@@ -234,11 +235,21 @@ export async function runAudit(
       throw new Error('You must be logged in to run audits');
     }
 
+    // Map preferredModel to the model format expected by the backend
+    let model: 'claude' | 'gemini' | 'gpt4' = 'gemini';
+    if (preferredModel === 'claude') {
+      model = 'claude';
+    } else if (preferredModel === 'gpt4') {
+      model = 'gpt4';
+    }
+    // For both gemini variants, use 'gemini' - the specific model will be selected by backend
+
     // Transform AuditInput to match AI agent function's expected format
     const agentRequest = {
       mode: input.input_type, // 'url' | 'html' | 'snippet' | 'document'
       content: input.input_value,
-      model: 'gemini' as const, // Default to Gemini
+      model,
+      geminiModel: preferredModel?.startsWith('gemini') ? preferredModel : undefined, // Pass specific Gemini variant
       language: 'en',
       documentType: input.document_type,
       filePath: input.document_path,

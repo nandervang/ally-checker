@@ -262,8 +262,8 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
             }
           };
 
-          // Run audit and get ID
-          const auditId = await runAudit(auditInput, onProgress);
+          // Run audit and get ID, passing preferred model from settings
+          const auditId = await runAudit(auditInput, onProgress, settings?.preferredModel);
 
           setProgressMessage("📊 Retrieving audit results from database...");
           setAuditStep("generating");
