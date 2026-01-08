@@ -134,6 +134,7 @@ const result = await Bun.build({
     "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(process.env.VITE_SUPABASE_URL || ""),
     "import.meta.env.VITE_SUPABASE_ANON_KEY": JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY || ""),
     "import.meta.env.VITE_REPORT_SERVICE_KEY": JSON.stringify(process.env.VITE_REPORT_SERVICE_KEY || ""),
+    "import.meta.env.GEMINI_API_KEY": JSON.stringify(process.env.GEMINI_API_KEY || ""),
     "import.meta.env.DEV": "false",
     "import.meta.env.PROD": "true",
   },
