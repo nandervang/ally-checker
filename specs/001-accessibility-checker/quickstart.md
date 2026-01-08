@@ -405,6 +405,101 @@ supabase gen types typescript --local > frontend/src/types/database.types.ts
 
 ---
 
+## Deployment to Netlify
+
+### Prerequisites
+
+1. Create a [Netlify account](https://netlify.com)
+2. Install Netlify CLI: `npm install -g netlify-cli`
+3. Link your repository to Netlify
+
+### Environment Variables
+
+Set these in Netlify dashboard (Site settings → Environment variables):
+
+```bash
+# Required
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+GEMINI_API_KEY=your-gemini-api-key
+
+# Optional - API Authentication
+REPORT_SERVICE_KEY=your-secret-key
+```
+
+### Deploy via CLI
+
+```bash
+# First time setup
+netlify login
+netlify init
+
+# Deploy to production
+bun run build
+netlify deploy --prod
+
+# Or use continuous deployment
+git push origin main  # Auto-deploys via GitHub integration
+```
+
+### Deploy via GitHub
+
+1. Push code to GitHub
+2. In Netlify dashboard: **New site from Git**
+3. Connect repository: `nandervang/ally-checker`
+4. Configure build settings:
+   - **Build command**: `bun run build`
+   - **Publish directory**: `dist`
+   - **Functions directory**: `netlify/functions`
+5. Add environment variables (see above)
+6. Click **Deploy site**
+
+### Verify Deployment
+
+After deployment, verify:
+- Frontend loads at your Netlify URL
+- SPA routing works (refresh on any route)
+- Netlify Functions respond at `/.netlify/functions/*`
+- Environment variables are accessible
+- Supabase connection works
+
+### Configuration
+
+The project includes pre-configured [netlify.toml](../../netlify.toml) with:
+- Build settings (Bun 1.3, Node 20)
+- Function timeout (30s) and memory (1024MB)
+- SPA redirect rules
+- CORS headers for API endpoints
+- Security headers
+
+### Troubleshooting Deployment
+
+**Build fails**:
+```bash
+# Test build locally first
+bun run build
+
+# Check Netlify build logs in dashboard
+```
+
+**Functions timeout**:
+- Increase timeout in netlify.toml (max 60s on Pro plan)
+- Optimize AI API calls
+- Enable function caching
+
+**Environment variables not working**:
+- Verify variables are set in Netlify dashboard
+- Check VITE_ prefix for frontend variables
+- Redeploy after adding new variables
+
+**CORS errors**:
+- Verify headers in netlify.toml
+- Check function response headers
+- Test with curl: `curl -H "Origin: https://yoursite.netlify.app" https://yoursite.netlify.app/.netlify/functions/ai-agent-audit`
+
+---
+
 ## Next Steps
 
 - **Read the full spec**: [spec.md](spec.md)
