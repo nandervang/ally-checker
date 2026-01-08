@@ -67,8 +67,9 @@ export async function runGeminiAudit(request: AuditRequest) {
     const toolCalls: MCPToolResult[] = [];
 
     // Handle function calling loop
-    while (response.functionCalls && response.functionCalls().length > 0) {
-      const calls = response.functionCalls();
+    let functionCalls = response.functionCalls?.() ?? [];
+    while (functionCalls.length > 0) {
+      const calls = functionCalls;
       const functionResponses = [];
 
       for (const call of calls) {
@@ -88,6 +89,7 @@ export async function runGeminiAudit(request: AuditRequest) {
       // Send function results back to model
       result = await chat.sendMessage(functionResponses);
       response = result.response;
+      functionCalls = response.functionCalls?.() ?? [];
     }
 
     // Get final text response
