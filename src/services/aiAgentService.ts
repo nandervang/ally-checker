@@ -56,7 +56,7 @@ export async function runAIAgentAudit(
     };
     
     // Add API key if configured
-    const apiKey = import.meta.env.VITE_REPORT_SERVICE_KEY;
+    const apiKey = import.meta.env?.VITE_REPORT_SERVICE_KEY;
     if (apiKey) {
       headers["X-Report-Service-Key"] = apiKey;
     }
