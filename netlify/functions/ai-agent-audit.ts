@@ -1,7 +1,9 @@
 import type { Handler, HandlerEvent } from "@netlify/functions";
 import Anthropic from "@anthropic-ai/sdk";
+import { createClient } from "@supabase/supabase-js";
 import { runGeminiAudit } from "./gemini-agent";
 import { validateApiKey, getCorsHeaders, createAuthErrorResponse } from "./lib/auth";
+import type { Database } from "../../src/types/database";
 
 interface AuditRequest {
   mode: "url" | "html" | "snippet" | "document";
@@ -10,6 +12,8 @@ interface AuditRequest {
   language?: string;
   documentType?: "pdf" | "docx";
   filePath?: string;
+  userId?: string;
+  sessionId?: string;
 }
 
 interface MCPToolResult {
@@ -64,13 +68,110 @@ export const handler: Handler = async (event: HandlerEvent) => {
       };
     }
 
+    // Get user ID from Authorization header (Supabase JWT)
+    const authHeader = event.headers.authorization || event.headers.Authorization;
+    let userId: string | undefined;
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      // Decode JWT to get user ID (simple decode, not verifying signature)
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        userId = payload.sub;
+      } catch (e) {
+        console.warn('Failed to decode JWT:', e);
+      }
+    }
+
     // Route to appropriate AI model
     const result = await runAIAudit(request);
+
+    // Save to Supabase
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Supabase not configured');
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ ...result, auditId: null }),
+      };
+    }
+
+    const supabase = createClient<Database>(supabaseUrl, supabaseKey);
+
+    // Create audit record
+    const { data: auditData, error: auditError } = await supabase
+      .from('audits')
+      .insert({
+        user_id: userId || null,
+        session_id: request.sessionId || null,
+        input_type: request.mode,
+        input_value: request.content,
+        url: request.mode === 'url' ? request.content : null,
+        document_path: request.filePath || null,
+        document_type: request.documentType || null,
+        status: 'complete',
+        completed_at: new Date().toISOString(),
+        total_issues: result.summary.totalIssues || 0,
+        critical_issues: result.summary.criticalCount || 0,
+        serious_issues: result.summary.seriousCount || 0,
+        moderate_issues: result.summary.moderateCount || 0,
+        minor_issues: result.summary.minorCount || 0,
+        perceivable_issues: 0,
+        operable_issues: 0,
+        understandable_issues: 0,
+        robust_issues: 0,
+      })
+      .select('id')
+      .single();
+
+    if (auditError) {
+      console.error('Failed to save audit:', auditError);
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ ...result, auditId: null }),
+      };
+    }
+
+    const auditId = auditData.id;
+
+    // Save issues if any
+    if (result.issues && result.issues.length > 0) {
+      const issuesData = result.issues.map((issue: any) => ({
+        audit_id: auditId,
+        wcag_criterion: issue.criterion || issue.wcagCriterion || '',
+        severity: issue.severity || 'moderate',
+        title: issue.title || issue.description || '',
+        description: issue.description || issue.explanation || '',
+        element: issue.element || issue.selector || '',
+        selector: issue.selector || issue.element || '',
+        code_snippet: issue.code || issue.codeSnippet || '',
+        remediation: issue.remediation || issue.fix || '',
+        wcag_url: issue.wcagUrl || issue.helpUrl || '',
+        user_impact: issue.userImpact || issue.impact || '',
+        how_to_reproduce: issue.howToReproduce || '',
+        keyboard_testing: issue.keyboardTesting || '',
+        screen_reader_testing: issue.screenReaderTesting || '',
+        visual_testing: issue.visualTesting || '',
+        expected_behavior: issue.expectedBehavior || '',
+      }));
+
+      const { error: issuesError } = await supabase
+        .from('issues')
+        .insert(issuesData);
+
+      if (issuesError) {
+        console.error('Failed to save issues:', issuesError);
+      }
+    }
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(result),
+      body: JSON.stringify({ ...result, auditId }),
     };
   } catch (error) {
     console.error("AI Agent Audit Error:", error);
