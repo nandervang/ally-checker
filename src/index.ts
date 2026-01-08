@@ -6,8 +6,8 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types/database";
 
 // Create Supabase client for server-side auth
-const supabaseUrl = process.env.VITE_SUPABASE_URL!;
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY!;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL!;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
 
 function createAuthenticatedClient(authToken: string) {
   return createClient<Database>(supabaseUrl, supabaseAnonKey, {
@@ -188,7 +188,7 @@ const server = serve({
     },
   },
 
-  development: process.env.NODE_ENV !== "production" && {
+  development: import.meta.env.DEV && {
     // Enable browser hot reloading in development
     hmr: true,
 

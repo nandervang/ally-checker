@@ -14,7 +14,7 @@ import { parseGeminiResponse } from './response-parser';
 import { calculateMetrics } from './metrics';
 import { deduplicateIssues, sortIssues } from './deduplication';
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_API_KEY = import.meta.env.GEMINI_API_KEY;
 
 if (!GEMINI_API_KEY) {
   throw new Error('GEMINI_API_KEY environment variable is required');
