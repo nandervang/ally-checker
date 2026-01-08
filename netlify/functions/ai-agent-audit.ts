@@ -9,6 +9,7 @@ interface AuditRequest {
   mode: "url" | "html" | "snippet" | "document";
   content: string;
   model: "claude" | "gemini" | "gpt4";
+  geminiModel?: "gemini-2.5-flash" | "gemini-2.5-pro"; // Specific Gemini variant
   language?: string;
   documentType?: "pdf" | "docx";
   filePath?: string;

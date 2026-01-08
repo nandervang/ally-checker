@@ -15,6 +15,7 @@ interface AuditRequest {
   mode: "url" | "html" | "snippet" | "document";
   content: string;
   model: "claude" | "gemini" | "gpt4";
+  geminiModel?: "gemini-2.5-flash" | "gemini-2.5-pro"; // Specific Gemini variant
   documentType?: "pdf" | "docx";
   filePath?: string;
 }
@@ -68,9 +69,13 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
     // Build user prompt based on mode
     const userPrompt = buildUserPrompt(request);
 
+    // Use specific Gemini model if provided, otherwise default to 2.5 Flash
+    const modelName = request.geminiModel || "gemini-2.5-flash";
+    console.log(`Using Gemini model: ${modelName}`);
+
     // Create model with MCP-based tools
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
+      model: modelName,
       systemInstruction,
       tools: [{ functionDeclarations: tools }],
     });

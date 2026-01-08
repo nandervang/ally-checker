@@ -57,7 +57,8 @@ export interface UserSettings {
   
   // Audit Preferences
   agentMode: boolean;
-  preferredModel: 'claude' | 'gemini' | 'gpt4';
+  preferredModel: 'claude' | 'gemini-2.5-flash' | 'gemini-2.5-pro' | 'gpt4';
+  geminiApiKey?: string; // User's own Gemini API key (optional)
   
   // MCP Server Configuration
   customMcpServers: MCPServer[];
@@ -91,7 +92,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   menuColor: 'default',
   menuAccent: 'subtle',
   agentMode: true,
-  preferredModel: 'gemini',
+  preferredModel: 'gemini-2.5-flash',
   customMcpServers: [],
 };
 
@@ -131,6 +132,7 @@ function dbToSettings(dbData: Record<string, unknown>): UserSettings {
     menuAccent: (dbData.menu_accent as UserSettings['menuAccent']) ?? DEFAULT_SETTINGS.menuAccent,
     agentMode: dbData.agent_mode !== undefined ? (dbData.agent_mode as boolean) : DEFAULT_SETTINGS.agentMode,
     preferredModel: (dbData.preferred_model as UserSettings['preferredModel']) ?? DEFAULT_SETTINGS.preferredModel,
+    geminiApiKey: dbData.gemini_api_key as string | undefined,
     customMcpServers: (dbData.custom_mcp_servers as MCPServer[]) ?? DEFAULT_SETTINGS.customMcpServers,
     createdAt: dbData.created_at as string | undefined,
     updatedAt: dbData.updated_at as string | undefined,
@@ -169,6 +171,7 @@ function settingsToDb(settings: UserSettings): Record<string, unknown> {
     menu_accent: settings.menuAccent,
     agent_mode: settings.agentMode,
     preferred_model: settings.preferredModel,
+    gemini_api_key: settings.geminiApiKey,
     custom_mcp_servers: settings.customMcpServers,
   };
 }

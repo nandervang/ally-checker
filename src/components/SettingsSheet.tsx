@@ -276,16 +276,42 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                       <Separator />
                       <div className="space-y-2">
                         <Label htmlFor="preferred-model">Preferred AI Model</Label>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Choose the AI model for accessibility audits. Gemini 2.5 Flash is recommended for speed and cost-effectiveness.
+                        </p>
                         <select
                           id="preferred-model"
                           value={settings.preferredModel}
                           onChange={(e) => { updateSetting('preferredModel', e.target.value as UserSettings['preferredModel']); }}
                           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
-                          <option value="gemini">Gemini (Google) - Fast with multimodal</option>
-                          <option value="claude">Claude (Anthropic) - Best for MCP tools</option>
-                          <option value="gpt4">GPT-4 (OpenAI) - Reliable evaluation</option>
+                          <optgroup label="Gemini (Google) - Recommended">
+                            <option value="gemini-2.5-flash">Gemini 2.5 Flash - Fast, cost-effective (Default)</option>
+                            <option value="gemini-2.5-pro">Gemini 2.5 Pro - Advanced reasoning, slower</option>
+                          </optgroup>
+                          <optgroup label="Other Models">
+                            <option value="claude">Claude (Anthropic) - Best for complex analysis</option>
+                            <option value="gpt4">GPT-4 (OpenAI) - Coming soon</option>
+                          </optgroup>
                         </select>
+                        <div className="mt-2 p-3 rounded-md bg-muted/50 text-sm">
+                          <strong className="block mb-1">Selected: {
+                            settings.preferredModel === 'gemini-2.5-flash' ? 'Gemini 2.5 Flash' :
+                            settings.preferredModel === 'gemini-2.5-pro' ? 'Gemini 2.5 Pro' :
+                            settings.preferredModel === 'claude' ? 'Claude 3.5 Sonnet' :
+                            'GPT-4'
+                          }</strong>
+                          <span className="text-muted-foreground">
+                            {settings.preferredModel === 'gemini-2.5-flash' && 
+                              'Best for agentic use cases with MCP tools. 1M token context, thinking capability, FREE tier available.'}
+                            {settings.preferredModel === 'gemini-2.5-pro' && 
+                              'Advanced thinking model for complex reasoning. Higher cost but better quality. Use for difficult audits.'}
+                            {settings.preferredModel === 'claude' && 
+                              'Anthropic Claude 3.5 Sonnet - excellent for comprehensive analysis but MCP support limited.'}
+                            {settings.preferredModel === 'gpt4' && 
+                              'OpenAI GPT-4 integration coming soon.'}
+                          </span>
+                        </div>
                       </div>
                     </>
                   )}
