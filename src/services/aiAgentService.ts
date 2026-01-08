@@ -51,11 +51,19 @@ export async function runAIAgentAudit(
     "/.netlify/functions/ai-agent-audit";
 
   try {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    
+    // Add API key if configured
+    const apiKey = import.meta.env.VITE_REPORT_SERVICE_KEY;
+    if (apiKey) {
+      headers["X-Report-Service-Key"] = apiKey;
+    }
+
     const response = await fetch(functionUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify(request),
     });
 
