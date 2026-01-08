@@ -1,19 +1,17 @@
 import type { Handler, HandlerEvent } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
+import { validateApiKey, getCorsHeaders, createAuthErrorResponse } from "./lib/auth";
 
 /**
  * Document Upload Function
  * 
  * Handles file uploads to Supabase Storage for document accessibility auditing.
  * Returns the storage path for use in subsequent audit requests.
+ * 
+ * Authentication: Requires X-Report-Service-Key header (if REPORT_SERVICE_KEY env var is set)
  */
 export const handler: Handler = async (event: HandlerEvent) => {
-  // CORS headers
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-  };
+  const headers = getCorsHeaders();
 
   // Handle preflight
   if (event.httpMethod === "OPTIONS") {
@@ -27,6 +25,12 @@ export const handler: Handler = async (event: HandlerEvent) => {
       headers,
       body: JSON.stringify({ error: "Method not allowed" }),
     };
+  }
+
+  // Validate authentication
+  const auth = validateApiKey(event);
+  if (!auth.isAuthenticated) {
+    return createAuthErrorResponse(auth.error!);
   }
 
   try {
