@@ -269,10 +269,10 @@ export async function runAudit(
         const errorData = await response.json();
         errorMessage = errorData.error || errorData.details || errorMessage;
         console.error('Audit Error:', errorData);
-      } catch {
-        const textError = await response.text();
-        console.error('Audit Error Response:', textError);
-        errorMessage = textError || errorMessage;
+      } catch (jsonError) {
+        // If JSON parsing failed, body is already consumed - use status text
+        console.error('Audit Error Response (non-JSON):', response.statusText, jsonError);
+        errorMessage = response.statusText || errorMessage;
       }
       throw new Error(errorMessage);
     }
