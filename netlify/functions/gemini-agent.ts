@@ -26,6 +26,18 @@ interface MCPToolResult {
 }
 
 /**
+ * Helper to wrap async operations with timeout
+ */
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => 
+      setTimeout(() => reject(new Error(errorMessage)), timeoutMs)
+    )
+  ]);
+}
+
+/**
  * Run audit using Google Gemini 2.5 Flash with MCP tools
  */
 export async function runGeminiAudit(request: AuditRequest) {
@@ -33,6 +45,16 @@ export async function runGeminiAudit(request: AuditRequest) {
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY not configured");
   }
+
+  // Add timeout to prevent Netlify function timeout (leave 2s buffer)
+  return withTimeout(
+    runGeminiAuditInternal(request, apiKey),
+    28000, // 28 seconds (30s Netlify limit - 2s buffer)
+    "Audit timed out - processing took too long. Try with a smaller HTML sample."
+  );
+}
+
+async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
 
   const genAI = new GoogleGenerativeAI(apiKey);
   
@@ -57,7 +79,7 @@ export async function runGeminiAudit(request: AuditRequest) {
     const chat = model.startChat({
       generationConfig: {
         temperature: 0.3,
-        maxOutputTokens: 8192,
+        maxOutputTokens: 4096, // Reduced from 8192 to speed up generation
       },
     });
 
@@ -66,9 +88,15 @@ export async function runGeminiAudit(request: AuditRequest) {
     let response = result.response;
     const toolCalls: MCPToolResult[] = [];
 
-    // Handle function calling loop
+    // Handle function calling loop with maximum iteration limit
+    const maxIterations = 10; // Prevent infinite loops
+    let iteration = 0;
     let functionCalls = response.functionCalls?.() ?? [];
-    while (functionCalls.length > 0) {
+    
+    while (functionCalls.length > 0 && iteration < maxIterations) {
+      iteration++;
+      console.log(`Function calling iteration ${iteration}/${maxIterations}`);
+      
       const calls = functionCalls;
       const functionResponses = [];
 
