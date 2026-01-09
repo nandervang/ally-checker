@@ -175,6 +175,28 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
     void applyDesignSettings(newSettings);
   }
 
+  async function applyPreset(updates: Partial<UserSettings>) {
+    if (!settings) return;
+    
+    const newSettings = { ...settings, ...updates };
+    setSettings(newSettings);
+    
+    // Apply design changes immediately
+    await applyDesignSettings(newSettings);
+    
+    // Save to database
+    setSaving(true);
+    try {
+      await updateUserSettings(newSettings);
+      toast.success('Preset applied and saved');
+    } catch (error) {
+      console.error('Failed to save preset:', error);
+      toast.error('Preset applied but failed to save');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   if (loading) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
@@ -466,48 +488,32 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => {
-                          updateSetting('style', 'vega');
-                          updateSetting('iconLibrary', 'lucide');
-                          updateSetting('font', 'inter');
-                          updateSetting('baseColor', 'neutral');
-                        }}
+                        onClick={() => { void applyPreset({ style: 'vega', iconLibrary: 'lucide', font: 'inter', baseColor: 'neutral' }); }}
+                        disabled={saving}
                       >
                         Vega / Lucide / Inter
                       </Button>
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => {
-                          updateSetting('style', 'nova');
-                          updateSetting('iconLibrary', 'hugeicons');
-                          updateSetting('font', 'inter');
-                          updateSetting('baseColor', 'neutral');
-                        }}
+                        onClick={() => { void applyPreset({ style: 'nova', iconLibrary: 'hugeicons', font: 'inter', baseColor: 'neutral' }); }}
+                        disabled={saving}
                       >
                         Nova / Hugeicons / Inter
                       </Button>
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => {
-                          updateSetting('style', 'maia');
-                          updateSetting('iconLibrary', 'hugeicons');
-                          updateSetting('font', 'figtree');
-                          updateSetting('baseColor', 'neutral');
-                        }}
+                        onClick={() => { void applyPreset({ style: 'maia', iconLibrary: 'hugeicons', font: 'figtree', baseColor: 'neutral' }); }}
+                        disabled={saving}
                       >
                         Maia / Hugeicons / Figtree
                       </Button>
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => {
-                          updateSetting('style', 'mira');
-                          updateSetting('iconLibrary', 'hugeicons');
-                          updateSetting('font', 'inter');
-                          updateSetting('baseColor', 'neutral');
-                        }}
+                        onClick={() => { void applyPreset({ style: 'mira', iconLibrary: 'hugeicons', font: 'inter', baseColor: 'neutral' }); }}
+                        disabled={saving}
                       >
                         Mira / Hugeicons / Inter
                       </Button>

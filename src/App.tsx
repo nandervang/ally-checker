@@ -66,7 +66,8 @@ export function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <IconLibraryProvider iconLibrary={settings?.iconLibrary || 'lucide'}>
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Header onOpenSettings={() => setSettingsOpen(true)} />
 
       <Main>
@@ -401,6 +402,7 @@ export function App() {
       {/* Settings Sheet */}
       <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
+    </IconLibraryProvider>
   );
 }
 
