@@ -203,7 +203,7 @@ function AppContent({ settings }: { settings: UserSettings | null }) {
             <Card className="shadow-elevation-2 hover:shadow-elevation-3 transition-all cursor-pointer" onClick={() => setActivePanel("components")}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-xl md:text-2xl lg:text-3xl">
-                  <Database className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8" />
+                  <Icon name="database" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8" />
                   {t("cards.uiComponents.title")}
                 </CardTitle>
                 <CardDescription className="text-base md:text-lg">{t("cards.uiComponents.description")}</CardDescription>
@@ -222,7 +222,7 @@ function AppContent({ settings }: { settings: UserSettings | null }) {
             <Card className="shadow-elevation-2 hover:shadow-elevation-3 transition-all cursor-pointer lg:col-span-2 xl:col-span-1" onClick={() => setActivePanel("settings")}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-xl md:text-2xl lg:text-3xl">
-                  <Settings className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8" />
+                  <Icon name="settings" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8" />
                   {t("cards.configuration.title")}
                 </CardTitle>
                 <CardDescription className="text-base md:text-lg">{t("cards.configuration.description")}</CardDescription>
@@ -301,7 +301,7 @@ function AppContent({ settings }: { settings: UserSettings | null }) {
         <SheetContent side="right" className="w-full sm:w-[540px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2 text-2xl md:text-3xl">
-              <Database className="h-6 w-6 md:h-7 md:w-7" />
+              <Icon name="database" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7" />
               {t("components.title")}
             </SheetTitle>
             <SheetDescription className="text-base md:text-lg">
@@ -347,7 +347,7 @@ function AppContent({ settings }: { settings: UserSettings | null }) {
         <SheetContent side="right" className="w-full sm:w-[540px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2 text-2xl md:text-3xl">
-              <Settings className="h-6 w-6 md:h-7 md:w-7" />
+              <Icon name="settings" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7" />
               {t("settings.title")}
             </SheetTitle>
             <SheetDescription className="text-base md:text-lg">
