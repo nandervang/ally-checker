@@ -179,6 +179,9 @@ export function SettingsSheet({ open, onOpenChange, onSettingsChange }: Settings
     
     // Apply design changes immediately for preview
     void applyDesignSettings(newSettings);
+    
+    // Notify parent component for real-time updates (e.g., icon library switching)
+    onSettingsChange?.(newSettings);
   }
 
   async function applyPreset(updates: Partial<UserSettings>) {
@@ -496,40 +499,48 @@ export function SettingsSheet({ open, onOpenChange, onSettingsChange }: Settings
                     <Label>Quick Presets</Label>
                     <div className="grid grid-cols-2 gap-2">
                       <Button 
-                        variant="outline" 
+                        variant={settings.style === 'vega' ? 'default' : 'outline'}
                         size="sm"
-                        onClick={() => { void applyPreset({ style: 'vega', iconLibrary: 'lucide', font: 'inter', baseColor: 'neutral' }); }}
+                        onClick={() => { void applyPreset({ style: 'vega', iconLibrary: 'lucide', font: 'inter', baseColor: 'blue' }); }}
                         disabled={saving}
+                        className="font-semibold"
                       >
-                        Vega / Lucide / Inter
+                        <Icon name="check-circle" library={iconLibrary} className="h-4 w-4 mr-1.5" />
+                        Vega
                       </Button>
                       <Button 
-                        variant="outline" 
+                        variant={settings.style === 'nova' ? 'default' : 'outline'}
                         size="sm"
-                        onClick={() => { void applyPreset({ style: 'nova', iconLibrary: 'hugeicons', font: 'inter', baseColor: 'neutral' }); }}
+                        onClick={() => { void applyPreset({ style: 'nova', iconLibrary: 'hugeicons', font: 'inter', baseColor: 'violet' }); }}
                         disabled={saving}
+                        className="text-xs font-medium"
                       >
-                        Nova / Hugeicons / Inter
+                        <Icon name="sparkles" library={iconLibrary} className="h-3.5 w-3.5 mr-1" />
+                        Nova
                       </Button>
                       <Button 
-                        variant="outline" 
+                        variant={settings.style === 'maia' ? 'default' : 'outline'}
                         size="sm"
-                        onClick={() => { void applyPreset({ style: 'maia', iconLibrary: 'hugeicons', font: 'figtree', baseColor: 'neutral' }); }}
+                        onClick={() => { void applyPreset({ style: 'maia', iconLibrary: 'hugeicons', font: 'figtree', baseColor: 'rose' }); }}
                         disabled={saving}
+                        className="rounded-xl font-medium"
                       >
-                        Maia / Hugeicons / Figtree
+                        <Icon name="sparkles" library={iconLibrary} className="h-4 w-4 mr-1.5" />
+                        Maia
                       </Button>
                       <Button 
-                        variant="outline" 
+                        variant={settings.style === 'mira' ? 'default' : 'outline'}
                         size="sm"
-                        onClick={() => { void applyPreset({ style: 'mira', iconLibrary: 'hugeicons', font: 'inter', baseColor: 'neutral' }); }}
+                        onClick={() => { void applyPreset({ style: 'mira', iconLibrary: 'hugeicons', font: 'inter', baseColor: 'orange' }); }}
                         disabled={saving}
+                        className="text-xs h-7 font-bold"
                       >
-                        Mira / Hugeicons / Inter
+                        <Icon name="zap" library={iconLibrary} className="h-3 w-3 mr-1" />
+                        Mira
                       </Button>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Apply popular combinations from shadcn/ui
+                      Each preset has distinctive styling, icons, and color themes
                     </p>
                   </div>
 

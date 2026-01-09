@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Globe, Code, Upload, AlertCircle, FileText, Brain, Zap } from "lucide-react";
+import { Icon } from "@/lib/icons";
+import { useIconLibrary } from "@/contexts/IconLibraryContext";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { ErrorDisplay } from "./ErrorDisplay";
 import { ProgressIndicator } from "./ProgressIndicator";
@@ -46,6 +47,7 @@ interface AuditInputFormProps {
 export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { iconLibrary } = useIconLibrary();
   const [mode, setMode] = useState<InputMode>("url");
   const [url, setUrl] = useState("");
   const [snippet, setSnippet] = useState("");
@@ -453,22 +455,22 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
         </div>
       )}
 
-      <Tabs value={mode} onValueChange={(value) => { setMode(value as InputMode); }} className="w-full">`
+      <Tabs value={mode} onValueChange={(value) => { setMode(value as InputMode); }} className="w-full">
         <TabsList className="grid w-full grid-cols-4 h-auto">
           <TabsTrigger value="url" className="gap-2 text-base md:text-lg h-auto py-3 focus-ring">
-            <Globe className="h-5 w-5" />
+            <Icon name="globe" library={iconLibrary} className="h-5 w-5" />
             URL
           </TabsTrigger>
           <TabsTrigger value="html" className="gap-2 text-base md:text-lg h-auto py-3 focus-ring">
-            <Upload className="h-5 w-5" />
+            <Icon name="upload" library={iconLibrary} className="h-5 w-5" />
             HTML
           </TabsTrigger>
           <TabsTrigger value="document" className="gap-2 text-base md:text-lg h-auto py-3 focus-ring">
-            <FileText className="h-5 w-5" />
+            <Icon name="file-text" library={iconLibrary} className="h-5 w-5" />
             Document
           </TabsTrigger>
           <TabsTrigger value="snippet" className="gap-2 text-base md:text-lg h-auto py-3 focus-ring">
-            <Code className="h-5 w-5" />
+            <Icon name="code" library={iconLibrary} className="h-5 w-5" />
             Snippet
           </TabsTrigger>
         </TabsList>
@@ -496,7 +498,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
               />
               {getFieldError("url") && (
                 <Alert variant="destructive" role="alert" aria-live="polite">
-                  <AlertCircle className="h-4 w-4" />
+                  <Icon name="alert-circle" library={iconLibrary} className="h-4 w-4" />
                   <AlertDescription id="url-error" className="text-base">
                     {getFieldError("url")?.message}
                   </AlertDescription>
@@ -527,7 +529,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
               )}
               {getFieldError("file") && (
                 <Alert variant="destructive" role="alert" aria-live="polite">
-                  <AlertCircle className="h-4 w-4" />
+                  <Icon name="alert-circle" library={iconLibrary} className="h-4 w-4" />
                   <AlertDescription id="file-error" className="text-base">
                     {getFieldError("file")?.message}
                   </AlertDescription>
@@ -559,7 +561,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
               )}
               {getFieldError("document") && (
                 <Alert variant="destructive" role="alert" aria-live="polite">
-                  <AlertCircle className="h-4 w-4" />
+                  <Icon name="alert-circle" library={iconLibrary} className="h-4 w-4" />
                   <AlertDescription id="document-error" className="text-base">
                     {getFieldError("document")?.message}
                   </AlertDescription>
@@ -589,7 +591,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
               />
               {getFieldError("snippet") && (
                 <Alert variant="destructive" role="alert" aria-live="polite">
-                  <AlertCircle className="h-4 w-4" />
+                  <Icon name="alert-circle" library={iconLibrary} className="h-4 w-4" />
                   <AlertDescription id="snippet-error" className="text-base">
                     {getFieldError("snippet")?.message}
                   </AlertDescription>
