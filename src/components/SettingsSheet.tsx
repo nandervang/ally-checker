@@ -34,7 +34,7 @@ interface SettingsSheetProps {
 
 export function SettingsSheet({ open, onOpenChange, onSettingsChange }: SettingsSheetProps) {
   const { setTheme } = useTheme();
-  const { iconLibrary: currentIconLibrary } = useIconLibrary();
+  const { iconLibrary } = useIconLibrary();
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -215,7 +215,7 @@ export function SettingsSheet({ open, onOpenChange, onSettingsChange }: Settings
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
           <div className="flex items-center justify-center min-h-[400px]">
-            <Icon name="loader" library={currentIconLibrary} className="h-8 w-8 animate-spin text-muted-foreground" />
+            <Icon name="loader" library={iconLibrary} className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         </SheetContent>
       </Sheet>
@@ -248,22 +248,22 @@ export function SettingsSheet({ open, onOpenChange, onSettingsChange }: Settings
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={handleExport}>
-              <Icon name="download" library={currentIconLibrary} className="h-4 w-4 mr-2" />
+              <Icon name="download" library={iconLibrary} className="h-4 w-4 mr-2" />
               Export
             </Button>
             <Button variant="outline" size="sm" onClick={handleImport}>
-              <Icon name="upload" library={currentIconLibrary} className="h-4 w-4 mr-2" />
+              <Icon name="upload" library={iconLibrary} className="h-4 w-4 mr-2" />
               Import
             </Button>
             <Button variant="outline" size="sm" onClick={() => { void handleReset(); }}>
-              <Icon name="refresh" library={currentIconLibrary} className="h-4 w-4 mr-2" />
+              <Icon name="refresh" library={iconLibrary} className="h-4 w-4 mr-2" />
               Reset
             </Button>
             <Button onClick={() => { void handleSave(); }} disabled={saving} className="ml-auto">
               {saving ? (
-                <Icon name="loader" library={currentIconLibrary} className="h-4 w-4 mr-2 animate-spin" />
+                <Icon name="loader" library={iconLibrary} className="h-4 w-4 mr-2 animate-spin" />
               ) : (
-                <Icon name="save" library={currentIconLibrary} className="h-4 w-4 mr-2" />
+                <Icon name="save" library={iconLibrary} className="h-4 w-4 mr-2" />
               )}
               Save
             </Button>
@@ -470,14 +470,14 @@ export function SettingsSheet({ open, onOpenChange, onSettingsChange }: Settings
               {/* Action Buttons for Audit Tab */}
               <div className="flex gap-2 pt-4">
                 <Button variant="outline" onClick={() => { void handleReset(); }} className="flex-1">
-                  <Icon name="refresh" library={currentIconLibrary} className="h-4 w-4 mr-2" />
+                  <Icon name="refresh" library={iconLibrary} className="h-4 w-4 mr-2" />
                   Reset to Defaults
                 </Button>
                 <Button onClick={() => { void handleSave(); }} disabled={saving} className="flex-1">
                   {saving ? (
-                    <Icon name="loader" library={currentIconLibrary} className="h-4 w-4 mr-2 animate-spin" />
+                    <Icon name="loader" library={iconLibrary} className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
-                    <Icon name="save" library={currentIconLibrary} className="h-4 w-4 mr-2" />
+                    <Icon name="save" library={iconLibrary} className="h-4 w-4 mr-2" />
                   )}
                   Save Settings
                 </Button>
@@ -760,14 +760,14 @@ export function SettingsSheet({ open, onOpenChange, onSettingsChange }: Settings
               {/* Action Buttons for Design Tab */}
               <div className="flex gap-2 pt-4">
                 <Button variant="outline" onClick={() => { void handleReset(); }} className="flex-1">
-                  <Icon name="refresh" library={currentIconLibrary} className="h-4 w-4 mr-2" />
+                  <Icon name="refresh" library={iconLibrary} className="h-4 w-4 mr-2" />
                   Reset to Defaults
                 </Button>
                 <Button onClick={() => { void handleSave(); }} disabled={saving} className="flex-1">
                   {saving ? (
-                    <Icon name="loader" library={currentIconLibrary} className="h-4 w-4 mr-2 animate-spin" />
+                    <Icon name="loader" library={iconLibrary} className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
-                    <Icon name="save" library={currentIconLibrary} className="h-4 w-4 mr-2" />
+                    <Icon name="save" library={iconLibrary} className="h-4 w-4 mr-2" />
                   )}
                   Save Settings
                 </Button>
@@ -853,14 +853,14 @@ export function SettingsSheet({ open, onOpenChange, onSettingsChange }: Settings
               {/* Action Buttons for UI Tab */}
               <div className="flex gap-2 pt-4">
                 <Button variant="outline" onClick={() => { void handleReset(); }} className="flex-1">
-                  <Icon name="refresh" library={currentIconLibrary} className="h-4 w-4 mr-2" />
+                  <Icon name="refresh" library={iconLibrary} className="h-4 w-4 mr-2" />
                   Reset to Defaults
                 </Button>
                 <Button onClick={() => { void handleSave(); }} disabled={saving} className="flex-1">
                   {saving ? (
-                    <Icon name="loader" library={currentIconLibrary} className="h-4 w-4 mr-2 animate-spin" />
+                    <Icon name="loader" library={iconLibrary} className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
-                    <Icon name="save" library={currentIconLibrary} className="h-4 w-4 mr-2" />
+                    <Icon name="save" library={iconLibrary} className="h-4 w-4 mr-2" />
                   )}
                   Save Settings
                 </Button>
@@ -931,14 +931,14 @@ export function SettingsSheet({ open, onOpenChange, onSettingsChange }: Settings
               {/* Action Buttons for Reports Tab */}
               <div className="flex gap-2 pt-4">
                 <Button variant="outline" onClick={() => { void handleReset(); }} className="flex-1">
-                  <Icon name="refresh" library={currentIconLibrary} className="h-4 w-4 mr-2" />
+                  <Icon name="refresh" library={iconLibrary} className="h-4 w-4 mr-2" />
                   Reset to Defaults
                 </Button>
                 <Button onClick={() => { void handleSave(); }} disabled={saving} className="flex-1">
                   {saving ? (
-                    <Icon name="loader" library={currentIconLibrary} className="h-4 w-4 mr-2 animate-spin" />
+                    <Icon name="loader" library={iconLibrary} className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
-                    <Icon name="save" library={currentIconLibrary} className="h-4 w-4 mr-2" />
+                    <Icon name="save" library={iconLibrary} className="h-4 w-4 mr-2" />
                   )}
                   Save Settings
                 </Button>
