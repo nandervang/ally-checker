@@ -453,13 +453,57 @@ For each issue, provide comprehensive testing instructions:
    - Use professional terminology appropriate for each template
    - Include all relevant standards (WCAG, EN 301 549, Section 508 as applicable)
 
-**Output Format:**
-Provide a comprehensive report with:
-1. Executive summary
-2. Automated test results (from axe-core)
-3. Manual accessibility findings
-4. Prioritized issue list with remediation guidance AND testing instructions
-5. WCAG conformance assessment
+**CRITICAL: Output Format**
+
+Your final response MUST end with a JSON code block containing an array of issue objects.
+Each issue object must match this EXACT schema (all fields are required unless marked optional):
+
+\`\`\`json
+{
+  "issues": [
+    {
+      "wcag_criterion": "1.4.3",           // WCAG number (e.g., "1.4.3", "2.4.7")
+      "wcag_level": "AA",                  // Must be: "A", "AA", or "AAA"
+      "wcag_principle": "perceivable",     // Must be: "perceivable", "operable", "understandable", or "robust"
+      "title": "Insufficient Color Contrast for Links",  // Clear, specific title (max 200 chars)
+      "description": "Detailed explanation...",  // Full issue description
+      "severity": "serious",               // Must be: "critical", "serious", "moderate", or "minor"
+      "source": "ai-heuristic",           // Must be: "axe-core", "ai-heuristic", or "manual"
+      "confidence_score": 85,             // Optional: 0-100
+      "element_selector": "nav a",        // Optional: CSS selector
+      "element_html": "<a href='...'>",   // Optional: HTML snippet
+      "element_context": "...",           // Optional: Surrounding HTML
+      "how_to_fix": "Increase contrast to 4.5:1...",  // Remediation steps
+      "code_example": "/* Before */\\n<a style='color:#777'>...\\n/* After */\\n<a style='color:#333'>...", // Optional: Before/after code
+      "wcag_url": "https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum",  // Optional: WCAG link
+      "user_impact": "Users with low vision cannot read links",  // Optional but recommended
+      "how_to_reproduce": "1. Navigate to homepage\\n2. Tab to navigation links\\n3. Observe low contrast",  // Optional but recommended
+      "keyboard_testing": "Tab: Links should be clearly visible when focused. Enter: Should activate. Current: Focus hard to see.",  // Optional but recommended
+      "screen_reader_testing": "Expected: 'About Us, link'. Current: Announces correctly but low contrast makes visual confirmation difficult.",  // Optional but recommended
+      "visual_testing": "Check contrast using dev tools. Links are #777777 on #FFFFFF = 3.2:1. Need 4.5:1 minimum.",  // Optional but recommended
+      "expected_behavior": "WCAG 1.4.3 requires 4.5:1 contrast for normal text. Links must be distinguishable visually."  // Optional but recommended
+    }
+  ]
+}
+\`\`\`
+
+**Response Structure:**
+1. Write your comprehensive narrative analysis (executive summary, findings, etc.)
+2. END your response with the JSON code block above containing ALL issues found
+3. The JSON will be extracted and parsed automatically
+4. The narrative provides context; JSON provides structured data
+
+**WCAG Principle Mapping:**
+- Criterion starts with 1.x.x → "perceivable"
+- Criterion starts with 2.x.x → "operable"  
+- Criterion starts with 3.x.x → "understandable"
+- Criterion starts with 4.x.x → "robust"
+
+**Severity Guidelines:**
+- critical: Level A violations that block access
+- serious: Level AA violations or significant barriers
+- moderate: Level AA issues or UX problems
+- minor: Best practice or Level AAA recommendations
 
 Focus on actionable insights that help developers fix issues effectively.`;
 }
