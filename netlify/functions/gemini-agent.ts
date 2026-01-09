@@ -74,20 +74,63 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
     const modelName = request.geminiModel || "gemini-2.5-flash";
     console.log(`Using Gemini model: ${modelName}`);
 
-    // Create model with MCP-based tools
+    // Define JSON schema for structured output
+    const responseSchema = {
+      type: "object",
+      properties: {
+        summary: {
+          type: "string",
+          description: "Executive summary of the audit findings"
+        },
+        issues: {
+          type: "array",
+          description: "Array of accessibility issues found",
+          items: {
+            type: "object",
+            properties: {
+              wcag_criterion: { type: "string", description: "WCAG criterion number (e.g., '1.4.3')" },
+              wcag_level: { type: "string", enum: ["A", "AA", "AAA"], description: "WCAG conformance level" },
+              wcag_principle: { type: "string", enum: ["perceivable", "operable", "understandable", "robust"], description: "WCAG principle" },
+              title: { type: "string", description: "Clear, specific title (max 200 chars)" },
+              description: { type: "string", description: "Full issue description" },
+              severity: { type: "string", enum: ["critical", "serious", "moderate", "minor"], description: "Issue severity" },
+              source: { type: "string", enum: ["axe-core", "ai-heuristic", "manual"], description: "Detection source" },
+              confidence_score: { type: "integer", description: "Confidence 0-100 (optional)" },
+              element_selector: { type: "string", description: "CSS selector (optional)" },
+              element_html: { type: "string", description: "HTML snippet (optional)" },
+              element_context: { type: "string", description: "Surrounding HTML (optional)" },
+              how_to_fix: { type: "string", description: "Remediation steps" },
+              code_example: { type: "string", description: "Before/after code (optional)" },
+              wcag_url: { type: "string", description: "WCAG documentation link (optional)" },
+              user_impact: { type: "string", description: "Impact on users (optional)" },
+              how_to_reproduce: { type: "string", description: "Steps to reproduce (optional)" },
+              keyboard_testing: { type: "string", description: "Keyboard testing notes (optional)" },
+              screen_reader_testing: { type: "string", description: "Screen reader testing notes (optional)" },
+              visual_testing: { type: "string", description: "Visual testing notes (optional)" },
+              expected_behavior: { type: "string", description: "Expected accessible behavior (optional)" }
+            },
+            required: ["wcag_criterion", "wcag_level", "wcag_principle", "title", "description", "severity", "source", "how_to_fix"]
+          }
+        }
+      },
+      required: ["summary", "issues"]
+    };
+
+    // Create model with MCP-based tools and structured output
     const model = genAI.getGenerativeModel({
       model: modelName,
       systemInstruction,
       tools: [{ functionDeclarations: tools }],
-    });
-
-    // Start chat with low temperature for reliable function calling
-    const chat = model.startChat({
       generationConfig: {
         temperature: 0.3,
-        maxOutputTokens: 4096, // Reduced from 8192 to speed up generation
-      },
+        maxOutputTokens: 8192, // Increased to allow full responses
+        responseMimeType: "application/json",
+        responseSchema,
+      }
     });
+
+    // Start chat
+    const chat = model.startChat();
 
     // Send initial message
     let result = await chat.sendMessage(userPrompt);
@@ -126,18 +169,33 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
       functionCalls = response.functionCalls?.() ?? [];
     }
 
-    // Get final text response
+    // Get final response - now guaranteed to be JSON
     const analysisText = response.text();
+    console.log("Gemini response (JSON):", analysisText.substring(0, 500));
     
-    // Parse the response to extract issues
-    const parsedIssues = parseGeminiResponse(analysisText);
+    // Parse JSON response
+    let structuredResponse;
+    try {
+      structuredResponse = JSON.parse(analysisText);
+    } catch (error) {
+      console.error("Failed to parse Gemini JSON response:", error);
+      // Fallback to old parser for backward compatibility
+      const parsedIssues = parseGeminiResponse(analysisText);
+      structuredResponse = {
+        summary: "Audit completed (legacy format)",
+        issues: parsedIssues
+      };
+    }
     
-    // Calculate counts from parsed issues
-    const criticalCount = parsedIssues.filter(i => i.severity === 'critical').length;
-    const seriousCount = parsedIssues.filter(i => i.severity === 'serious').length;
-    const moderateCount = parsedIssues.filter(i => i.severity === 'moderate').length;
-    const minorCount = parsedIssues.filter(i => i.severity === 'minor').length;
-    const totalIssues = parsedIssues.length;
+    const issues = structuredResponse.issues || [];
+    const summary = structuredResponse.summary || "No summary provided";
+    
+    // Calculate counts from issues
+    const criticalCount = issues.filter((i: any) => i.severity === 'critical').length;
+    const seriousCount = issues.filter((i: any) => i.severity === 'serious').length;
+    const moderateCount = issues.filter((i: any) => i.severity === 'moderate').length;
+    const minorCount = issues.filter((i: any) => i.severity === 'minor').length;
+    const totalIssues = issues.length;
     
     return {
       summary: {
@@ -151,13 +209,13 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
         passCount: 0,
         model: "gemini-2.5-flash-with-mcp",
       },
-      issues: parsedIssues,
+      issues: issues,
       wcagCompliance: {
-        levelA: { passed: 0, failed: parsedIssues.filter(i => i.wcag_level === 'A').length, percentage: 0 },
-        levelAA: { passed: 0, failed: parsedIssues.filter(i => i.wcag_level === 'AA').length, percentage: 0 },
-        levelAAA: { passed: 0, failed: parsedIssues.filter(i => i.wcag_level === 'AAA').length, percentage: 0 },
+        levelA: { passed: 0, failed: issues.filter((i: any) => i.wcag_level === 'A').length, percentage: 0 },
+        levelAA: { passed: 0, failed: issues.filter((i: any) => i.wcag_level === 'AA').length, percentage: 0 },
+        levelAAA: { passed: 0, failed: issues.filter((i: any) => i.wcag_level === 'AAA').length, percentage: 0 },
       },
-      rawAnalysis: analysisText,
+      rawAnalysis: `${summary}\n\n${JSON.stringify({ issues }, null, 2)}`,
       toolResults: toolCalls,
     };
     
@@ -455,57 +513,32 @@ For each issue, provide comprehensive testing instructions:
 
 **CRITICAL: Output Format**
 
-Your final response MUST end with a JSON code block containing an array of issue objects.
-Each issue object must match this EXACT schema (all fields are required unless marked optional):
+You MUST return a JSON object with two properties:
+1. "summary": Executive summary of audit findings (string)
+2. "issues": Array of accessibility issue objects
 
-\`\`\`json
-{
-  "issues": [
-    {
-      "wcag_criterion": "1.4.3",           // WCAG number (e.g., "1.4.3", "2.4.7")
-      "wcag_level": "AA",                  // Must be: "A", "AA", or "AAA"
-      "wcag_principle": "perceivable",     // Must be: "perceivable", "operable", "understandable", or "robust"
-      "title": "Insufficient Color Contrast for Links",  // Clear, specific title (max 200 chars)
-      "description": "Detailed explanation...",  // Full issue description
-      "severity": "serious",               // Must be: "critical", "serious", "moderate", or "minor"
-      "source": "ai-heuristic",           // Must be: "axe-core", "ai-heuristic", or "manual"
-      "confidence_score": 85,             // Optional: 0-100
-      "element_selector": "nav a",        // Optional: CSS selector
-      "element_html": "<a href='...'>",   // Optional: HTML snippet
-      "element_context": "...",           // Optional: Surrounding HTML
-      "how_to_fix": "Increase contrast to 4.5:1...",  // Remediation steps
-      "code_example": "/* Before */\\n<a style='color:#777'>...\\n/* After */\\n<a style='color:#333'>...", // Optional: Before/after code
-      "wcag_url": "https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum",  // Optional: WCAG link
-      "user_impact": "Users with low vision cannot read links",  // Optional but recommended
-      "how_to_reproduce": "1. Navigate to homepage\\n2. Tab to navigation links\\n3. Observe low contrast",  // Optional but recommended
-      "keyboard_testing": "Tab: Links should be clearly visible when focused. Enter: Should activate. Current: Focus hard to see.",  // Optional but recommended
-      "screen_reader_testing": "Expected: 'About Us, link'. Current: Announces correctly but low contrast makes visual confirmation difficult.",  // Optional but recommended
-      "visual_testing": "Check contrast using dev tools. Links are #777777 on #FFFFFF = 3.2:1. Need 4.5:1 minimum.",  // Optional but recommended
-      "expected_behavior": "WCAG 1.4.3 requires 4.5:1 contrast for normal text. Links must be distinguishable visually."  // Optional but recommended
-    }
-  ]
-}
-\`\`\`
-
-**Response Structure:**
-1. Write your comprehensive narrative analysis (executive summary, findings, etc.)
-2. END your response with the JSON code block above containing ALL issues found
-3. The JSON will be extracted and parsed automatically
-4. The narrative provides context; JSON provides structured data
-
-**WCAG Principle Mapping:**
-- Criterion starts with 1.x.x → "perceivable"
-- Criterion starts with 2.x.x → "operable"  
-- Criterion starts with 3.x.x → "understandable"
-- Criterion starts with 4.x.x → "robust"
+The JSON schema is enforced automatically. Each issue must include:
+- wcag_criterion: WCAG number (e.g., "1.4.3")
+- wcag_level: "A", "AA", or "AAA"
+- wcag_principle: "perceivable", "operable", "understandable", or "robust"
+  * Criterion 1.x.x → "perceivable"
+  * Criterion 2.x.x → "operable"
+  * Criterion 3.x.x → "understandable"
+  * Criterion 4.x.x → "robust"
+- title: Clear, specific title
+- description: Full explanation
+- severity: "critical", "serious", "moderate", or "minor"
+- source: "axe-core", "ai-heuristic", or "manual"
+- how_to_fix: Remediation steps
+- Optional but recommended: element_selector, element_html, code_example, user_impact, how_to_reproduce, keyboard_testing, screen_reader_testing, visual_testing, expected_behavior, wcag_url
 
 **Severity Guidelines:**
-- critical: Level A violations that block access
-- serious: Level AA violations or significant barriers
+- critical: Level A violations blocking access
+- serious: Level AA violations or major barriers
 - moderate: Level AA issues or UX problems
 - minor: Best practice or Level AAA recommendations
 
-Focus on actionable insights that help developers fix issues effectively.`;
+Focus on actionable, detailed findings with comprehensive testing instructions.`;
 }
 
 /**
