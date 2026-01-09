@@ -13,6 +13,7 @@ import type { AuditInput, AuditResult, Issue, AgentTrace, AgentTraceStep } from 
 import { parseGeminiResponse } from './response-parser';
 import { calculateMetrics } from './metrics';
 import { deduplicateIssues, sortIssues } from './deduplication';
+import { getUserSettings } from '@/services/settingsService';
 
 const GEMINI_API_KEY = import.meta.env.GEMINI_API_KEY;
 
@@ -261,10 +262,21 @@ function chunkHTML(html: string): string[] {
 }
 
 /**
+ * Get the system prompt from user settings or use the default
+ */
+async function getSystemPrompt(): Promise<string> {
+  const settings = await getUserSettings();
+  if (settings.useCustomPrompt && settings.customSystemPrompt) {
+    return settings.customSystemPrompt;
+  }
+  return SYSTEM_PROMPT;
+}
+
+/**
  * Create mode-specific prompt based on input type
  */
-function createPrompt(input: AuditInput, chunkIndex?: number, totalChunks?: number): string {
-  const basePrompt = SYSTEM_PROMPT;
+async function createPrompt(input: AuditInput, chunkIndex?: number, totalChunks?: number): Promise<string> {
+  const basePrompt = await getSystemPrompt();
 
   switch (input.input_type) {
     case 'url':
@@ -329,6 +341,9 @@ Focus on WCAG 2.2 AA success criteria adapted for document context.
 `}
 
 Provide specific remediation guidance for document formats (not web HTML).`;
+    
+    default:
+      return `${basePrompt}\n\nAnalyze the following for accessibility issues:\n${input.input_value}`;
   }
 }
 
@@ -337,9 +352,11 @@ Provide specific remediation guidance for document formats (not web HTML).`;
  * Handles large HTML inputs by chunking if necessary
  */
 export async function runGeminiAudit(input: AuditInput): Promise<AuditResult> {
+  const systemInstruction = await getSystemPrompt();
+  
   const model = genAI.getGenerativeModel({ 
     model: 'gemini-2.0-flash-exp',
-    systemInstruction: SYSTEM_PROMPT,
+    systemInstruction,
   });
 
   const startTime = Date.now();
@@ -384,7 +401,7 @@ export async function runGeminiAudit(input: AuditInput): Promise<AuditResult> {
         reasoning: 'Constructing comprehensive audit framework covering all 78 WCAG 2.2 Level A+AA success criteria. Analysis will include automated checks (axe-core baseline), heuristic evaluation (expert judgment for subjective issues), and pattern analysis (identifying systemic problems and root causes).',
       });
 
-      const prompt = createPrompt(input);
+      const prompt = await createPrompt(input);
       
       addTraceStep('🤖 Consulting accessibility expert AI', {
         tool: 'gemini-2.0-flash-exp',
@@ -409,7 +426,7 @@ export async function runGeminiAudit(input: AuditInput): Promise<AuditResult> {
         'Assistive Technology Behavior Patterns'
       );
 
-      const parsedIssues = parseGeminiResponse(text, input);
+      const parsedIssues = parseGeminiResponse(text);
       allIssues = parsedIssues;
 
       addTraceStep('🔍 Issues identified and categorized', {
@@ -426,14 +443,17 @@ export async function runGeminiAudit(input: AuditInput): Promise<AuditResult> {
 
       // Process each chunk
       for (let i = 0; i < chunks.length; i++) {
-        console.log(`Processing chunk ${i + 1}/${chunks.length} (${chunks[i].length} chars)...`);
+        const chunk = chunks[i];
+        if (!chunk) continue; // Skip undefined chunks
+        
+        console.log(`Processing chunk ${i + 1}/${chunks.length} (${chunk.length} chars)...`);
         
         const chunkInput: AuditInput = {
           ...input,
-          input_value: chunks[i],
+          input_value: chunk,
         };
 
-        const prompt = createPrompt(chunkInput, i, chunks.length);
+        const prompt = await createPrompt(chunkInput, i, chunks.length);
         const result = await model.generateContent(prompt);
         const response = result.response;
         const text = response.text();
@@ -444,7 +464,7 @@ export async function runGeminiAudit(input: AuditInput): Promise<AuditResult> {
       }
     } else {
       // Process normally for non-chunked content
-      const prompt = createPrompt(input);
+      const prompt = await createPrompt(input);
       const result = await model.generateContent(prompt);
       const response = result.response;
       const text = response.text();

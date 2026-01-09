@@ -3,9 +3,10 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIconLibrary } from "@/contexts/IconLibraryContext";
+import { Icon } from "@/lib/icons";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Moon, Sun, Home, Clock, FileText, User, LogOut, Settings as SettingsIcon } from "lucide-react";
 
 interface HeaderProps {
   onOpenSettings: () => void;
@@ -15,6 +16,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
   const { t } = useTranslation();
   const { theme, setTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const { iconLibrary } = useIconLibrary();
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
@@ -45,7 +47,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
             className="gap-2"
           >
             <Link to="/">
-              <Home className="h-4 w-4" />
+              <Icon name="home" library={iconLibrary} className="h-4 w-4" />
               Home
             </Link>
           </Button>
@@ -56,7 +58,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
             className="gap-2"
           >
             <Link to="/history">
-              <Clock className="h-4 w-4" />
+              <Icon name="clock" library={iconLibrary} className="h-4 w-4" />
               History
             </Link>
           </Button>
@@ -67,7 +69,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
             className="gap-2"
           >
             <Link to="/statement">
-              <FileText className="h-4 w-4" />
+              <Icon name="file" library={iconLibrary} className="h-4 w-4" />
               Statement
             </Link>
           </Button>
@@ -80,18 +82,18 @@ export function Header({ onOpenSettings }: HeaderProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="focus-ring" aria-label="User menu">
-                <User className="h-5 w-5" />
+                <Icon name="user" library={iconLibrary} className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onOpenSettings} className="gap-2 cursor-pointer">
-                <SettingsIcon className="h-4 w-4" />
+                <Icon name="settings" library={iconLibrary} className="h-4 w-4" />
                 Settings
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => { signOut(); }} className="gap-2 cursor-pointer">
-                <LogOut className="h-4 w-4" />
+                <Icon name="logout" library={iconLibrary} className="h-4 w-4" />
                 Sign Out
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -108,7 +110,7 @@ export function Header({ onOpenSettings }: HeaderProps) {
           className="focus-ring"
           aria-label={t("nav.toggleTheme")}
         >
-          {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          {theme === "dark" ? <Icon name="sun" library={iconLibrary} className="h-5 w-5" /> : <Icon name="moon" library={iconLibrary} className="h-5 w-5" />}
         </Button>
 
         {/* Language Switcher */}

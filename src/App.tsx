@@ -12,8 +12,9 @@ import { AuthForm } from "@/components/AuthForm";
 import { ActionBanner } from "@/components/ActionBanner";
 import { SettingsSheet } from "@/components/SettingsSheet";
 import { useAuth } from "@/contexts/AuthContext";
+import { IconLibraryProvider, useIconLibrary } from "@/contexts/IconLibraryContext";
+import { Icon } from "@/lib/icons";
 import { useTheme } from "@/hooks/useTheme";
-import { Settings, FileText, Database, ChevronRight, Menu, Sparkles, Zap } from "lucide-react";
 import type { AuditResult } from "@/data/mockAuditResults";
 import { getUserSettings, type UserSettings } from "@/services/settingsService";
 import { applyDesignSettings } from "@/lib/apply-design-settings";
@@ -21,31 +22,26 @@ import "./index.css";
 
 export function App() {
   const { t } = useTranslation();
-  const { theme, setTheme } = useTheme();
   const { user, loading } = useAuth();
-  const [activePanel, setActivePanel] = useState<string | null>(null);
-  const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
   const [settings, setSettings] = useState<UserSettings | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsLoading, setSettingsLoading] = useState(true);
 
-  // Load user settings and apply them
+  // Load user settings
   useEffect(() => {
-    void getUserSettings()
-      .then(async (userSettings) => {
-        setSettings(userSettings);
-        // Apply all design settings
-        await applyDesignSettings(userSettings);
-      })
-      .finally(() => {
-        setSettingsLoading(false);
-      });
-  }, []);
+    if (user) {
+      getUserSettings()
+        .then(userSettings => {
+          setSettings(userSettings);
+          void applyDesignSettings(userSettings);
+        })
+        .catch(error => {
+          console.error('Failed to load user settings:', error);
+        });
+    }
+  }, [user]);
 
-  // Show loading state while checking auth or loading settings
-  if (loading || settingsLoading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
           <p className="text-lg text-muted-foreground">{t("auth.loading")}</p>
@@ -59,10 +55,25 @@ export function App() {
     return <AuthForm />;
   }
 
+  return (
+    <IconLibraryProvider iconLibrary={settings?.iconLibrary || 'lucide'}>
+      <AppContent settings={settings} onSettingsChange={setSettings} />
+    </IconLibraryProvider>
+  );
+}
+
+function AppContent({ settings, onSettingsChange }: { settings: UserSettings | null; onSettingsChange: (settings: UserSettings) => void }) {
+  const { t } = useTranslation();
+  const { theme } = useTheme();
+  const { iconLibrary } = useIconLibrary();
+  const [activePanel, setActivePanel] = useState<string | null>(null);
+  const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   const menuItems = [
-    { id: "overview", label: t("nav.overview"), icon: FileText },
-    { id: "components", label: t("nav.components"), icon: Database },
-    { id: "settings", label: t("nav.settings"), icon: Settings },
+    { id: "overview", label: t("nav.overview"), icon: "file" as const },
+    { id: "components", label: t("nav.components"), icon: "database" as const },
+    { id: "settings", label: t("nav.settings"), icon: "settings" as const },
   ];
 
   return (
@@ -75,7 +86,7 @@ export function App() {
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" className="focus-ring md:hidden mb-8">
-                <Menu className="h-5 w-5 mr-2" />
+                <Icon name="menu" library={iconLibrary} className="h-5 w-5 mr-2" />
                 {t("nav.menu")}
               </Button>
             </SheetTrigger>
@@ -94,7 +105,7 @@ export function App() {
                       setActivePanel(item.id);
                     }}
                   >
-                    <item.icon className="h-5 w-5" />
+                    <Icon name={item.icon} library={iconLibrary} className="h-5 w-5" />
                     {item.label}
                   </Button>
                 ))}
@@ -110,9 +121,9 @@ export function App() {
                 className="gap-2 whitespace-nowrap focus-ring shadow-elevation-1 hover:shadow-elevation-2 transition-all text-base md:text-lg lg:text-xl h-auto py-4 px-8"
                 onClick={() => setActivePanel(item.id)}
               >
-                <item.icon className="h-5 w-5 md:h-6 md:w-6" />
+                <Icon name={item.icon} library={iconLibrary} className="h-5 w-5 md:h-6 md:w-6" />
                 {item.label}
-                <ChevronRight className="h-4 w-4 md:h-5 md:w-5 ml-1" />
+                <Icon name="chevron-right" library={iconLibrary} className="h-4 w-4 md:h-5 md:w-5 ml-1" />
               </Button>
             ))}
           </div>
@@ -151,11 +162,11 @@ export function App() {
         </p>
         <div className="flex gap-4 justify-center flex-wrap mt-8">
           <Button size="lg" variant="secondary" className="gap-2 h-auto py-4 px-8 text-lg">
-            <Sparkles className="h-5 w-5" />
+            <Icon name="sparkles" library={iconLibrary} className="h-5 w-5" />
             {t("banners.aiPowered.tryNow") ?? "Try AI Analysis"}
           </Button>
           <Button size="lg" variant="outline" className="gap-2 h-auto py-4 px-8 text-lg bg-background/10 border-primary-foreground/20 hover:bg-background/20">
-            <Zap className="h-5 w-5" />
+            <Icon name="zap" library={iconLibrary} className="h-5 w-5" />
             {t("banners.aiPowered.learnMore") ?? "Learn More"}
           </Button>
         </div>
@@ -168,7 +179,7 @@ export function App() {
             <Card className="shadow-elevation-2 hover:shadow-elevation-3 transition-all cursor-pointer" onClick={() => setActivePanel("overview")}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-xl md:text-2xl lg:text-3xl">
-                  <FileText className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8" />
+                  <Icon name="file" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8" />
                   {t("cards.m3Demo.title")}
                 </CardTitle>
                 <CardDescription className="text-base md:text-lg">
@@ -193,7 +204,7 @@ export function App() {
             <Card className="shadow-elevation-2 hover:shadow-elevation-3 transition-all cursor-pointer" onClick={() => setActivePanel("components")}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-xl md:text-2xl lg:text-3xl">
-                  <Database className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8" />
+                  <Icon name="database" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8" />
                   {t("cards.uiComponents.title")}
                 </CardTitle>
                 <CardDescription className="text-base md:text-lg">{t("cards.uiComponents.description")}</CardDescription>
@@ -212,7 +223,7 @@ export function App() {
             <Card className="shadow-elevation-2 hover:shadow-elevation-3 transition-all cursor-pointer lg:col-span-2 xl:col-span-1" onClick={() => setActivePanel("settings")}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-xl md:text-2xl lg:text-3xl">
-                  <Settings className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8" />
+                  <Icon name="settings" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8" />
                   {t("cards.configuration.title")}
                 </CardTitle>
                 <CardDescription className="text-base md:text-lg">{t("cards.configuration.description")}</CardDescription>
@@ -244,7 +255,7 @@ export function App() {
         <SheetContent side="right" className="w-full sm:w-[540px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2 text-2xl md:text-3xl">
-              <FileText className="h-6 w-6 md:h-7 md:w-7" />
+              <Icon name="file" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7" />
               {t("overview.title")}
             </SheetTitle>
             <SheetDescription className="text-base md:text-lg">
@@ -291,7 +302,7 @@ export function App() {
         <SheetContent side="right" className="w-full sm:w-[540px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2 text-2xl md:text-3xl">
-              <Database className="h-6 w-6 md:h-7 md:w-7" />
+              <Icon name="database" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7" />
               {t("components.title")}
             </SheetTitle>
             <SheetDescription className="text-base md:text-lg">
@@ -337,7 +348,7 @@ export function App() {
         <SheetContent side="right" className="w-full sm:w-[540px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2 text-2xl md:text-3xl">
-              <Settings className="h-6 w-6 md:h-7 md:w-7" />
+              <Icon name="settings" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7" />
               {t("settings.title")}
             </SheetTitle>
             <SheetDescription className="text-base md:text-lg">
@@ -399,7 +410,11 @@ export function App() {
       </Sheet>
 
       {/* Settings Sheet */}
-      <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <SettingsSheet 
+        open={settingsOpen} 
+        onOpenChange={setSettingsOpen}
+        onSettingsChange={onSettingsChange}
+      />
     </div>
   );
 }

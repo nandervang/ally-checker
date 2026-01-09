@@ -1,0 +1,322 @@
+/**
+ * Style Variants - Custom design systems for shadcn components
+ * 
+ * Each variant defines a complete design language including:
+ * - Typography scale and weights
+ * - Spacing system
+ * - Component density
+ * - Border radii
+ * - Visual hierarchy
+ */
+
+/* ============================================
+   VEGA - Classic shadcn/ui Look
+   ============================================
+   - Balanced spacing
+   - Medium weights
+   - Standard density
+   - Professional and clean
+   ============================================ */
+
+.style-vega {
+  /* Typography */
+  --heading-weight: 600;
+  --body-weight: 400;
+  --heading-line-height: 1.2;
+  --body-line-height: 1.6;
+  
+  /* Spacing multipliers (applied to base spacing) */
+  --spacing-scale: 1;
+  --component-padding-x: 1rem;
+  --component-padding-y: 0.625rem;
+  
+  /* Component density */
+  --input-height: 2.5rem;
+  --button-height: 2.5rem;
+  --card-padding: 1.5rem;
+  
+  /* Visual emphasis */
+  --border-width: 1px;
+  --focus-ring-width: 2px;
+  
+  /* Shadows - moderate elevation */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.style-vega h1 { font-weight: 700; font-size: clamp(2rem, 5vw, 2.5rem); }
+.style-vega h2 { font-weight: 600; font-size: clamp(1.5rem, 4vw, 2rem); }
+.style-vega h3 { font-weight: 600; font-size: clamp(1.25rem, 3vw, 1.5rem); }
+.style-vega h4 { font-weight: 600; font-size: 1.125rem; }
+
+/* ============================================
+   NOVA - Compact Layouts
+   ============================================
+   - Tighter spacing
+   - Smaller components
+   - High information density
+   - Efficient use of space
+   ============================================ */
+
+.style-nova {
+  /* Typography - slightly smaller */
+  --heading-weight: 500;
+  --body-weight: 400;
+  --heading-line-height: 1.15;
+  --body-line-height: 1.5;
+  
+  /* Compact spacing */
+  --spacing-scale: 0.75;
+  --component-padding-x: 0.75rem;
+  --component-padding-y: 0.5rem;
+  
+  /* Smaller components */
+  --input-height: 2rem;
+  --button-height: 2rem;
+  --card-padding: 1rem;
+  
+  /* Subtle borders */
+  --border-width: 1px;
+  --focus-ring-width: 2px;
+  
+  /* Minimal shadows */
+  --shadow-sm: 0 1px 1px 0 rgb(0 0 0 / 0.03);
+  --shadow-md: 0 2px 4px -1px rgb(0 0 0 / 0.06);
+  --shadow-lg: 0 6px 12px -2px rgb(0 0 0 / 0.08);
+}
+
+.style-nova h1 { font-weight: 600; font-size: clamp(1.75rem, 4vw, 2rem); }
+.style-nova h2 { font-weight: 500; font-size: clamp(1.375rem, 3.5vw, 1.75rem); }
+.style-nova h3 { font-weight: 500; font-size: clamp(1.125rem, 2.5vw, 1.375rem); }
+.style-nova h4 { font-weight: 500; font-size: 1rem; }
+
+/* Apply compact spacing to common components */
+.style-nova .card,
+.style-nova [data-card] {
+  padding: var(--card-padding);
+}
+
+.style-nova button,
+.style-nova input,
+.style-nova select,
+.style-nova textarea {
+  height: var(--input-height);
+  padding-left: var(--component-padding-x);
+  padding-right: var(--component-padding-x);
+  padding-top: var(--component-padding-y);
+  padding-bottom: var(--component-padding-y);
+}
+
+/* ============================================
+   MAIA - Soft and Rounded
+   ============================================
+   - Generous border radii
+   - Softer visual language
+   - Friendly and approachable
+   - Smooth edges everywhere
+   ============================================ */
+
+.style-maia {
+  /* Typography - slightly heavier for warmth */
+  --heading-weight: 600;
+  --body-weight: 450;
+  --heading-line-height: 1.25;
+  --body-line-height: 1.65;
+  
+  /* Generous spacing */
+  --spacing-scale: 1.1;
+  --component-padding-x: 1.25rem;
+  --component-padding-y: 0.75rem;
+  
+  /* Comfortable components */
+  --input-height: 2.75rem;
+  --button-height: 2.75rem;
+  --card-padding: 1.75rem;
+  
+  /* Emphasis on soft edges */
+  --border-width: 1px;
+  --focus-ring-width: 3px;
+  
+  /* Soft shadows */
+  --shadow-sm: 0 2px 4px 0 rgb(0 0 0 / 0.04);
+  --shadow-md: 0 6px 12px -2px rgb(0 0 0 / 0.08), 0 3px 6px -3px rgb(0 0 0 / 0.06);
+  --shadow-lg: 0 12px 24px -4px rgb(0 0 0 / 0.1), 0 6px 12px -6px rgb(0 0 0 / 0.08);
+}
+
+.style-maia h1 { font-weight: 700; font-size: clamp(2.125rem, 5.5vw, 2.75rem); }
+.style-maia h2 { font-weight: 600; font-size: clamp(1.625rem, 4.5vw, 2.125rem); }
+.style-maia h3 { font-weight: 600; font-size: clamp(1.375rem, 3.5vw, 1.625rem); }
+.style-maia h4 { font-weight: 600; font-size: 1.25rem; }
+
+/* Override radius for soft look */
+.style-maia button,
+.style-maia input,
+.style-maia select,
+.style-maia .card,
+.style-maia [data-card],
+.style-maia .badge,
+.style-maia [data-badge] {
+  border-radius: calc(var(--radius) * 1.5);
+}
+
+/* ============================================
+   LYRA - Boxy and Sharp
+   ============================================
+   - Minimal border radius
+   - Sharp, crisp edges
+   - Technical, precise aesthetic
+   - Strong grid alignment
+   ============================================ */
+
+.style-lyra {
+  /* Typography - precise and technical */
+  --heading-weight: 700;
+  --body-weight: 400;
+  --heading-line-height: 1.1;
+  --body-line-height: 1.5;
+  
+  /* Precise spacing */
+  --spacing-scale: 1;
+  --component-padding-x: 1rem;
+  --component-padding-y: 0.5rem;
+  
+  /* Standard components */
+  --input-height: 2.5rem;
+  --button-height: 2.5rem;
+  --card-padding: 1.5rem;
+  
+  /* Strong borders */
+  --border-width: 2px;
+  --focus-ring-width: 2px;
+  
+  /* Crisp shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.08);
+  --shadow-md: 0 4px 8px 0 rgb(0 0 0 / 0.12);
+  --shadow-lg: 0 8px 16px 0 rgb(0 0 0 / 0.15);
+}
+
+.style-lyra h1 { font-weight: 800; font-size: clamp(2rem, 5vw, 2.5rem); letter-spacing: -0.02em; }
+.style-lyra h2 { font-weight: 700; font-size: clamp(1.5rem, 4vw, 2rem); letter-spacing: -0.01em; }
+.style-lyra h3 { font-weight: 700; font-size: clamp(1.25rem, 3vw, 1.5rem); }
+.style-lyra h4 { font-weight: 600; font-size: 1.125rem; }
+
+/* Override radius for sharp look */
+.style-lyra button,
+.style-lyra input,
+.style-lyra select,
+.style-lyra .card,
+.style-lyra [data-card],
+.style-lyra .badge,
+.style-lyra [data-badge],
+.style-lyra .alert,
+.style-lyra [data-alert] {
+  border-radius: calc(var(--radius) * 0.25);
+}
+
+.style-lyra button,
+.style-lyra input,
+.style-lyra select {
+  border-width: var(--border-width);
+}
+
+/* ============================================
+   MIRA - Dense Interfaces
+   ============================================
+   - Maximum information density
+   - Minimal whitespace
+   - Professional data-heavy UIs
+   - Optimized for power users
+   ============================================ */
+
+.style-mira {
+  /* Typography - optimized for scanning */
+  --heading-weight: 500;
+  --body-weight: 400;
+  --heading-line-height: 1.1;
+  --body-line-height: 1.4;
+  
+  /* Minimal spacing */
+  --spacing-scale: 0.65;
+  --component-padding-x: 0.625rem;
+  --component-padding-y: 0.375rem;
+  
+  /* Compact components */
+  --input-height: 1.875rem;
+  --button-height: 1.875rem;
+  --card-padding: 0.875rem;
+  
+  /* Thin borders */
+  --border-width: 1px;
+  --focus-ring-width: 1px;
+  
+  /* Minimal shadows */
+  --shadow-sm: 0 1px 1px 0 rgb(0 0 0 / 0.02);
+  --shadow-md: 0 2px 3px 0 rgb(0 0 0 / 0.04);
+  --shadow-lg: 0 4px 8px 0 rgb(0 0 0 / 0.06);
+}
+
+.style-mira h1 { font-weight: 600; font-size: clamp(1.625rem, 3.5vw, 1.875rem); }
+.style-mira h2 { font-weight: 500; font-size: clamp(1.25rem, 3vw, 1.625rem); }
+.style-mira h3 { font-weight: 500; font-size: clamp(1.125rem, 2.5vw, 1.25rem); }
+.style-mira h4 { font-weight: 500; font-size: 0.9375rem; }
+
+/* Apply dense spacing */
+.style-mira .card,
+.style-mira [data-card] {
+  padding: var(--card-padding);
+}
+
+.style-mira button,
+.style-mira input,
+.style-mira select,
+.style-mira textarea {
+  height: var(--input-height);
+  padding-left: var(--component-padding-x);
+  padding-right: var(--component-padding-x);
+  padding-top: var(--component-padding-y);
+  padding-bottom: var(--component-padding-y);
+  font-size: 0.875rem;
+}
+
+.style-mira p,
+.style-mira li,
+.style-mira td {
+  font-size: 0.875rem;
+}
+
+/* Compact labels and descriptions */
+.style-mira label,
+.style-mira [data-label] {
+  font-size: 0.8125rem;
+  margin-bottom: 0.25rem;
+}
+
+/* ============================================
+   COMMON UTILITIES
+   ============================================ */
+
+/* Apply custom shadows to all variants */
+[class*="style-"] .shadow-sm {
+  box-shadow: var(--shadow-sm);
+}
+
+[class*="style-"] .shadow,
+[class*="style-"] .shadow-md {
+  box-shadow: var(--shadow-md);
+}
+
+[class*="style-"] .shadow-lg {
+  box-shadow: var(--shadow-lg);
+}
+
+/* Focus rings */
+[class*="style-"] *:focus-visible {
+  outline: var(--focus-ring-width) solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Ensure custom properties cascade properly */
+[class*="style-"] * {
+  --computed-spacing: calc(1rem * var(--spacing-scale, 1));
+}

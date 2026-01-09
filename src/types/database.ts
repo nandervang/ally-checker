@@ -1,248 +1,33 @@
-// Database types generated from Supabase schema
-export interface Database {
-  public: {
-    Tables: {
-      user_sessions: {
-        Row: {
-          id: string;
-          supabase_user_id: string | null;
-          locale: 'sv-SE' | 'en-US';
-          preferences: Record<string, any>;
-          created_at: string;
-          last_active_at: string;
-        };
-        Insert: {
-          id?: string;
-          supabase_user_id?: string | null;
-          locale?: 'sv-SE' | 'en-US';
-          preferences?: Record<string, any>;
-          created_at?: string;
-          last_active_at?: string;
-        };
-        Update: {
-          id?: string;
-          supabase_user_id?: string | null;
-          locale?: 'sv-SE' | 'en-US';
-          preferences?: Record<string, any>;
-          created_at?: string;
-          last_active_at?: string;
-        };
-      };
-      audits: {
-        Row: {
-          id: string;
-          user_id: string;
-          session_id: string | null;
-          input_type: 'url' | 'html' | 'snippet' | 'document';
-          input_value: string;
-          url: string | null;
-          document_path: string | null;
-          document_type: 'pdf' | 'docx' | null;
-          suspected_issue: string | null;
-          status: 'queued' | 'analyzing' | 'complete' | 'failed';
-          ai_model: string | null;
-          total_issues: number;
-          critical_issues: number;
-          serious_issues: number;
-          moderate_issues: number;
-          minor_issues: number;
-          perceivable_issues: number;
-          operable_issues: number;
-          understandable_issues: number;
-          robust_issues: number;
-          error_message: string | null;
-          agent_trace: Record<string, unknown> | null;
-          tools_used: string[] | null;
-          analysis_steps: string[] | null;
-          created_at: string;
-          updated_at: string;
-          completed_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          session_id?: string | null;
-          input_type: 'url' | 'html' | 'snippet' | 'document';
-          input_value: string;
-          url?: string | null;
-          document_path?: string | null;
-          document_type?: 'pdf' | 'docx' | null;
-          suspected_issue?: string | null;
-          status?: 'queued' | 'analyzing' | 'complete' | 'failed';
-          ai_model?: string | null;
-          total_issues?: number;
-          critical_issues?: number;
-          serious_issues?: number;
-          moderate_issues?: number;
-          minor_issues?: number;
-          perceivable_issues?: number;
-          operable_issues?: number;
-          understandable_issues?: number;
-          robust_issues?: number;
-          error_message?: string | null;
-          agent_trace?: Record<string, unknown> | null;
-          tools_used?: string[] | null;
-          analysis_steps?: string[] | null;
-          created_at?: string;
-          updated_at?: string;
-          completed_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          session_id?: string | null;
-          input_type?: 'url' | 'html' | 'snippet' | 'document';
-          input_value?: string;
-          url?: string | null;
-          document_path?: string | null;
-          document_type?: 'pdf' | 'docx' | null;
-          suspected_issue?: string | null;
-          status?: 'queued' | 'analyzing' | 'complete' | 'failed';
-          ai_model?: string | null;
-          total_issues?: number;
-          critical_issues?: number;
-          serious_issues?: number;
-          moderate_issues?: number;
-          minor_issues?: number;
-          perceivable_issues?: number;
-          operable_issues?: number;
-          understandable_issues?: number;
-          robust_issues?: number;
-          error_message?: string | null;
-          agent_trace?: Record<string, unknown> | null;
-          tools_used?: string[] | null;
-          analysis_steps?: string[] | null;
-          created_at?: string;
-          updated_at?: string;
-          completed_at?: string | null;
-        };
-      };
-      issues: {
-        Row: {
-          id: string;
-          audit_id: string;
-          wcag_criterion: string;
-          wcag_level: 'A' | 'AA' | 'AAA';
-          wcag_principle: 'perceivable' | 'operable' | 'understandable' | 'robust';
-          title: string;
-          description: string;
-          severity: 'critical' | 'serious' | 'moderate' | 'minor';
-          source: 'axe-core' | 'ai-heuristic' | 'manual';
-          confidence_score: number | null;
-          element_selector: string | null;
-          element_html: string | null;
-          element_context: string | null;
-          how_to_fix: string;
-          code_example: string | null;
-          wcag_url: string | null;
-          user_impact: string | null;
-          how_to_reproduce: string | null;
-          keyboard_testing: string | null;
-          screen_reader_testing: string | null;
-          visual_testing: string | null;
-          expected_behavior: string | null;
-          report_text: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          audit_id: string;
-          wcag_criterion: string;
-          wcag_level: 'A' | 'AA' | 'AAA';
-          wcag_principle: 'perceivable' | 'operable' | 'understandable' | 'robust';
-          title: string;
-          description: string;
-          severity: 'critical' | 'serious' | 'moderate' | 'minor';
-          source: 'axe-core' | 'ai-heuristic' | 'manual';
-          confidence_score?: number | null;
-          element_selector?: string | null;
-          element_html?: string | null;
-          element_context?: string | null;
-          how_to_fix: string;
-          code_example?: string | null;
-          wcag_url?: string | null;
-          user_impact?: string | null;
-          how_to_reproduce?: string | null;
-          keyboard_testing?: string | null;
-          screen_reader_testing?: string | null;
-          visual_testing?: string | null;
-          expected_behavior?: string | null;
-          report_text?: string | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          audit_id?: string;
-          wcag_criterion?: string;
-          wcag_level?: 'A' | 'AA' | 'AAA';
-          wcag_principle?: 'perceivable' | 'operable' | 'understandable' | 'robust';
-          title?: string;
-          description?: string;
-          severity?: 'critical' | 'serious' | 'moderate' | 'minor';
-          source?: 'axe-core' | 'ai-heuristic' | 'manual';
-          confidence_score?: number | null;
-          element_selector?: string | null;
-          element_html?: string | null;
-          element_context?: string | null;
-          how_to_fix?: string;
-          code_example?: string | null;
-          wcag_url?: string | null;
-          user_impact?: string | null;
-          how_to_reproduce?: string | null;
-          keyboard_testing?: string | null;
-          screen_reader_testing?: string | null;
-          visual_testing?: string | null;
-          expected_behavior?: string | null;
-          report_text?: string | null;
-          created_at?: string;
-        };
-      };
-      issue_collections: {
-        Row: {
-          id: string;
-          user_id: string;
-          audit_id: string;
-          name: string;
-          description: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          audit_id: string;
-          name: string;
-          description?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          audit_id?: string;
-          name?: string;
-          description?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-      collection_issues: {
-        Row: {
-          collection_id: string;
-          issue_id: string;
-          created_at: string;
-        };
-        Insert: {
-          collection_id: string;
-          issue_id: string;
-          created_at?: string;
-        };
-        Update: {
-          collection_id?: string;
-          issue_id?: string;
-          created_at?: string;
-        };
-      };
-    };
-  };
-}
+// Database types - auto-generated from Supabase schema
+// Generated using: supabase gen types typescript --local > src/types/database-generated.ts
+// Last updated: 2026-01-08
+
+export * from './database-generated';
+export type { Database } from './database-generated';
+
+// Re-export commonly used types for convenience
+import type { Database } from './database-generated';
+
+export type UserSession = Database['public']['Tables']['user_sessions']['Row'];
+export type UserSessionInsert = Database['public']['Tables']['user_sessions']['Insert'];
+export type UserSessionUpdate = Database['public']['Tables']['user_sessions']['Update'];
+
+export type Audit = Database['public']['Tables']['audits']['Row'];
+export type AuditInsert = Database['public']['Tables']['audits']['Insert'];
+export type AuditUpdate = Database['public']['Tables']['audits']['Update'];
+
+export type Issue = Database['public']['Tables']['issues']['Row'];
+export type IssueInsert = Database['public']['Tables']['issues']['Insert'];
+export type IssueUpdate = Database['public']['Tables']['issues']['Update'];
+
+export type UserSettings = Database['public']['Tables']['user_settings']['Row'];
+export type UserSettingsInsert = Database['public']['Tables']['user_settings']['Insert'];
+export type UserSettingsUpdate = Database['public']['Tables']['user_settings']['Update'];
+
+export type IssueCollection = Database['public']['Tables']['issue_collections']['Row'];
+export type IssueCollectionInsert = Database['public']['Tables']['issue_collections']['Insert'];
+export type IssueCollectionUpdate = Database['public']['Tables']['issue_collections']['Update'];
+
+export type CollectionIssue = Database['public']['Tables']['collection_issues']['Row'];
+export type CollectionIssueInsert = Database['public']['Tables']['collection_issues']['Insert'];
+export type CollectionIssueUpdate = Database['public']['Tables']['collection_issues']['Update'];

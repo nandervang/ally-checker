@@ -423,6 +423,135 @@
       "generationFailed": "Kunde inte generera redogörelse",
       "downloaded": "Redogörelse nedladdad som {{format}}",
       "selectIssues": "Välj minst ett problem för att generera en redogörelse."
+    },
+    "form": {
+      "title": "Anpassning av tillgänglighetsredogörelse",
+      "generate": "Generera redogörelse",
+      "clearDraft": "Rensa utkast",
+      "tabs": {
+        "organization": "Organisation",
+        "conformance": "Överensstämmelse",
+        "technical": "Tekniskt",
+        "additional": "Ytterligare"
+      },
+      "organization": {
+        "title": "Organisationsinformation",
+        "description": "Grundläggande information om din organisation och kontaktuppgifter",
+        "name": "Organisationsnamn",
+        "websiteUrl": "Webbplatsens URL",
+        "contactEmail": "Kontakt e-post",
+        "contactPhone": "Kontakttelefon",
+        "feedbackUrl": "URL för feedbackformulär",
+        "responseTime": "Förväntad svarstid"
+      },
+      "dates": {
+        "title": "Redogörelsens datum",
+        "statementDate": "Redogörelsens datum",
+        "lastReviewDate": "Senaste granskningsdatum",
+        "nextReviewDate": "Nästa granskningsdatum",
+        "approver": "Godkänd av",
+        "approverPlaceholder": "Namn på person som godkände denna redogörelse"
+      },
+      "conformance": {
+        "title": "Överensstämmelsestatus",
+        "description": "WCAG-överensstämmelsenivå och kända tillgänglighetsproblem",
+        "status": "Överensstämmelsestatus",
+        "statusFull": "Fullt förenlig",
+        "statusPartial": "Delvis förenlig",
+        "statusNon": "Inte förenlig",
+        "wcagLevel": "WCAG-nivå",
+        "wcagVersion": "WCAG-version",
+        "limitations": "Kända begränsningar",
+        "limitationsPlaceholder": "Ange varje begränsning på en ny rad. Format: Titel: Beskrivning",
+        "limitationsHelp": "Lista kända tillgänglighetsproblem. En per rad, valfritt i formatet 'Titel: Beskrivning'",
+        "plannedImprovements": "Planerade förbättringar",
+        "improvementsPlaceholder": "Beskriv planerade tillgänglighetsförbättringar och tidslinje"
+      },
+      "assessment": {
+        "title": "Bedömningsinformation",
+        "method": "Bedömningsmetod",
+        "methodSelf": "Självbedömning",
+        "methodExternal": "Extern bedömning",
+        "methodBoth": "Både själv och extern",
+        "date": "Bedömningsdatum",
+        "assessor": "Bedömare",
+        "assessorPlaceholder": "Organisation eller person som utförde bedömningen",
+        "tools": "Testverktyg",
+        "toolsHelp": "Kommaseparerad lista över använda tillgänglighetsverktyg",
+        "scope": "Testomfång",
+        "scopePlaceholder": "Beskriv vilka sidor/funktioner som testades"
+      },
+      "technical": {
+        "title": "Tekniska specifikationer",
+        "description": "Teknologier och plattformar som din webbplats är beroende av",
+        "technologies": "Använda teknologier",
+        "technologiesHelp": "Kommaseparerad lista (t.ex. HTML5, CSS3, JavaScript, WAI-ARIA)",
+        "browsers": "Testade webbläsare",
+        "browsersHelp": "Kommaseparerad lista med versioner (t.ex. Chrome 120+, Firefox 121+)",
+        "assistive": "Hjälpmedelsteknologier",
+        "assistiveHelp": "Kommaseparerad lista över kompatibla skärmläsare och hjälpmedel"
+      },
+      "contentTypes": {
+        "title": "Innehållstyper",
+        "mobileApp": "Mobilapp inkluderad",
+        "mobileAppHelp": "Redogörelsen omfattar mobilapplikationer",
+        "pdfDocuments": "PDF-dokument inkluderade",
+        "pdfHelp": "Redogörelsen omfattar PDF-dokument på webbplatsen",
+        "thirdParty": "Innehåll från tredje part",
+        "thirdPartyHelp": "Webbplatsen innehåller innehåll från externa leverantörer",
+        "thirdPartyDescription": "Beskrivning av innehåll från tredje part",
+        "thirdPartyProviders": "Tredjepartsleverantörer",
+        "providersHelp": "Kommaseparerad lista över tredjepartsleverantörer",
+        "disproportionateBurden": "Oproportionell börda",
+        "burdenHelp": "Visst innehåll kan inte göras tillgängligt på grund av oproportionell börda",
+        "burdenExplanation": "Förklaring av börda",
+        "burdenJustification": "Motivering"
+      },
+      "customization": {
+        "title": "Anpassning",
+        "description": "Valfritt anpassat innehåll för din redogörelse",
+        "intro": "Anpassad introduktion",
+        "introPlaceholder": "Anpassad introduktionstext för redogörelsen",
+        "outro": "Anpassad avslutning",
+        "outroPlaceholder": "Anpassad avslutningstext för redogörelsen",
+        "additionalInfo": "Ytterligare information",
+        "additionalPlaceholder": "Ytterligare information att inkludera"
+      },
+      "errors": {
+        "fixErrors": "Åtgärda felen nedan innan du genererar redogörelsen",
+        "organizationRequired": "Organisationsnamn krävs",
+        "websiteRequired": "Webbplatsens URL krävs",
+        "websiteInvalid": "Ange en giltig URL (t.ex. https://example.com)",
+        "emailRequired": "Kontakt e-post krävs",
+        "emailInvalid": "Ange en giltig e-postadress",
+        "urlInvalid": "Ange en giltig URL",
+        "technologiesRequired": "Minst en teknologi måste anges"
+      }
+    },
+    "export": {
+      "title": "Exportera redogörelse",
+      "filename": "Filnamn",
+      "download": "Ladda ner",
+      "copy": "Kopiera till urklipp",
+      "copied": "Kopierad!",
+      "preview": "Förhandsgranska",
+      "previewTitle": "Förhandsgranskning av redogörelse",
+      "previewDescription": "Så här kommer din tillgänglighetsredogörelse att se ut",
+      "snippetPreview": "HTML-kodsnuttförhandsgranskning",
+      "textPreview": "Förhandsgranskning av ren text",
+      "formats": {
+        "html": "Fristående HTML",
+        "snippet": "Inbäddningsbar kodsnutt",
+        "text": "Ren text"
+      },
+      "descriptions": {
+        "html": "Komplett HTML-fil med DOCTYPE, stilar och full dokumentstruktur. Redo att publicera som fristående sida.",
+        "snippet": "Bara redogörelsens innehåll utan dokumentstruktur. Kopiera och klistra in på din befintliga webbsida.",
+        "text": "Version i ren text utan HTML-formatering. Lämplig för e-post och textdokument."
+      }
     }
+  },
+  "common": {
+    "optional": "(valfritt)"
   }
 }

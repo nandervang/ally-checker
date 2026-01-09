@@ -12,7 +12,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Save, RotateCcw, Download, Upload, Loader2 } from 'lucide-react';
+import { Icon } from '@/lib/icons';
+import { useIconLibrary } from '@/contexts/IconLibraryContext';
 import { toast } from 'sonner';
 import { useTheme } from '@/hooks/useTheme';
 import {
@@ -28,10 +29,12 @@ import { applyDesignSettings } from '@/lib/apply-design-settings';
 interface SettingsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSettingsChange?: (settings: UserSettings) => void;
 }
 
-export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
+export function SettingsSheet({ open, onOpenChange, onSettingsChange }: SettingsSheetProps) {
   const { setTheme } = useTheme();
+  const { iconLibrary } = useIconLibrary();
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -89,6 +92,9 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
     try {
       const updated = await updateUserSettings(settings);
       setSettings(updated);
+      
+      // Notify parent component of settings change
+      onSettingsChange?.(updated);
       
       // Apply settings immediately
       document.documentElement.classList.remove('font-size-small', 'font-size-medium', 'font-size-large');
@@ -173,6 +179,35 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
     
     // Apply design changes immediately for preview
     void applyDesignSettings(newSettings);
+    
+    // Notify parent component for real-time updates (e.g., icon library switching)
+    onSettingsChange?.(newSettings);
+  }
+
+  async function applyPreset(updates: Partial<UserSettings>) {
+    if (!settings) return;
+    
+    const newSettings = { ...settings, ...updates };
+    setSettings(newSettings);
+    
+    // Apply design changes immediately
+    await applyDesignSettings(newSettings);
+    
+    // Save to database
+    setSaving(true);
+    try {
+      const updated = await updateUserSettings(newSettings);
+      
+      // Notify parent component of settings change
+      onSettingsChange?.(updated);
+      
+      toast.success('Preset applied and saved');
+    } catch (error) {
+      console.error('Failed to save preset:', error);
+      toast.error('Preset applied but failed to save');
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (loading) {
@@ -180,7 +215,7 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
           <div className="flex items-center justify-center min-h-[400px]">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <Icon name="loader" library={iconLibrary} className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         </SheetContent>
       </Sheet>
@@ -213,22 +248,22 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={handleExport}>
-              <Download className="h-4 w-4 mr-2" />
+              <Icon name="download" library={iconLibrary} className="h-4 w-4 mr-2" />
               Export
             </Button>
             <Button variant="outline" size="sm" onClick={handleImport}>
-              <Upload className="h-4 w-4 mr-2" />
+              <Icon name="upload" library={iconLibrary} className="h-4 w-4 mr-2" />
               Import
             </Button>
             <Button variant="outline" size="sm" onClick={() => { void handleReset(); }}>
-              <RotateCcw className="h-4 w-4 mr-2" />
+              <Icon name="refresh" library={iconLibrary} className="h-4 w-4 mr-2" />
               Reset
             </Button>
             <Button onClick={() => { void handleSave(); }} disabled={saving} className="ml-auto">
               {saving ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Icon name="loader" library={iconLibrary} className="h-4 w-4 mr-2 animate-spin" />
               ) : (
-                <Save className="h-4 w-4 mr-2" />
+                <Icon name="save" library={iconLibrary} className="h-4 w-4 mr-2" />
               )}
               Save
             </Button>
@@ -363,17 +398,86 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                 </CardContent>
               </Card>
 
+              <Card>
+                <CardHeader>
+                  <CardTitle>System Prompt</CardTitle>
+                  <CardDescription>
+                    Customize the AI agent's instructions and behavior
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="use-custom-prompt">Use Custom System Prompt</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Override the default WCAG expert prompt with your own instructions
+                      </p>
+                    </div>
+                    <Switch
+                      id="use-custom-prompt"
+                      checked={settings.useCustomPrompt}
+                      onCheckedChange={(checked) => { updateSetting('useCustomPrompt', checked); }}
+                    />
+                  </div>
+
+                  {settings.useCustomPrompt && (
+                    <div className="space-y-2">
+                      <Label htmlFor="custom-prompt">Custom Prompt</Label>
+                      <textarea
+                        id="custom-prompt"
+                        className="w-full min-h-[200px] p-3 rounded-md border border-input bg-background text-sm resize-y"
+                        placeholder="Enter your custom system prompt here..."
+                        value={settings.customSystemPrompt || ''}
+                        onChange={(e) => { updateSetting('customSystemPrompt', e.target.value); }}
+                      />
+                      <div className="flex justify-between items-center text-xs text-muted-foreground">
+                        <span>
+                          {settings.customSystemPrompt?.length || 0} characters
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            updateSetting('customSystemPrompt', undefined);
+                            updateSetting('useCustomPrompt', false);
+                            toast.success('Reset to default system prompt');
+                          }}
+                        >
+                          Reset to Default
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        💡 Tip: Include instructions about WCAG criteria, user analysis expectations, 
+                        and response format. The default prompt is comprehensive - only customize if 
+                        you need specialized behavior.
+                      </p>
+                    </div>
+                  )}
+
+                  {!settings.useCustomPrompt && (
+                    <div className="rounded-md bg-muted p-3 text-sm">
+                      <p className="font-medium mb-1">Using Default WCAG Expert Prompt</p>
+                      <p className="text-muted-foreground">
+                        The default system prompt configures the AI as a WCAG 2.2 Level AA accessibility 
+                        consultant with expertise in assistive technologies, systematic WCAG coverage, 
+                        and detailed user impact analysis.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
               {/* Action Buttons for Audit Tab */}
               <div className="flex gap-2 pt-4">
                 <Button variant="outline" onClick={() => { void handleReset(); }} className="flex-1">
-                  <RotateCcw className="h-4 w-4 mr-2" />
+                  <Icon name="refresh" library={iconLibrary} className="h-4 w-4 mr-2" />
                   Reset to Defaults
                 </Button>
                 <Button onClick={() => { void handleSave(); }} disabled={saving} className="flex-1">
                   {saving ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Icon name="loader" library={iconLibrary} className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
-                    <Save className="h-4 w-4 mr-2" />
+                    <Icon name="save" library={iconLibrary} className="h-4 w-4 mr-2" />
                   )}
                   Save Settings
                 </Button>
@@ -395,56 +499,48 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                     <Label>Quick Presets</Label>
                     <div className="grid grid-cols-2 gap-2">
                       <Button 
-                        variant="outline" 
+                        variant={settings.style === 'vega' ? 'default' : 'outline'}
                         size="sm"
-                        onClick={() => {
-                          updateSetting('style', 'vega');
-                          updateSetting('iconLibrary', 'lucide');
-                          updateSetting('font', 'inter');
-                          updateSetting('baseColor', 'neutral');
-                        }}
+                        onClick={() => { void applyPreset({ style: 'vega', iconLibrary: 'lucide', font: 'inter', baseColor: 'blue' }); }}
+                        disabled={saving}
+                        className="font-semibold"
                       >
-                        Vega / Lucide / Inter
+                        <Icon name="check-circle" library={iconLibrary} className="h-4 w-4 mr-1.5" />
+                        Vega
                       </Button>
                       <Button 
-                        variant="outline" 
+                        variant={settings.style === 'nova' ? 'default' : 'outline'}
                         size="sm"
-                        onClick={() => {
-                          updateSetting('style', 'nova');
-                          updateSetting('iconLibrary', 'hugeicons');
-                          updateSetting('font', 'inter');
-                          updateSetting('baseColor', 'neutral');
-                        }}
+                        onClick={() => { void applyPreset({ style: 'nova', iconLibrary: 'hugeicons', font: 'inter', baseColor: 'violet' }); }}
+                        disabled={saving}
+                        className="text-xs font-medium"
                       >
-                        Nova / Hugeicons / Inter
+                        <Icon name="sparkles" library={iconLibrary} className="h-3.5 w-3.5 mr-1" />
+                        Nova
                       </Button>
                       <Button 
-                        variant="outline" 
+                        variant={settings.style === 'maia' ? 'default' : 'outline'}
                         size="sm"
-                        onClick={() => {
-                          updateSetting('style', 'maia');
-                          updateSetting('iconLibrary', 'hugeicons');
-                          updateSetting('font', 'figtree');
-                          updateSetting('baseColor', 'neutral');
-                        }}
+                        onClick={() => { void applyPreset({ style: 'maia', iconLibrary: 'hugeicons', font: 'figtree', baseColor: 'rose' }); }}
+                        disabled={saving}
+                        className="rounded-xl font-medium"
                       >
-                        Maia / Hugeicons / Figtree
+                        <Icon name="sparkles" library={iconLibrary} className="h-4 w-4 mr-1.5" />
+                        Maia
                       </Button>
                       <Button 
-                        variant="outline" 
+                        variant={settings.style === 'mira' ? 'default' : 'outline'}
                         size="sm"
-                        onClick={() => {
-                          updateSetting('style', 'mira');
-                          updateSetting('iconLibrary', 'hugeicons');
-                          updateSetting('font', 'inter');
-                          updateSetting('baseColor', 'neutral');
-                        }}
+                        onClick={() => { void applyPreset({ style: 'mira', iconLibrary: 'hugeicons', font: 'inter', baseColor: 'orange' }); }}
+                        disabled={saving}
+                        className="text-xs h-7 font-bold"
                       >
-                        Mira / Hugeicons / Inter
+                        <Icon name="zap" library={iconLibrary} className="h-3 w-3 mr-1" />
+                        Mira
                       </Button>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Apply popular combinations from shadcn/ui
+                      Each preset has distinctive styling, icons, and color themes
                     </p>
                   </div>
 
@@ -664,14 +760,14 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
               {/* Action Buttons for Design Tab */}
               <div className="flex gap-2 pt-4">
                 <Button variant="outline" onClick={() => { void handleReset(); }} className="flex-1">
-                  <RotateCcw className="h-4 w-4 mr-2" />
+                  <Icon name="refresh" library={iconLibrary} className="h-4 w-4 mr-2" />
                   Reset to Defaults
                 </Button>
                 <Button onClick={() => { void handleSave(); }} disabled={saving} className="flex-1">
                   {saving ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Icon name="loader" library={iconLibrary} className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
-                    <Save className="h-4 w-4 mr-2" />
+                    <Icon name="save" library={iconLibrary} className="h-4 w-4 mr-2" />
                   )}
                   Save Settings
                 </Button>
@@ -757,14 +853,14 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
               {/* Action Buttons for UI Tab */}
               <div className="flex gap-2 pt-4">
                 <Button variant="outline" onClick={() => { void handleReset(); }} className="flex-1">
-                  <RotateCcw className="h-4 w-4 mr-2" />
+                  <Icon name="refresh" library={iconLibrary} className="h-4 w-4 mr-2" />
                   Reset to Defaults
                 </Button>
                 <Button onClick={() => { void handleSave(); }} disabled={saving} className="flex-1">
                   {saving ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Icon name="loader" library={iconLibrary} className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
-                    <Save className="h-4 w-4 mr-2" />
+                    <Icon name="save" library={iconLibrary} className="h-4 w-4 mr-2" />
                   )}
                   Save Settings
                 </Button>
@@ -835,14 +931,14 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
               {/* Action Buttons for Reports Tab */}
               <div className="flex gap-2 pt-4">
                 <Button variant="outline" onClick={() => { void handleReset(); }} className="flex-1">
-                  <RotateCcw className="h-4 w-4 mr-2" />
+                  <Icon name="refresh" library={iconLibrary} className="h-4 w-4 mr-2" />
                   Reset to Defaults
                 </Button>
                 <Button onClick={() => { void handleSave(); }} disabled={saving} className="flex-1">
                   {saving ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Icon name="loader" library={iconLibrary} className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
-                    <Save className="h-4 w-4 mr-2" />
+                    <Icon name="save" library={iconLibrary} className="h-4 w-4 mr-2" />
                   )}
                   Save Settings
                 </Button>

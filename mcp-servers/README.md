@@ -60,6 +60,36 @@ playwright install chromium
 python server.py
 ```
 
+### 4. Supabase Schema Server (`mcp-servers/supabase-schema-server`)
+Provides database schema introspection for Supabase.
+
+**Tools:**
+- `list_tables`: List all tables in public schema
+- `get_table_schema`: Get column details for a table
+- `get_table_relationships`: View foreign key relationships
+- `get_table_indexes`: List indexes
+- `get_rls_policies`: View Row Level Security policies
+
+**Install:**
+```bash
+cd mcp-servers/supabase-schema-server
+pip install -r requirements.txt
+```
+
+**Configure:**
+```bash
+# Create .env file (for production)
+echo "SUPABASE_DB_HOST=db.xxxxxxxxxxxx.supabase.co" > .env
+echo "SUPABASE_DB_PASSWORD=your-password" >> .env
+
+# Or use defaults for local Supabase (127.0.0.1:54322)
+```
+
+**Run:**
+```bash
+python server.py
+```
+
 ## Usage with Claude Desktop
 
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
@@ -78,6 +108,15 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
     "ally-checker-axe-core": {
       "command": "python",
       "args": ["/path/to/ally-checker/mcp-servers/axe-core-server/server.py"]
+    },
+    "ally-checker-supabase-schema": {
+      "command": "python",
+      "args": ["/path/to/ally-checker/mcp-servers/supabase-schema-server/server.py"],
+      "env": {
+        "SUPABASE_DB_HOST": "127.0.0.1",
+        "SUPABASE_DB_PORT": "54322",
+        "SUPABASE_DB_PASSWORD": "postgres"
+      }
     }
   }
 }
