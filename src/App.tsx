@@ -64,6 +64,7 @@ export function App() {
 
 function AppContent({ settings }: { settings: UserSettings | null }) {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const { iconLibrary } = useIconLibrary();
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);

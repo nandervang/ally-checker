@@ -20,19 +20,24 @@ export type IconComponent = ComponentType<IconProps>;
 export type IconName =
   // UI Actions
   | 'save' | 'refresh' | 'download' | 'upload' | 'delete' | 'edit' | 'add' | 'close'
-  | 'search' | 'filter' | 'settings' | 'menu' | 'more' | 'check' | 'x'
+  | 'search' | 'filter' | 'settings' | 'menu' | 'more' | 'check' | 'x' | 'copy'
   // Navigation
   | 'home' | 'back' | 'forward' | 'external-link' | 'chevron-down' | 'chevron-up' 
   | 'chevron-right' | 'chevron-left'
   // Status & Feedback
-  | 'loading' | 'success' | 'error' | 'warning' | 'info' | 'alert-circle'
-  | 'check-circle' | 'circle'
-  // Content
-  | 'file-text' | 'calendar' | 'mail' | 'user' | 'clock' | 'eye'
-  // Theme
-  | 'sun' | 'moon' | 'languages'
+  | 'loading' | 'loader' | 'success' | 'error' | 'warning' | 'info' | 'alert-circle'
+  | 'check-circle' | 'check-circle-2' | 'circle'
+  // Content & Files
+  | 'file' | 'file-text' | 'calendar' | 'mail' | 'user' | 'clock' | 'eye'
+  | 'file-code' | 'folder-open' | 'database'
+  // Theme & UI
+  | 'sun' | 'moon' | 'languages' | 'sparkles' | 'zap'
+  // Code & Development
+  | 'code' | 'code-2' | 'globe' | 'brain' | 'lightbulb' 
+  // Accessibility
+  | 'keyboard' | 'audio' | 'play-circle'
   // Auth
-  | 'log-out' | 'log-in';
+  | 'logout' | 'login';
 
 /**
  * Icon name mappings between libraries
@@ -55,6 +60,7 @@ const ICON_MAP: Record<IconName, Record<IconLibrary, string>> = {
   'more': { lucide: 'MoreHorizontal', hugeicons: 'MoreHorizontal', tabler: 'Dots', phosphor: 'DotsThree' },
   'check': { lucide: 'Check', hugeicons: 'Checkmark01', tabler: 'Check', phosphor: 'Check' },
   'x': { lucide: 'X', hugeicons: 'Cancel01', tabler: 'X', phosphor: 'X' },
+  'copy': { lucide: 'Copy', hugeicons: 'Copy01', tabler: 'Copy', phosphor: 'Copy' },
   
   // Navigation
   'home': { lucide: 'Home', hugeicons: 'Home01', tabler: 'Home', phosphor: 'House' },
@@ -68,30 +74,50 @@ const ICON_MAP: Record<IconName, Record<IconLibrary, string>> = {
   
   // Status & Feedback
   'loading': { lucide: 'Loader2', hugeicons: 'Loading03', tabler: 'Loader2', phosphor: 'CircleNotch' },
+  'loader': { lucide: 'Loader2', hugeicons: 'Loading03', tabler: 'Loader2', phosphor: 'CircleNotch' },
   'success': { lucide: 'CheckCircle', hugeicons: 'CheckmarkCircle01', tabler: 'CircleCheck', phosphor: 'CheckCircle' },
   'error': { lucide: 'XCircle', hugeicons: 'Cancel01', tabler: 'CircleX', phosphor: 'XCircle' },
   'warning': { lucide: 'AlertTriangle', hugeicons: 'Alert01', tabler: 'AlertTriangle', phosphor: 'Warning' },
   'info': { lucide: 'Info', hugeicons: 'InformationCircle', tabler: 'InfoCircle', phosphor: 'Info' },
   'alert-circle': { lucide: 'AlertCircle', hugeicons: 'Alert02', tabler: 'AlertCircle', phosphor: 'WarningCircle' },
   'check-circle': { lucide: 'CheckCircle', hugeicons: 'CheckmarkCircle01', tabler: 'CircleCheck', phosphor: 'CheckCircle' },
+  'check-circle-2': { lucide: 'CheckCircle2', hugeicons: 'CheckmarkCircle01', tabler: 'CircleCheck', phosphor: 'CheckCircle' },
   'circle': { lucide: 'Circle', hugeicons: 'Circle', tabler: 'Circle', phosphor: 'Circle' },
   
-  // Content
+  // Content & Files
+  'file': { lucide: 'FileText', hugeicons: 'FileDocument', tabler: 'FileText', phosphor: 'FileText' },
   'file-text': { lucide: 'FileText', hugeicons: 'FileDocument', tabler: 'FileText', phosphor: 'FileText' },
   'calendar': { lucide: 'Calendar', hugeicons: 'Calendar01', tabler: 'Calendar', phosphor: 'Calendar' },
   'mail': { lucide: 'Mail', hugeicons: 'Mail01', tabler: 'Mail', phosphor: 'Envelope' },
   'user': { lucide: 'User', hugeicons: 'User', tabler: 'User', phosphor: 'User' },
   'clock': { lucide: 'Clock', hugeicons: 'Clock01', tabler: 'Clock', phosphor: 'Clock' },
   'eye': { lucide: 'Eye', hugeicons: 'View', tabler: 'Eye', phosphor: 'Eye' },
+  'file-code': { lucide: 'FileCode', hugeicons: 'FileDocument', tabler: 'FileCode', phosphor: 'FileCode' },
+  'folder-open': { lucide: 'FolderOpen', hugeicons: 'Folder01', tabler: 'FolderOpen', phosphor: 'FolderOpen' },
+  'database': { lucide: 'Database', hugeicons: 'Database', tabler: 'Database', phosphor: 'Database' },
   
-  // Theme
+  // Theme & UI
   'sun': { lucide: 'Sun', hugeicons: 'Sun01', tabler: 'Sun', phosphor: 'Sun' },
   'moon': { lucide: 'Moon', hugeicons: 'Moon01', tabler: 'Moon', phosphor: 'Moon' },
   'languages': { lucide: 'Languages', hugeicons: 'LanguageCircle', tabler: 'Language', phosphor: 'Translate' },
+  'sparkles': { lucide: 'Sparkles', hugeicons: 'Star', tabler: 'Sparkles', phosphor: 'Sparkle' },
+  'zap': { lucide: 'Zap', hugeicons: 'Flash', tabler: 'Bolt', phosphor: 'Lightning' },
+  
+  // Code & Development
+  'code': { lucide: 'Code', hugeicons: 'Code', tabler: 'Code', phosphor: 'Code' },
+  'code-2': { lucide: 'Code2', hugeicons: 'Code', tabler: 'Code', phosphor: 'Code' },
+  'globe': { lucide: 'Globe', hugeicons: 'Globe', tabler: 'World', phosphor: 'Globe' },
+  'brain': { lucide: 'Brain', hugeicons: 'Brain', tabler: 'Brain', phosphor: 'Brain' },
+  'lightbulb': { lucide: 'Lightbulb', hugeicons: 'Bulb', tabler: 'Bulb', phosphor: 'Lightbulb' },
+  
+  // Accessibility
+  'keyboard': { lucide: 'Keyboard', hugeicons: 'Keyboard', tabler: 'Keyboard', phosphor: 'Keyboard' },
+  'audio': { lucide: 'AudioLines', hugeicons: 'MusicNote01', tabler: 'Waveform', phosphor: 'Waveform' },
+  'play-circle': { lucide: 'PlayCircle', hugeicons: 'Play', tabler: 'PlayerPlay', phosphor: 'PlayCircle' },
   
   // Auth
-  'log-out': { lucide: 'LogOut', hugeicons: 'Logout01', tabler: 'Logout', phosphor: 'SignOut' },
-  'log-in': { lucide: 'LogIn', hugeicons: 'Login01', tabler: 'Login', phosphor: 'SignIn' },
+  'logout': { lucide: 'LogOut', hugeicons: 'Logout01', tabler: 'Logout', phosphor: 'SignOut' },
+  'login': { lucide: 'LogIn', hugeicons: 'Login01', tabler: 'Login', phosphor: 'SignIn' },
 };
 
 /**
