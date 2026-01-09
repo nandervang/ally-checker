@@ -13,11 +13,11 @@
 
 # Configure individual functions with timeout and memory
 [functions."ai-agent-audit"]
-  timeout = 30
+  timeout = 60
   memory = 1024
 
 [functions."gemini-agent"]
-  timeout = 30
+  timeout = 60
   memory = 1024
 
 [functions."upload-document"]

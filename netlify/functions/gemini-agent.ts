@@ -95,7 +95,7 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
     const toolCalls: MCPToolResult[] = [];
 
     // Handle function calling loop with maximum iteration limit
-    const maxIterations = 10; // Prevent infinite loops
+    const maxIterations = 5; // Reduced to prevent timeout
     let iteration = 0;
     let functionCalls = response.functionCalls?.() ?? [];
     
@@ -345,7 +345,12 @@ async function cleanupMCPClients(clients: Map<string, Client>) {
 function buildSystemInstruction(): string {
   return `You are an expert accessibility auditor with deep knowledge of WCAG 2.2 guidelines.
 
-Your task is to perform a comprehensive accessibility audit using the provided MCP tools:
+**CRITICAL: Efficiency Requirements**
+- You have a 60-second execution limit
+- Use tools strategically: prioritize analyze_url or analyze_html first
+- After automated tests, focus manual review on 4-6 most critical issues
+- Do NOT repeatedly call get_wcag_criterion for every issue - reference criteria by number only
+- Provide concise, actionable findings
 
 **Available MCP Tools:**
 - fetch_url: Retrieve HTML content from URLs
