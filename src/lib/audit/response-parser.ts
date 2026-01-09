@@ -204,7 +204,8 @@ function parseJSONResponse(text: string): Issue[] {
  */
 function parseMarkdownSections(text: string): Issue[] {
   const issues: Issue[] = [];
-  const sections = text.split(/(?=^##\s+(?:Issue|Violation|Problem))/gim);
+  // Match both ## and #### headings for issues
+  const sections = text.split(/(?=^#{2,4}\s+(?:Issue|Violation|Problem))/gim);
 
   for (const section of sections) {
     if (!section.trim()) continue;
@@ -214,8 +215,8 @@ function parseMarkdownSections(text: string): Issue[] {
     // Extract criterion
     parsedIssue.criterion = extractWCAGCriterion(section);
 
-    // Extract title
-    const titleMatch = section.match(/^##\s+(.+)$/m);
+    // Extract title - match both ## and ####
+    const titleMatch = section.match(/^#{2,4}\s+(.+)$/m);
     parsedIssue.title = titleMatch ? titleMatch[1].trim() : undefined;
 
     // Extract description
