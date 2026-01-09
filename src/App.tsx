@@ -178,7 +178,7 @@ function AppContent({ settings }: { settings: UserSettings | null }) {
             <Card className="shadow-elevation-2 hover:shadow-elevation-3 transition-all cursor-pointer" onClick={() => setActivePanel("overview")}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-xl md:text-2xl lg:text-3xl">
-                  <FileText className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8" />
+                  <Icon name="file" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8" />
                   {t("cards.m3Demo.title")}
                 </CardTitle>
                 <CardDescription className="text-base md:text-lg">
@@ -254,7 +254,7 @@ function AppContent({ settings }: { settings: UserSettings | null }) {
         <SheetContent side="right" className="w-full sm:w-[540px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2 text-2xl md:text-3xl">
-              <FileText className="h-6 w-6 md:h-7 md:w-7" />
+              <Icon name="file" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7" />
               {t("overview.title")}
             </SheetTitle>
             <SheetDescription className="text-base md:text-lg">
