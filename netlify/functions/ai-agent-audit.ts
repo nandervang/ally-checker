@@ -139,6 +139,14 @@ export const handler: Handler = async (event: HandlerEvent) => {
 
     const auditId = auditData.id;
 
+    // Debug: Log what we received from AI agent
+    console.log('Result from AI agent:', {
+      has_issues: !!result.issues,
+      issues_length: result.issues?.length || 0,
+      issues_keys: result.issues ? Object.keys(result.issues[0] || {}) : [],
+      total_issues_from_summary: result.summary.totalIssues
+    });
+
     // Save issues if any
     if (result.issues && result.issues.length > 0) {
       const issuesData = result.issues.map((issue: any) => ({
