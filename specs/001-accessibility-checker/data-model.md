@@ -270,59 +270,94 @@ WHERE id = ? AND ai_investigation IS NOT NULL;
 
 ## Database Functions
 
-### update_audit_counts()
+Automated functions maintain data integrity and implement business logic at the database level.
 
-**Purpose**: Trigger function to automatically update issue counts on audits table when issues are inserted/updated/deleted.
+### update_audit_counts(audit_uuid UUID)
 
+**Purpose**: Recalculates all issue statistics for a specific audit.  
+**Trigger**: Automatically called when issues are inserted, updated, or deleted.  
+**Location**: Migration 012_add_database_functions.sql
+
+**Function Signature**:
 ```sql
-CREATE OR REPLACE FUNCTION update_audit_counts()
-RETURNS TRIGGER AS $$
-BEGIN
-  UPDATE audits
-  SET 
-    total_issues = (
-      SELECT COUNT(*) FROM issues WHERE audit_id = NEW.audit_id
-    ),
-    perceivable_count = (
-      SELECT COUNT(*) FROM issues 
-      WHERE audit_id = NEW.audit_id AND wcag_principle = 'Perceivable'
-    ),
-    operable_count = (
-      SELECT COUNT(*) FROM issues 
-      WHERE audit_id = NEW.audit_id AND wcag_principle = 'Operable'
-    ),
-    understandable_count = (
-      SELECT COUNT(*) FROM issues 
-      WHERE audit_id = NEW.audit_id AND wcag_principle = 'Understandable'
-    ),
-    robust_count = (
-      SELECT COUNT(*) FROM issues 
-      WHERE audit_id = NEW.audit_id AND wcag_principle = 'Robust'
-    )
-  WHERE id = NEW.audit_id;
-  
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trigger_update_audit_counts
-AFTER INSERT OR UPDATE OR DELETE ON issues
-FOR EACH ROW EXECUTE FUNCTION update_audit_counts();
+CREATE OR REPLACE FUNCTION update_audit_counts(audit_uuid UUID)
+RETURNS void
+LANGUAGE plpgsql
 ```
 
-### cleanup_old_audits()
+**What it does**:
+- Counts total issues by severity (critical, serious, moderate, minor)
+- Counts issues by WCAG principle (perceivable, operable, understandable, robust)
+- Updates all count columns in the audits table
+- Sets updated_at timestamp
 
-**Purpose**: Scheduled function to delete audits (and cascade to issues) older than 90 days.
-
+**Trigger Configuration**:
 ```sql
-CREATE OR REPLACE FUNCTION cleanup_old_audits()
-RETURNS void AS $$
-BEGIN
-  DELETE FROM audits
-  WHERE created_at < NOW() - INTERVAL '90 days';
-END;
-$$ LANGUAGE plpgsql;
+CREATE TRIGGER update_audit_counts_trigger
+  AFTER INSERT OR UPDATE OR DELETE ON issues
+  FOR EACH ROW
+  EXECUTE FUNCTION update_audit_counts_trigger_fn();
 ```
+
+**Example Usage**:
+```sql
+-- Manual call (usually not needed, trigger handles it)
+SELECT update_audit_counts('audit-id-here');
+```
+
+**Test Results** (from test-db-functions.sql):
+- ✅ Trigger auto-updates counts on INSERT
+- ✅ Counts update correctly on DELETE
+- ✅ Manual function call works
+- ✅ Handles all severity levels
+- ✅ Handles all WCAG principles
+
+---
+
+### cleanup_old_audits(days_old INTEGER DEFAULT 90)
+
+**Purpose**: Deletes audits older than specified days (default 90 for GDPR compliance).  
+**Returns**: INTEGER (count of deleted audits)  
+**Location**: Migration 012_add_database_functions.sql
+
+**Function Signature**:
+```sql
+CREATE OR REPLACE FUNCTION cleanup_old_audits(days_old INTEGER DEFAULT 90)
+RETURNS INTEGER
+LANGUAGE plpgsql
+```
+
+**What it does**:
+- Deletes audits where created_at < NOW() - interval
+- CASCADE DELETE automatically removes related issues
+- Logs count of deleted audits via RAISE NOTICE
+- Returns count for external tracking
+
+**Example Usage**:
+```sql
+-- Delete audits older than 90 days (default)
+SELECT cleanup_old_audits();
+
+-- Delete audits older than 30 days
+SELECT cleanup_old_audits(30);
+
+-- Dry run: check how many would be deleted
+SELECT COUNT(*) FROM audits 
+WHERE created_at < NOW() - INTERVAL '90 days';
+```
+
+**Scheduling** (recommended):
+```bash
+# Cron job to run daily at 2 AM
+0 2 * * * psql $DATABASE_URL -c "SELECT cleanup_old_audits(90);"
+```
+
+**Test Results** (from test-db-functions.sql):
+- ✅ Correctly identifies old audits
+- ✅ Deletes audits older than threshold
+- ✅ Preserves audits within threshold
+- ✅ Returns accurate count
+- ✅ CASCADE deletes related issues
 
 ---
 
@@ -621,6 +656,105 @@ Report text displayed in issue cards with:
 - Copy button ("Kopiera" for Swedish, "Copy" for English)
 - Monospace font for code examples
 - Syntax highlighting (future enhancement)
+
+---
+
+## Row-Level Security (RLS)
+
+### Overview
+
+All tables in the database have Row-Level Security enabled to prevent unauthorized data access. RLS policies enforce data isolation between users and allow the service role to bypass restrictions for backend operations.
+
+### Enabled Tables
+
+- `user_sessions` - User session and preference data
+- `audits` - Accessibility audit records
+- `issues` - Accessibility issues from audits
+- `user_settings` - User configuration (authenticated users only)
+- `issue_collections` - Saved issue collections
+- `collection_issues` - Issues within collections
+
+### Policy Structure
+
+Each table implements four standard policies:
+
+1. **SELECT**: Users can view only their own data
+2. **INSERT**: Users can create records linked to themselves
+3. **UPDATE**: Users can modify only their own records
+4. **DELETE**: Users can delete only their own records
+
+### User Identification
+
+Policies use two methods to identify the current user:
+
+1. **Authenticated users**: `auth.uid()` returns the user's UUID from JWT
+2. **Anonymous users**: `supabase_user_id IS NULL` allows anonymous sessions
+
+### Example Policies
+
+**user_sessions**:
+```sql
+-- SELECT policy
+CREATE POLICY "Users can view their own sessions"
+ON user_sessions FOR SELECT
+USING (
+  supabase_user_id = auth.uid() OR
+  supabase_user_id IS NULL
+);
+```
+
+**audits**:
+```sql
+-- SELECT policy
+CREATE POLICY "Users can view their own audits"
+ON audits FOR SELECT
+USING (user_id = auth.uid());
+
+-- INSERT policy
+CREATE POLICY "Users can create their own audits"
+ON audits FOR INSERT
+WITH CHECK (user_id = auth.uid());
+```
+
+**issues**:
+```sql
+-- SELECT policy (via audit ownership)
+CREATE POLICY "Users can view issues from their own audits"
+ON issues FOR SELECT
+USING (
+  audit_id IN (
+    SELECT id FROM audits WHERE user_id = auth.uid()
+  )
+);
+```
+
+### Service Role Bypass
+
+Backend Netlify Functions use the `SUPABASE_SERVICE_ROLE_KEY` which bypasses all RLS policies. This allows:
+
+- Creating audits on behalf of users
+- Inserting issues for audits
+- Aggregating statistics across users
+- Administrative operations
+
+### Testing
+
+RLS policies are tested with multiple user contexts to verify:
+
+- ✅ Users can access their own data
+- ✅ Users cannot access other users' data
+- ✅ Anonymous users can create sessions
+- ✅ Service role can bypass restrictions
+
+See `/test-rls.sql` for test script.
+
+### Migration History
+
+- **000**: user_sessions RLS enabled with policies
+- **001**: audits RLS enabled with policies
+- **002**: issues RLS enabled with policies
+- **007**: issue_collections and collection_issues RLS enabled
+- **008**: user_settings RLS enabled with policies
 
 ---
 
