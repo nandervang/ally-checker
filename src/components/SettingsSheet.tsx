@@ -363,6 +363,75 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
                 </CardContent>
               </Card>
 
+              <Card>
+                <CardHeader>
+                  <CardTitle>System Prompt</CardTitle>
+                  <CardDescription>
+                    Customize the AI agent's instructions and behavior
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="use-custom-prompt">Use Custom System Prompt</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Override the default WCAG expert prompt with your own instructions
+                      </p>
+                    </div>
+                    <Switch
+                      id="use-custom-prompt"
+                      checked={settings.useCustomPrompt}
+                      onCheckedChange={(checked) => { updateSetting('useCustomPrompt', checked); }}
+                    />
+                  </div>
+
+                  {settings.useCustomPrompt && (
+                    <div className="space-y-2">
+                      <Label htmlFor="custom-prompt">Custom Prompt</Label>
+                      <textarea
+                        id="custom-prompt"
+                        className="w-full min-h-[200px] p-3 rounded-md border border-input bg-background text-sm resize-y"
+                        placeholder="Enter your custom system prompt here..."
+                        value={settings.customSystemPrompt || ''}
+                        onChange={(e) => { updateSetting('customSystemPrompt', e.target.value); }}
+                      />
+                      <div className="flex justify-between items-center text-xs text-muted-foreground">
+                        <span>
+                          {settings.customSystemPrompt?.length || 0} characters
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            updateSetting('customSystemPrompt', undefined);
+                            updateSetting('useCustomPrompt', false);
+                            toast.success('Reset to default system prompt');
+                          }}
+                        >
+                          Reset to Default
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        💡 Tip: Include instructions about WCAG criteria, user analysis expectations, 
+                        and response format. The default prompt is comprehensive - only customize if 
+                        you need specialized behavior.
+                      </p>
+                    </div>
+                  )}
+
+                  {!settings.useCustomPrompt && (
+                    <div className="rounded-md bg-muted p-3 text-sm">
+                      <p className="font-medium mb-1">Using Default WCAG Expert Prompt</p>
+                      <p className="text-muted-foreground">
+                        The default system prompt configures the AI as a WCAG 2.2 Level AA accessibility 
+                        consultant with expertise in assistive technologies, systematic WCAG coverage, 
+                        and detailed user impact analysis.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
               {/* Action Buttons for Audit Tab */}
               <div className="flex gap-2 pt-4">
                 <Button variant="outline" onClick={() => { void handleReset(); }} className="flex-1">
