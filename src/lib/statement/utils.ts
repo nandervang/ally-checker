@@ -33,7 +33,7 @@ export function escapeHtml(text: string): string {
     '"': '&quot;',
     "'": '&#039;'
   };
-  return text.replace(/[&<>"']/g, (char) => map[char]);
+  return text.replace(/[&<>"']/g, (char) => map[char] || char);
 }
 
 /**
@@ -50,6 +50,7 @@ export function validateStatementData(data: unknown): { valid: boolean; errors: 
     return { valid: false, errors };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const obj = data as Record<string, any>;
 
   // Required metadata fields
@@ -150,7 +151,7 @@ export function generateFilename(organizationName: string, date: string | Date =
   const safeName = organizationName
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replace(/^-|-$/g, '') || 'organization';
   
   return `accessibility-statement-${safeName}-${dateStr}.html`;
 }
@@ -246,5 +247,5 @@ export function getConformanceStatusText(
   const lang = locale.split('-')[0];
   const localeKey = translations[locale] ? locale : (translations[lang] ? lang : 'en-US');
   
-  return translations[localeKey][status] || status;
+  return (translations[localeKey]?.[status]) || status;
 }

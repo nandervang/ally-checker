@@ -423,6 +423,113 @@
       "generationFailed": "Failed to generate statement",
       "downloaded": "Statement downloaded as {{format}}",
       "selectIssues": "Please select at least one issue to generate a statement."
+    },
+    "form": {
+      "title": "Accessibility Statement Customization",
+      "generate": "Generate Statement",
+      "clearDraft": "Clear Draft",
+      "tabs": {
+        "organization": "Organization",
+        "conformance": "Conformance",
+        "technical": "Technical",
+        "additional": "Additional"
+      },
+      "organization": {
+        "title": "Organization Information",
+        "description": "Basic information about your organization and contact details",
+        "name": "Organization Name",
+        "websiteUrl": "Website URL",
+        "contactEmail": "Contact Email",
+        "contactPhone": "Contact Phone",
+        "feedbackUrl": "Feedback Form URL",
+        "responseTime": "Expected Response Time"
+      },
+      "dates": {
+        "title": "Statement Dates",
+        "statementDate": "Statement Date",
+        "lastReviewDate": "Last Review Date",
+        "nextReviewDate": "Next Review Date",
+        "approver": "Approved By",
+        "approverPlaceholder": "Name of person who approved this statement"
+      },
+      "conformance": {
+        "title": "Conformance Status",
+        "description": "WCAG conformance level and known accessibility issues",
+        "status": "Conformance Status",
+        "statusFull": "Fully Conformant",
+        "statusPartial": "Partially Conformant",
+        "statusNon": "Not Conformant",
+        "wcagLevel": "WCAG Level",
+        "wcagVersion": "WCAG Version",
+        "limitations": "Known Limitations",
+        "limitationsPlaceholder": "Enter each limitation on a new line. Format: Title: Description",
+        "limitationsHelp": "List known accessibility issues. One per line, optionally in format 'Title: Description'",
+        "plannedImprovements": "Planned Improvements",
+        "improvementsPlaceholder": "Describe planned accessibility improvements and timeline"
+      },
+      "assessment": {
+        "title": "Assessment Information",
+        "method": "Assessment Method",
+        "methodSelf": "Self Assessment",
+        "methodExternal": "External Assessment",
+        "methodBoth": "Both Self and External",
+        "date": "Assessment Date",
+        "assessor": "Assessor",
+        "assessorPlaceholder": "Organization or person who performed the assessment",
+        "tools": "Testing Tools",
+        "toolsHelp": "Comma-separated list of accessibility testing tools used",
+        "scope": "Testing Scope",
+        "scopePlaceholder": "Describe what pages/features were tested"
+      },
+      "technical": {
+        "title": "Technical Specifications",
+        "description": "Technologies and platforms your website depends on",
+        "technologies": "Technologies Used",
+        "technologiesHelp": "Comma-separated list (e.g., HTML5, CSS3, JavaScript, WAI-ARIA)",
+        "browsers": "Tested Browsers",
+        "browsersHelp": "Comma-separated list with versions (e.g., Chrome 120+, Firefox 121+)",
+        "assistive": "Assistive Technologies",
+        "assistiveHelp": "Comma-separated list of compatible screen readers and assistive tech"
+      },
+      "contentTypes": {
+        "title": "Content Types",
+        "mobileApp": "Mobile App Included",
+        "mobileAppHelp": "Statement covers mobile applications",
+        "pdfDocuments": "PDF Documents Included",
+        "pdfHelp": "Statement covers PDF documents on the website",
+        "thirdParty": "Third-Party Content",
+        "thirdPartyHelp": "Website includes content from external providers",
+        "thirdPartyDescription": "Third-Party Content Description",
+        "thirdPartyProviders": "Third-Party Providers",
+        "providersHelp": "Comma-separated list of third-party content providers",
+        "disproportionateBurden": "Disproportionate Burden",
+        "burdenHelp": "Some content cannot be made accessible due to disproportionate burden",
+        "burdenExplanation": "Burden Explanation",
+        "burdenJustification": "Justification"
+      },
+      "customization": {
+        "title": "Customization",
+        "description": "Optional custom content for your statement",
+        "intro": "Custom Introduction",
+        "introPlaceholder": "Custom introduction text for the statement",
+        "outro": "Custom Conclusion",
+        "outroPlaceholder": "Custom conclusion text for the statement",
+        "additionalInfo": "Additional Information",
+        "additionalPlaceholder": "Any additional information to include"
+      },
+      "errors": {
+        "fixErrors": "Please fix the errors below before generating the statement",
+        "organizationRequired": "Organization name is required",
+        "websiteRequired": "Website URL is required",
+        "websiteInvalid": "Please enter a valid URL (e.g., https://example.com)",
+        "emailRequired": "Contact email is required",
+        "emailInvalid": "Please enter a valid email address",
+        "urlInvalid": "Please enter a valid URL",
+        "technologiesRequired": "At least one technology must be specified"
+      }
     }
+  },
+  "common": {
+    "optional": "(optional)"
   }
 }

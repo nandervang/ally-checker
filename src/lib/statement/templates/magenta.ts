@@ -22,7 +22,7 @@ function generateMagentaStatement(data: StatementData): string {
     if (!acc[priority]) acc[priority] = [];
     acc[priority].push(lim);
     return acc;
-  }, {} as Record<string, typeof limitations>);
+  }, {});
 
   const limitationsHTML = `
     <h2>Known Accessibility Issues</h2>
