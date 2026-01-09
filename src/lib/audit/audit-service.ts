@@ -237,19 +237,30 @@ export async function runAudit(
 
     // Map preferredModel to the model format expected by the backend
     let model: 'claude' | 'gemini' | 'gpt4' = 'gemini';
+    let geminiModelVariant: 'gemini-2.5-flash' | 'gemini-2.5-pro' | undefined;
+    
     if (preferredModel === 'claude') {
       model = 'claude';
     } else if (preferredModel === 'gpt4') {
       model = 'gpt4';
+    } else if (preferredModel === 'gemini-2.5-flash') {
+      model = 'gemini';
+      geminiModelVariant = 'gemini-2.5-flash';
+    } else if (preferredModel === 'gemini-2.5-pro') {
+      model = 'gemini';
+      geminiModelVariant = 'gemini-2.5-pro';
+    } else {
+      // Default to Gemini 2.5 Flash if no valid model specified
+      model = 'gemini';
+      geminiModelVariant = 'gemini-2.5-flash';
     }
-    // For both gemini variants, use 'gemini' - the specific model will be selected by backend
 
     // Transform AuditInput to match AI agent function's expected format
     const agentRequest = {
       mode: input.input_type, // 'url' | 'html' | 'snippet' | 'document'
       content: input.input_value,
       model,
-      geminiModel: preferredModel?.startsWith('gemini') ? preferredModel : undefined, // Pass specific Gemini variant
+      geminiModel: geminiModelVariant,
       language: 'en',
       documentType: input.document_type,
       filePath: input.document_path,
