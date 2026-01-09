@@ -12,8 +12,9 @@ import { AuthForm } from "@/components/AuthForm";
 import { ActionBanner } from "@/components/ActionBanner";
 import { SettingsSheet } from "@/components/SettingsSheet";
 import { useAuth } from "@/contexts/AuthContext";
+import { IconLibraryProvider, useIconLibrary } from "@/contexts/IconLibraryContext";
+import { Icon } from "@/lib/icons";
 import { useTheme } from "@/hooks/useTheme";
-import { Settings, FileText, Database, ChevronRight, Menu, Sparkles, Zap } from "lucide-react";
 import type { AuditResult } from "@/data/mockAuditResults";
 import { getUserSettings, type UserSettings } from "@/services/settingsService";
 import { applyDesignSettings } from "@/lib/apply-design-settings";
@@ -21,31 +22,26 @@ import "./index.css";
 
 export function App() {
   const { t } = useTranslation();
-  const { theme, setTheme } = useTheme();
   const { user, loading } = useAuth();
-  const [activePanel, setActivePanel] = useState<string | null>(null);
-  const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
   const [settings, setSettings] = useState<UserSettings | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsLoading, setSettingsLoading] = useState(true);
 
-  // Load user settings and apply them
+  // Load user settings
   useEffect(() => {
-    void getUserSettings()
-      .then(async (userSettings) => {
-        setSettings(userSettings);
-        // Apply all design settings
-        await applyDesignSettings(userSettings);
-      })
-      .finally(() => {
-        setSettingsLoading(false);
-      });
-  }, []);
+    if (user) {
+      getUserSettings()
+        .then(userSettings => {
+          setSettings(userSettings);
+          void applyDesignSettings(userSettings);
+        })
+        .catch(error => {
+          console.error('Failed to load user settings:', error);
+        });
+    }
+  }, [user]);
 
-  // Show loading state while checking auth or loading settings
-  if (loading || settingsLoading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
           <p className="text-lg text-muted-foreground">{t("auth.loading")}</p>
@@ -59,15 +55,28 @@ export function App() {
     return <AuthForm />;
   }
 
+  return (
+    <IconLibraryProvider iconLibrary={settings?.iconLibrary || 'lucide'}>
+      <AppContent settings={settings} />
+    </IconLibraryProvider>
+  );
+}
+
+function AppContent({ settings }: { settings: UserSettings | null }) {
+  const { t } = useTranslation();
+  const { iconLibrary } = useIconLibrary();
+  const [activePanel, setActivePanel] = useState<string | null>(null);
+  const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   const menuItems = [
-    { id: "overview", label: t("nav.overview"), icon: FileText },
-    { id: "components", label: t("nav.components"), icon: Database },
-    { id: "settings", label: t("nav.settings"), icon: Settings },
+    { id: "overview", label: t("nav.overview"), icon: "file" as const },
+    { id: "components", label: t("nav.components"), icon: "database" as const },
+    { id: "settings", label: t("nav.settings"), icon: "settings" as const },
   ];
 
   return (
-    <IconLibraryProvider iconLibrary={settings?.iconLibrary || 'lucide'}>
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Header onOpenSettings={() => setSettingsOpen(true)} />
 
       <Main>
@@ -76,7 +85,7 @@ export function App() {
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" className="focus-ring md:hidden mb-8">
-                <Menu className="h-5 w-5 mr-2" />
+                <Icon name="menu" library={iconLibrary} className="h-5 w-5 mr-2" />
                 {t("nav.menu")}
               </Button>
             </SheetTrigger>
@@ -95,7 +104,7 @@ export function App() {
                       setActivePanel(item.id);
                     }}
                   >
-                    <item.icon className="h-5 w-5" />
+                    <Icon name={item.icon} library={iconLibrary} className="h-5 w-5" />
                     {item.label}
                   </Button>
                 ))}
@@ -111,9 +120,9 @@ export function App() {
                 className="gap-2 whitespace-nowrap focus-ring shadow-elevation-1 hover:shadow-elevation-2 transition-all text-base md:text-lg lg:text-xl h-auto py-4 px-8"
                 onClick={() => setActivePanel(item.id)}
               >
-                <item.icon className="h-5 w-5 md:h-6 md:w-6" />
+                <Icon name={item.icon} library={iconLibrary} className="h-5 w-5 md:h-6 md:w-6" />
                 {item.label}
-                <ChevronRight className="h-4 w-4 md:h-5 md:w-5 ml-1" />
+                <Icon name="chevron-right" library={iconLibrary} className="h-4 w-4 md:h-5 md:w-5 ml-1" />
               </Button>
             ))}
           </div>
@@ -402,7 +411,6 @@ export function App() {
       {/* Settings Sheet */}
       <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
-    </IconLibraryProvider>
   );
 }
 

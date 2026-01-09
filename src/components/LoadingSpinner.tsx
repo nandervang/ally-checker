@@ -1,4 +1,5 @@
-import { Loader2 } from "lucide-react";
+import { Icon } from "@/lib/icons";
+import { useIconLibrary } from "@/contexts/IconLibraryContext";
 import { useTranslation } from "react-i18next";
 
 interface LoadingSpinnerProps {
@@ -8,6 +9,7 @@ interface LoadingSpinnerProps {
 
 export function LoadingSpinner({ message, size = "md" }: LoadingSpinnerProps) {
   const { t } = useTranslation();
+  const { iconLibrary } = useIconLibrary();
 
   const sizeClasses = {
     sm: "h-4 w-4",
@@ -17,7 +19,7 @@ export function LoadingSpinner({ message, size = "md" }: LoadingSpinnerProps) {
 
   return (
     <div className="flex flex-col items-center justify-center gap-4 p-8" role="status" aria-live="polite">
-      <Loader2 className={`${sizeClasses[size]} animate-spin text-primary`} aria-hidden="true" />
+      <Icon name="loader" library={iconLibrary} className={`${sizeClasses[size]} animate-spin text-primary`} aria-hidden="true" />
       <p className="text-base md:text-lg text-muted-foreground">
         {message || t("loading.default", "Loading...")}
       </p>

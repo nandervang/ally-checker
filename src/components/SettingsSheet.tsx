@@ -12,7 +12,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Save, RotateCcw, Download, Upload, Loader2 } from 'lucide-react';
+import { Icon } from '@/lib/icons';
+import { useIconLibrary } from '@/contexts/IconLibraryContext';
 import { toast } from 'sonner';
 import { useTheme } from '@/hooks/useTheme';
 import {
@@ -31,8 +32,7 @@ interface SettingsSheetProps {
 }
 
 export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
-  const { setTheme } = useTheme();
-  const [settings, setSettings] = useState<UserSettings | null>(null);
+  const { setTheme } = useTheme();  const { iconLibrary: currentIconLibrary } = useIconLibrary();  const [settings, setSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -202,7 +202,7 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
           <div className="flex items-center justify-center min-h-[400px]">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <Icon name="loader" library={currentIconLibrary} className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         </SheetContent>
       </Sheet>
@@ -235,22 +235,22 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={handleExport}>
-              <Download className="h-4 w-4 mr-2" />
+              <Icon name="download" library={currentIconLibrary} className="h-4 w-4 mr-2" />
               Export
             </Button>
             <Button variant="outline" size="sm" onClick={handleImport}>
-              <Upload className="h-4 w-4 mr-2" />
+              <Icon name="upload" library={currentIconLibrary} className="h-4 w-4 mr-2" />
               Import
             </Button>
             <Button variant="outline" size="sm" onClick={() => { void handleReset(); }}>
-              <RotateCcw className="h-4 w-4 mr-2" />
+              <Icon name="refresh" library={currentIconLibrary} className="h-4 w-4 mr-2" />
               Reset
             </Button>
             <Button onClick={() => { void handleSave(); }} disabled={saving} className="ml-auto">
               {saving ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Icon name="loader" library={currentIconLibrary} className="h-4 w-4 mr-2 animate-spin" />
               ) : (
-                <Save className="h-4 w-4 mr-2" />
+                <Icon name="save" library={currentIconLibrary} className="h-4 w-4 mr-2" />
               )}
               Save
             </Button>
