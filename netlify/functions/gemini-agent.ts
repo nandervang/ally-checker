@@ -10,6 +10,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { spawn } from "child_process";
 import path from "path";
+import { parseGeminiResponse } from "../../src/lib/audit/response-parser.js";
 
 interface AuditRequest {
   mode: "url" | "html" | "snippet" | "document";
@@ -128,23 +129,33 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
     // Get final text response
     const analysisText = response.text();
     
+    // Parse the response to extract issues
+    const parsedIssues = parseGeminiResponse(analysisText);
+    
+    // Calculate counts from parsed issues
+    const criticalCount = parsedIssues.filter(i => i.severity === 'critical').length;
+    const seriousCount = parsedIssues.filter(i => i.severity === 'serious').length;
+    const moderateCount = parsedIssues.filter(i => i.severity === 'moderate').length;
+    const minorCount = parsedIssues.filter(i => i.severity === 'minor').length;
+    const totalIssues = parsedIssues.length;
+    
     return {
       summary: {
         url: request.mode === "url" ? request.content : undefined,
         timestamp: new Date().toISOString(),
-        totalIssues: 0, // Will be parsed from response
-        criticalCount: 0,
-        seriousCount: 0,
-        moderateCount: 0,
-        minorCount: 0,
+        totalIssues,
+        criticalCount,
+        seriousCount,
+        moderateCount,
+        minorCount,
         passCount: 0,
         model: "gemini-2.5-flash-with-mcp",
       },
-      issues: [],
+      issues: parsedIssues,
       wcagCompliance: {
-        levelA: { passed: 0, failed: 0, percentage: 0 },
-        levelAA: { passed: 0, failed: 0, percentage: 0 },
-        levelAAA: { passed: 0, failed: 0, percentage: 0 },
+        levelA: { passed: 0, failed: parsedIssues.filter(i => i.wcag_level === 'A').length, percentage: 0 },
+        levelAA: { passed: 0, failed: parsedIssues.filter(i => i.wcag_level === 'AA').length, percentage: 0 },
+        levelAAA: { passed: 0, failed: parsedIssues.filter(i => i.wcag_level === 'AAA').length, percentage: 0 },
       },
       rawAnalysis: analysisText,
       toolResults: toolCalls,
