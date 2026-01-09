@@ -161,11 +161,11 @@ function AppContent({ settings }: { settings: UserSettings | null }) {
         </p>
         <div className="flex gap-4 justify-center flex-wrap mt-8">
           <Button size="lg" variant="secondary" className="gap-2 h-auto py-4 px-8 text-lg">
-            <Sparkles className="h-5 w-5" />
+            <Icon name="sparkles" library={iconLibrary} className="h-5 w-5" />
             {t("banners.aiPowered.tryNow") ?? "Try AI Analysis"}
           </Button>
           <Button size="lg" variant="outline" className="gap-2 h-auto py-4 px-8 text-lg bg-background/10 border-primary-foreground/20 hover:bg-background/20">
-            <Zap className="h-5 w-5" />
+            <Icon name="zap" library={iconLibrary} className="h-5 w-5" />
             {t("banners.aiPowered.learnMore") ?? "Learn More"}
           </Button>
         </div>
