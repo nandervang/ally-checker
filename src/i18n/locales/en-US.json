@@ -527,6 +527,28 @@
         "urlInvalid": "Please enter a valid URL",
         "technologiesRequired": "At least one technology must be specified"
       }
+    },
+    "export": {
+      "title": "Export Statement",
+      "filename": "Filename",
+      "download": "Download",
+      "copy": "Copy to Clipboard",
+      "copied": "Copied!",
+      "preview": "Preview",
+      "previewTitle": "Statement Preview",
+      "previewDescription": "This is how your accessibility statement will look",
+      "snippetPreview": "HTML Snippet Preview",
+      "textPreview": "Plain Text Preview",
+      "formats": {
+        "html": "Standalone HTML",
+        "snippet": "Embeddable Snippet",
+        "text": "Plain Text"
+      },
+      "descriptions": {
+        "html": "Complete HTML file with DOCTYPE, styles, and full document structure. Ready to host as a standalone page.",
+        "snippet": "Just the statement content without document structure. Copy and paste into your existing webpage.",
+        "text": "Plain text version without HTML formatting. Suitable for emails and text documents."
+      }
     }
   },
   "common": {

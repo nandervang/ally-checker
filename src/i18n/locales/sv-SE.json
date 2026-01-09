@@ -527,6 +527,28 @@
         "urlInvalid": "Ange en giltig URL",
         "technologiesRequired": "Minst en teknologi måste anges"
       }
+    },
+    "export": {
+      "title": "Exportera redogörelse",
+      "filename": "Filnamn",
+      "download": "Ladda ner",
+      "copy": "Kopiera till urklipp",
+      "copied": "Kopierad!",
+      "preview": "Förhandsgranska",
+      "previewTitle": "Förhandsgranskning av redogörelse",
+      "previewDescription": "Så här kommer din tillgänglighetsredogörelse att se ut",
+      "snippetPreview": "HTML-kodsnuttförhandsgranskning",
+      "textPreview": "Förhandsgranskning av ren text",
+      "formats": {
+        "html": "Fristående HTML",
+        "snippet": "Inbäddningsbar kodsnutt",
+        "text": "Ren text"
+      },
+      "descriptions": {
+        "html": "Komplett HTML-fil med DOCTYPE, stilar och full dokumentstruktur. Redo att publicera som fristående sida.",
+        "snippet": "Bara redogörelsens innehåll utan dokumentstruktur. Kopiera och klistra in på din befintliga webbsida.",
+        "text": "Version i ren text utan HTML-formatering. Lämplig för e-post och textdokument."
+      }
     }
   },
   "common": {
