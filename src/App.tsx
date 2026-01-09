@@ -24,27 +24,33 @@ export function App() {
   const { t } = useTranslation();
   const { user, loading } = useAuth();
   const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
 
   // Load user settings
   useEffect(() => {
     if (user) {
+      setIsLoadingSettings(true);
       getUserSettings()
         .then(userSettings => {
           setSettings(userSettings);
           void applyDesignSettings(userSettings);
+          setIsLoadingSettings(false);
         })
         .catch(error => {
           console.error('Failed to load user settings:', error);
+          setIsLoadingSettings(false);
         });
+    } else {
+      setIsLoadingSettings(false);
     }
   }, [user]);
 
-  if (loading) {
+  if (loading || isLoadingSettings) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-lg text-muted-foreground">{t("auth.loading")}</p>
+          <p className="text-lg text-muted-foreground">{loading ? t("auth.loading") : "Loading settings..."}</p>
         </div>
       </div>
     );
