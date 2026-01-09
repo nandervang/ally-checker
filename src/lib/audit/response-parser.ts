@@ -330,6 +330,44 @@ function parseSimpleList(text: string): Issue[] {
 }
 
 /**
+ * Parse issues marked with **Issue:** in bullet points
+ */
+function parseIssueMarkers(text: string): Issue[] {
+  const issues: Issue[] = [];
+  // Match **Issue:** markers and capture everything until next **Issue:** or section end
+  const issueMatches = text.matchAll(/\*\*Issue:\*\*\s+([^\n]+(?:\n(?!\*\*Issue:)[^\n]+)*)/gim);
+
+  for (const match of issueMatches) {
+    const issueText = match[1];
+    
+    // Extract WCAG criterion
+    const criterion = extractWCAGCriterion(issueText) || 'Unknown';
+    const principleNum = criterion.split('.')[0];
+
+    // Extract severity
+    const severity = extractSeverity(issueText);
+
+    // Try to extract a clear title from the first sentence
+    const firstSentence = issueText.split(/[.!?]\s/)[0];
+    const title = firstSentence.length > 100 ? firstSentence.substring(0, 100) + '...' : firstSentence;
+
+    issues.push({
+      wcag_criterion: criterion,
+      wcag_level: WCAG_LEVEL_MAP[criterion] || 'AA',
+      wcag_principle: (WCAG_PRINCIPLE_MAP[principleNum] || 'perceivable') as WCAGPrinciple,
+      title: title.trim(),
+      description: issueText.trim(),
+      severity: (severity as IssueSeverity) || 'moderate',
+      source: 'ai-heuristic',
+      how_to_fix: '', // Will be extracted if present in the text
+      wcag_url: `https://www.w3.org/WAI/WCAG22/Understanding/${criterion.replace(/\./g, '')}`,
+    });
+  }
+
+  return issues;
+}
+
+/**
  * Main parser: Try multiple strategies to extract issues from Gemini response
  */
 export function parseGeminiResponse(text: string): Issue[] {
@@ -343,13 +381,19 @@ export function parseGeminiResponse(text: string): Issue[] {
     return jsonIssues;
   }
 
-  // Strategy 2: Try markdown sections
+  // Strategy 2: Try **Issue:** markers (common in narrative reports)
+  const markerIssues = parseIssueMarkers(text);
+  if (markerIssues.length > 0) {
+    return markerIssues;
+  }
+
+  // Strategy 3: Try markdown sections
   const markdownIssues = parseMarkdownSections(text);
   if (markdownIssues.length > 0) {
     return markdownIssues;
   }
 
-  // Strategy 3: Try simple list
+  // Strategy 4: Try simple list
   const listIssues = parseSimpleList(text);
   if (listIssues.length > 0) {
     return listIssues;
