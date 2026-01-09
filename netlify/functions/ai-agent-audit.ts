@@ -165,12 +165,20 @@ export const handler: Handler = async (event: HandlerEvent) => {
         expected_behavior: issue.expected_behavior || issue.expectedBehavior || null,
       }));
 
-      const { error: issuesError } = await supabase
+      console.log(`Attempting to save ${issuesData.length} issues for audit ${auditId}`);
+      console.log('First issue sample:', JSON.stringify(issuesData[0], null, 2));
+      
+      const { data: insertedIssues, error: issuesError } = await supabase
         .from('issues')
-        .insert(issuesData);
+        .insert(issuesData)
+        .select();
 
       if (issuesError) {
         console.error('Failed to save issues:', issuesError);
+        console.error('Issue data that failed:', JSON.stringify(issuesData, null, 2));
+        // Don't throw - return audit ID anyway, but log the error
+      } else {
+        console.log(`Successfully saved ${insertedIssues?.length || 0} issues`);
       }
     }
 
