@@ -29,10 +29,13 @@ import { applyDesignSettings } from '@/lib/apply-design-settings';
 interface SettingsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSettingsChange?: (settings: UserSettings) => void;
 }
 
-export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
-  const { setTheme } = useTheme();  const { iconLibrary: currentIconLibrary } = useIconLibrary();  const [settings, setSettings] = useState<UserSettings | null>(null);
+export function SettingsSheet({ open, onOpenChange, onSettingsChange }: SettingsSheetProps) {
+  const { setTheme } = useTheme();
+  const { iconLibrary: currentIconLibrary } = useIconLibrary();
+  const [settings, setSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -89,6 +92,9 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
     try {
       const updated = await updateUserSettings(settings);
       setSettings(updated);
+      
+      // Notify parent component of settings change
+      onSettingsChange?.(updated);
       
       // Apply settings immediately
       document.documentElement.classList.remove('font-size-small', 'font-size-medium', 'font-size-large');
@@ -187,7 +193,11 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
     // Save to database
     setSaving(true);
     try {
-      await updateUserSettings(newSettings);
+      const updated = await updateUserSettings(newSettings);
+      
+      // Notify parent component of settings change
+      onSettingsChange?.(updated);
+      
       toast.success('Preset applied and saved');
     } catch (error) {
       console.error('Failed to save preset:', error);

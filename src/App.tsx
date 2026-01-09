@@ -57,12 +57,12 @@ export function App() {
 
   return (
     <IconLibraryProvider iconLibrary={settings?.iconLibrary || 'lucide'}>
-      <AppContent settings={settings} />
+      <AppContent settings={settings} onSettingsChange={setSettings} />
     </IconLibraryProvider>
   );
 }
 
-function AppContent({ settings }: { settings: UserSettings | null }) {
+function AppContent({ settings, onSettingsChange }: { settings: UserSettings | null; onSettingsChange: (settings: UserSettings) => void }) {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const { iconLibrary } = useIconLibrary();
@@ -410,7 +410,11 @@ function AppContent({ settings }: { settings: UserSettings | null }) {
       </Sheet>
 
       {/* Settings Sheet */}
-      <SettingsSheet open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <SettingsSheet 
+        open={settingsOpen} 
+        onOpenChange={setSettingsOpen}
+        onSettingsChange={onSettingsChange}
+      />
     </div>
   );
 }
