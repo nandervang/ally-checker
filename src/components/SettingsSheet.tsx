@@ -457,14 +457,14 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
               {/* Action Buttons for Audit Tab */}
               <div className="flex gap-2 pt-4">
                 <Button variant="outline" onClick={() => { void handleReset(); }} className="flex-1">
-                  <RotateCcw className="h-4 w-4 mr-2" />
+                  <Icon name="refresh" library={currentIconLibrary} className="h-4 w-4 mr-2" />
                   Reset to Defaults
                 </Button>
                 <Button onClick={() => { void handleSave(); }} disabled={saving} className="flex-1">
                   {saving ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Icon name="loader" library={currentIconLibrary} className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
-                    <Save className="h-4 w-4 mr-2" />
+                    <Icon name="save" library={currentIconLibrary} className="h-4 w-4 mr-2" />
                   )}
                   Save Settings
                 </Button>
@@ -739,14 +739,14 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
               {/* Action Buttons for Design Tab */}
               <div className="flex gap-2 pt-4">
                 <Button variant="outline" onClick={() => { void handleReset(); }} className="flex-1">
-                  <RotateCcw className="h-4 w-4 mr-2" />
+                  <Icon name="refresh" library={currentIconLibrary} className="h-4 w-4 mr-2" />
                   Reset to Defaults
                 </Button>
                 <Button onClick={() => { void handleSave(); }} disabled={saving} className="flex-1">
                   {saving ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Icon name="loader" library={currentIconLibrary} className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
-                    <Save className="h-4 w-4 mr-2" />
+                    <Icon name="save" library={currentIconLibrary} className="h-4 w-4 mr-2" />
                   )}
                   Save Settings
                 </Button>
@@ -832,14 +832,14 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
               {/* Action Buttons for UI Tab */}
               <div className="flex gap-2 pt-4">
                 <Button variant="outline" onClick={() => { void handleReset(); }} className="flex-1">
-                  <RotateCcw className="h-4 w-4 mr-2" />
+                  <Icon name="refresh" library={currentIconLibrary} className="h-4 w-4 mr-2" />
                   Reset to Defaults
                 </Button>
                 <Button onClick={() => { void handleSave(); }} disabled={saving} className="flex-1">
                   {saving ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Icon name="loader" library={currentIconLibrary} className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
-                    <Save className="h-4 w-4 mr-2" />
+                    <Icon name="save" library={currentIconLibrary} className="h-4 w-4 mr-2" />
                   )}
                   Save Settings
                 </Button>
@@ -910,14 +910,14 @@ export function SettingsSheet({ open, onOpenChange }: SettingsSheetProps) {
               {/* Action Buttons for Reports Tab */}
               <div className="flex gap-2 pt-4">
                 <Button variant="outline" onClick={() => { void handleReset(); }} className="flex-1">
-                  <RotateCcw className="h-4 w-4 mr-2" />
+                  <Icon name="refresh" library={currentIconLibrary} className="h-4 w-4 mr-2" />
                   Reset to Defaults
                 </Button>
                 <Button onClick={() => { void handleSave(); }} disabled={saving} className="flex-1">
                   {saving ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Icon name="loader" library={currentIconLibrary} className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
-                    <Save className="h-4 w-4 mr-2" />
+                    <Icon name="save" library={currentIconLibrary} className="h-4 w-4 mr-2" />
                   )}
                   Save Settings
                 </Button>
