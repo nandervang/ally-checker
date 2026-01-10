@@ -101,13 +101,7 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
               element_context: { type: "string", description: "Surrounding HTML (optional)" },
               how_to_fix: { type: "string", description: "Remediation steps" },
               code_example: { type: "string", description: "Before/after code (optional)" },
-              wcag_url: { type: "string", description: "WCAG documentation link (optional)" },
-              user_impact: { type: "string", description: "Impact on users (optional)" },
-              how_to_reproduce: { type: "string", description: "Steps to reproduce (optional)" },
-              keyboard_testing: { type: "string", description: "Keyboard testing notes (optional)" },
-              screen_reader_testing: { type: "string", description: "Screen reader testing notes (optional)" },
-              visual_testing: { type: "string", description: "Visual testing notes (optional)" },
-              expected_behavior: { type: "string", description: "Expected accessible behavior (optional)" }
+              wcag_url: { type: "string", description: "WCAG documentation link (optional)" }
             },
             required: ["wcag_criterion", "wcag_level", "wcag_principle", "title", "description", "severity", "source", "how_to_fix"]
           }

@@ -23,6 +23,13 @@ export interface AuthResult {
 export function validateApiKey(event: HandlerEvent): AuthResult {
   const apiKey = event.headers["x-report-service-key"];
   const expectedKey = process.env.REPORT_SERVICE_KEY;
+  
+  // Allow requests from localhost (local development)
+  const host = event.headers.host || '';
+  if (host.includes('localhost') || host.includes('127.0.0.1')) {
+    console.log('[LOCAL DEV] Bypassing API key validation for localhost');
+    return { isAuthenticated: true };
+  }
 
   // Allow requests without auth if REPORT_SERVICE_KEY is not configured
   // This is useful for development and open public APIs
