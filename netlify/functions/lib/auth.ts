@@ -34,11 +34,13 @@ export function validateApiKey(event: HandlerEvent): AuthResult {
   // Allow requests without auth if REPORT_SERVICE_KEY is not configured
   // This is useful for development and open public APIs
   if (!expectedKey) {
+    console.log('[AUTH] No REPORT_SERVICE_KEY configured, allowing request');
     return { isAuthenticated: true };
   }
 
   // Require API key if REPORT_SERVICE_KEY is configured
   if (!apiKey) {
+    console.error('[AUTH] Missing API key in request headers');
     return {
       isAuthenticated: false,
       error: "Missing X-Report-Service-Key header",
@@ -46,13 +48,21 @@ export function validateApiKey(event: HandlerEvent): AuthResult {
   }
 
   // Validate API key
+  console.log('[AUTH] Comparing keys:', {
+    received: apiKey.substring(0, 10) + '...',
+    expected: expectedKey.substring(0, 10) + '...',
+    match: apiKey === expectedKey
+  });
+  
   if (apiKey !== expectedKey) {
+    console.error('[AUTH] API key mismatch');
     return {
       isAuthenticated: false,
       error: "Invalid API key",
     };
   }
 
+  console.log('[AUTH] API key validated successfully');
   return { isAuthenticated: true };
 }
 
