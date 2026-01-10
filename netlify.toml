@@ -24,6 +24,10 @@
   timeout = 30
   memory = 1024
 
+[functions."generate-report"]
+  timeout = 60
+  memory = 1024
+
 [dev]
   # command = "bun dev"
   # targetPort = 3000
