@@ -165,12 +165,6 @@ export const handler: Handler = async (event: HandlerEvent) => {
         how_to_fix: issue.how_to_fix || issue.remediation || issue.fix || 'Review WCAG guidelines for remediation steps.',
         code_example: issue.code_example || issue.code || issue.codeSnippet || null,
         wcag_url: issue.wcag_url || issue.wcagUrl || issue.helpUrl || null,
-        user_impact: issue.user_impact || issue.userImpact || issue.impact || null,
-        how_to_reproduce: issue.how_to_reproduce || issue.howToReproduce || null,
-        keyboard_testing: issue.keyboard_testing || issue.keyboardTesting || null,
-        screen_reader_testing: issue.screen_reader_testing || issue.screenReaderTesting || null,
-        visual_testing: issue.visual_testing || issue.visualTesting || null,
-        expected_behavior: issue.expected_behavior || issue.expectedBehavior || null,
       }));
 
       console.log(`Attempting to save ${issuesData.length} issues for audit ${auditId}`);
