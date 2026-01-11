@@ -1,11 +1,16 @@
 /**
- * Netlify Function wrapper for Python report generation
- * Calls the Python report generator as a subprocess
+ * Netlify Function for Professional Report Generation
+ * Generates high-quality accessibility reports in multiple formats
  */
 
 import type { Handler, HandlerEvent, HandlerContext } from "@netlify/functions";
-import { spawn } from "child_process";
-import path from "path";
+import { 
+  generateWordReport, 
+  generateHTMLReport, 
+  generateMarkdownReport,
+  type AuditData,
+  type ReportConfig
+} from "./lib/reportGenerator";
 
 const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
   // CORS headers
@@ -40,6 +45,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
   // If REPORT_SERVICE_KEY is configured, require and validate it
   if (expectedKey) {
     if (!apiKey || apiKey !== expectedKey) {
+      console.error('[AUTH] API key validation failed');
       return {
         statusCode: 401,
         headers: { ...headers, "Content-Type": "application/json" },
@@ -47,96 +53,86 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       };
     }
   }
-  // If not configured, allow the request (useful for development and open APIs)
-
 
   try {
     // Parse request body
     const requestBody = JSON.parse(event.body || "{}");
+    const { 
+      audit_data, 
+      format = "word", 
+      template = "etu-standard",
+      locale = "sv-SE",
+      metadata,
+      include_ai_summary,
+      executive_summary
+    } = requestBody;
 
-    // Call Python script
-    const pythonDir = path.join(__dirname, "generate-report");
-    const pythonScript = path.join(pythonDir, "cli.py");
+    if (!audit_data || !audit_data.issues) {
+      return {
+        statusCode: 400,
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "INVALID_REQUEST", message: "Missing audit_data or issues" }),
+      };
+    }
 
-    return await new Promise((resolve) => {
-      const python = spawn("python3", [pythonScript], {
-        cwd: pythonDir,
-        env: {
-          ...process.env,
-          REQUEST_BODY: JSON.stringify(requestBody),
+    const config: ReportConfig = {
+      template,
+      locale,
+      format,
+      include_ai_summary,
+      executive_summary
+    };
+
+    console.log(`[REPORT] Generating ${format} report with ${audit_data.issues.length} issues`);
+
+    // Generate report based on format
+    if (format === "word") {
+      const buffer = await generateWordReport(audit_data as AuditData, config);
+      const base64 = buffer.toString("base64");
+      
+      return {
+        statusCode: 200,
+        headers: {
+          ...headers,
+          "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "Content-Disposition": `attachment; filename="accessibility-report-${new Date().toISOString().split('T')[0]}.docx"`,
         },
-      });
-
-      let stdout = "";
-      let stderr = "";
-      const chunks: Buffer[] = [];
-
-      python.stdout.on("data", (data) => {
-        chunks.push(data);
-        stdout += data.toString();
-      });
-
-      python.stderr.on("data", (data) => {
-        stderr += data.toString();
-      });
-
-      python.on("close", (code) => {
-        if (code !== 0) {
-          console.error("Python error:", stderr);
-          resolve({
-            statusCode: 500,
-            headers: { ...headers, "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-              error: "REPORT_GENERATION_ERROR", 
-              message: `Report generation failed: ${stderr.slice(0, 500)}` 
-            }),
-          });
-          return;
-        }
-
-        // Try to parse JSON response first
-        try {
-          const jsonResponse = JSON.parse(stdout);
-          if (jsonResponse.error) {
-            resolve({
-              statusCode: jsonResponse.statusCode || 500,
-              headers: { ...headers, "Content-Type": "application/json" },
-              body: stdout,
-            });
-            return;
-          }
-        } catch {
-          // Not JSON, assume it's binary data (Word document)
-        }
-
-        // Return binary data
-        const buffer = Buffer.concat(chunks);
-        const base64 = buffer.toString("base64");
-
-        resolve({
-          statusCode: 200,
-          headers: {
-            ...headers,
-            "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            "Content-Disposition": `attachment; filename="accessibility-report-${new Date().toISOString().split('T')[0]}.docx"`,
-          },
-          body: base64,
-          isBase64Encoded: true,
-        });
-      });
-
-      // Set timeout
-      setTimeout(() => {
-        python.kill();
-        resolve({
-          statusCode: 408,
-          headers: { ...headers, "Content-Type": "application/json" },
-          body: JSON.stringify({ error: "TIMEOUT", message: "Report generation timeout" }),
-        });
-      }, 55000); // 55 seconds (function timeout is 60s)
-    });
+        body: base64,
+        isBase64Encoded: true,
+      };
+    } else if (format === "html") {
+      const html = generateHTMLReport(audit_data as AuditData, config);
+      
+      return {
+        statusCode: 200,
+        headers: {
+          ...headers,
+          "Content-Type": "text/html; charset=utf-8",
+          "Content-Disposition": `attachment; filename="accessibility-report-${new Date().toISOString().split('T')[0]}.html"`,
+        },
+        body: html,
+      };
+    } else if (format === "markdown") {
+      const markdown = generateMarkdownReport(audit_data as AuditData, config);
+      
+      return {
+        statusCode: 200,
+        headers: {
+          ...headers,
+          "Content-Type": "text/markdown; charset=utf-8",
+          "Content-Disposition": `attachment; filename="accessibility-report-${new Date().toISOString().split('T')[0]}.md"`,
+        },
+        body: markdown,
+      };
+    } else {
+      return {
+        statusCode: 400,
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "INVALID_FORMAT", message: `Unsupported format: ${format}` }),
+      };
+    }
   } catch (error) {
-    console.error("Handler error:", error);
+    console.error("[REPORT] Generation error:", error);
     return {
       statusCode: 500,
       headers: { ...headers, "Content-Type": "application/json" },
