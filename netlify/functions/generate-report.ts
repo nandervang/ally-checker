@@ -33,25 +33,22 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     };
   }
 
-  // Verify authentication
+  // Verify authentication (optional - allow if not configured)
   const apiKey = event.headers["x-report-service-key"] || event.headers["X-Report-Service-Key"];
   const expectedKey = process.env.REPORT_SERVICE_KEY;
 
-  if (!expectedKey) {
-    return {
-      statusCode: 500,
-      headers: { ...headers, "Content-Type": "application/json" },
-      body: JSON.stringify({ error: "SERVER_CONFIG_ERROR", message: "Report service not configured" }),
-    };
+  // If REPORT_SERVICE_KEY is configured, require and validate it
+  if (expectedKey) {
+    if (!apiKey || apiKey !== expectedKey) {
+      return {
+        statusCode: 401,
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "UNAUTHORIZED", message: "Invalid or missing API key" }),
+      };
+    }
   }
+  // If not configured, allow the request (useful for development and open APIs)
 
-  if (!apiKey || apiKey !== expectedKey) {
-    return {
-      statusCode: 401,
-      headers: { ...headers, "Content-Type": "application/json" },
-      body: JSON.stringify({ error: "UNAUTHORIZED", message: "Invalid or missing API key" }),
-    };
-  }
 
   try {
     // Parse request body
