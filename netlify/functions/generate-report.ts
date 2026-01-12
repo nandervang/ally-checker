@@ -60,7 +60,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     const { 
       audit_data, 
       format = "word", 
-      template = "etu-standard",
+      template = "wcag-international",  // Changed default to wcag-international per spec
       locale = "sv-SE",
       metadata,
       include_ai_summary,
