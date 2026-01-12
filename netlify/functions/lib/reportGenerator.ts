@@ -429,17 +429,6 @@ function createMetadataTable(
     rows
   });
 }
-        ]
-      }),
-      new TableRow({
-        children: [
-          new TableCell({ children: [new Paragraph({ text: t.totalIssues })] }),
-          new TableCell({ children: [new Paragraph({ text: auditData.total_issues.toString() })] }),
-        ]
-      }),
-    ]
-  });
-}
 
 function createPrincipleBreakdown(
   auditData: AuditData,
