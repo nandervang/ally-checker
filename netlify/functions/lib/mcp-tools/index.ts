@@ -9,6 +9,7 @@ import { axeTools, handleAxeTool } from "./axe-core.js";
 import { wcagTools, handleWcagTool } from "./wcag-docs.js";
 import { waiTools, handleWaiTool } from "./wai-tips.js";
 import { magentaTools, handleMagentaTool } from "./magenta.js";
+import { playwrightTools, handlePlaywrightTool } from "./playwright-screenshots.js";
 
 /**
  * Get all available MCP tools
@@ -20,6 +21,7 @@ export function getAllTools(): Tool[] {
     ...wcagTools,
     ...waiTools,
     ...magentaTools,
+    ...playwrightTools,
   ];
 }
 
@@ -46,6 +48,10 @@ export async function executeTool(toolName: string, args: any): Promise<any> {
   
   if (toolName.startsWith("get_magenta_") || toolName.startsWith("search_magenta_")) {
     return await handleMagentaTool(toolName, args);
+  }
+  
+  if (toolName.startsWith("capture_")) {
+    return await handlePlaywrightTool(toolName, args);
   }
   
   throw new Error(`Unknown tool: ${toolName}`);
