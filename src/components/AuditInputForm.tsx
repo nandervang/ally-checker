@@ -265,7 +265,72 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
           };
 
           // Run audit and get ID, passing preferred model from settings
-          const auditId = await runAudit(auditInput, onProgress, settings?.preferredModel);
+          let auditId: string;
+          let auditResponseData: any = null;
+          
+          try {
+            auditId = await runAudit(auditInput, onProgress, settings?.preferredModel);
+          } catch (error: any) {
+            // Check if this is an AUDIT_NOT_SAVED error with response data
+            if (error.message === 'AUDIT_NOT_SAVED' && error.responseData) {
+              console.warn('[Audit] Results not saved to database, using direct response');
+              auditResponseData = error.responseData;
+              
+              // Convert API response to AuditResult format
+              const apiResult = auditResponseData;
+              const result: AuditResult = {
+                auditId: null as any, // No audit ID since it wasn't saved
+                url: inputType === 'url' ? inputValue : undefined,
+                fileName: inputType === 'snippet' ? 'HTML Snippet' : inputType === 'html' ? 'HTML Document' : inputType === 'document' ? inputValue : undefined,
+                documentType: inputType === 'url' ? 'html' : inputType as 'html' | 'snippet',
+                timestamp: apiResult.summary?.timestamp || new Date().toISOString(),
+                summary: {
+                  totalIssues: apiResult.summary?.totalIssues || 0,
+                  critical: apiResult.summary?.criticalCount || 0,
+                  serious: apiResult.summary?.seriousCount || 0,
+                  moderate: apiResult.summary?.moderateCount || 0,
+                  minor: apiResult.summary?.minorCount || 0,
+                  passed: apiResult.summary?.passCount || 0,
+                  failed: apiResult.summary?.totalIssues || 0,
+                },
+                issues: (apiResult.issues || []).map((issue: any, idx: number) => ({
+                  id: `issue-${idx}-${issue.wcag_criterion}`,
+                  principle: issue.wcag_principle,
+                  guideline: `${issue.wcag_criterion} ${issue.title}`,
+                  wcagLevel: issue.wcag_level,
+                  severity: issue.severity,
+                  title: issue.title,
+                  description: issue.description,
+                  element: issue.element_html || issue.element_context || '',
+                  selector: issue.element_selector || '',
+                  impact: issue.user_impact || issue.severity,
+                  remediation: issue.how_to_fix || '',
+                  helpUrl: issue.wcag_url || `https://www.w3.org/WAI/WCAG22/Understanding/${issue.wcag_criterion?.replace(/\./g, '')}.html`,
+                  occurrences: 1,
+                  codeExample: issue.code_example,
+                })),
+                agent_trace: apiResult.auditMethodology ? {
+                  steps: [],
+                  tools_used: apiResult.mcpToolsUsed || [],
+                  sources_consulted: apiResult.sourcesConsulted || [],
+                  duration_ms: undefined,
+                } : undefined,
+              };
+
+              setProgressMessage("🎉 Audit complete! (Results not saved to database - check environment configuration)");
+              setAuditStep("complete");
+              onAuditComplete?.(result);
+              
+              setTimeout(() => {
+                setAuditStep("idle");
+                setProgressMessage("");
+              }, 3000);
+              
+              return;
+            }
+            // If it's a different error, re-throw it
+            throw error;
+          }
 
           setProgressMessage("📊 Retrieving audit results from database...");
           setAuditStep("generating");
