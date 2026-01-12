@@ -11,7 +11,10 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  # happy-dom instead of jsdom - no ES Module bundling issues
+  # Force ES Module output instead of CommonJS to support happy-dom/axe-core
+  # This allows dynamic import() of ES Module dependencies
+  [functions.esbuild]
+    format = "esm"
   external_node_modules = ["axe-core", "happy-dom"]
 
 # Configure individual functions with timeout and memory
