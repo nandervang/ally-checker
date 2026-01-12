@@ -67,7 +67,17 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       executive_summary
     } = requestBody;
 
+    console.log('[REPORT] Request received:', {
+      format,
+      template,
+      locale,
+      has_audit_data: !!audit_data,
+      issues_count: audit_data?.issues?.length,
+      metadata
+    });
+
     if (!audit_data || !audit_data.issues) {
+      console.error('[REPORT] Invalid request - missing audit_data or issues');
       return {
         statusCode: 400,
         headers: { ...headers, "Content-Type": "application/json" },
@@ -133,12 +143,18 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     }
   } catch (error) {
     console.error("[REPORT] Generation error:", error);
+    console.error("[REPORT] Error stack:", error instanceof Error ? error.stack : 'No stack trace');
+    console.error("[REPORT] Error details:", {
+      message: error instanceof Error ? error.message : String(error),
+      type: error?.constructor?.name,
+    });
     return {
       statusCode: 500,
       headers: { ...headers, "Content-Type": "application/json" },
       body: JSON.stringify({ 
         error: "INTERNAL_ERROR", 
-        message: error instanceof Error ? error.message : "Unknown error" 
+        message: error instanceof Error ? error.message : "Unknown error",
+        details: error instanceof Error ? error.stack : undefined
       }),
     };
   }

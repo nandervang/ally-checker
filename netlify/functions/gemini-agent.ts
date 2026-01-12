@@ -199,13 +199,7 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
       const functionResponses = [];
 
       for (const call of calls) {
-        console.log(`Gemini requesting tool: ${call.name}`);
-        
-        const toolResult = await executeMCPTool(clients, call.name, call.args);
-        toolCalls.push(toolResult);
-        
-        functionResponses.push({
-          functionResponse: { with args:`, call.args);
+        console.log(`Gemini requesting tool: ${call.name} with args:`, call.args);
         
         try {
           const toolResult = await executeTool(call.name, call.args);
@@ -239,8 +233,17 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
             },
           });
         }
-        2000
-      );
+      }
+
+      // Send function responses back to Gemini
+      const result = await model.generateContent({
+        contents: [
+          { role: "user", parts: [{ text: prompt }] },
+          { role: "model", parts: response.candidates[0].content.parts },
+          { role: "function", parts: functionResponses.map(fr => fr.functionResponse) },
+        ],
+      });
+      
       response = result.response;
       functionCalls = response.functionCalls?.() ?? [];
     }
