@@ -80,7 +80,8 @@ export function useAudit(auditId: string | null): UseAuditReturn {
   const [error, setError] = useState<Error | null>(null);
 
   const fetchAudit = useCallback(async () => {
-    if (!auditId) {
+    // Check for null, undefined, empty string, or literal string "null"
+    if (!auditId || auditId === 'null' || auditId === 'undefined') {
       setAudit(null);
       setLoading(false);
       return;
