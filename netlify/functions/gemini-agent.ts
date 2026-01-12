@@ -38,11 +38,12 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: st
 
 /**
  * Retry helper for handling transient API errors (503, rate limits, etc.)
+ * Increased retries and delays to handle Gemini overload situations better
  */
 async function retryWithBackoff<T>(
   fn: () => Promise<T>,
-  maxRetries: number = 3,
-  initialDelay: number = 1000
+  maxRetries: number = 4,
+  initialDelay: number = 5000
 ): Promise<T> {
   let lastError: Error | null = null;
   
@@ -65,11 +66,10 @@ async function retryWithBackoff<T>(
         throw error;
       }
       
-      // Exponential backoff with moderate delays
-      // For overloaded: 2s, 4s
-      // For other errors: 1s, 2s
-      const baseDelay = errorMessage.includes('overloaded') ? 2000 : initialDelay;
-      const delay = baseDelay * Math.pow(2, attempt);
+      // Exponential backoff with longer delays to give API time to recover
+      // For overloaded: 5s, 10s, 20s (total: 35s retry window)
+      // For other errors: 5s, 10s, 20s
+      const delay = initialDelay * Math.pow(2, attempt);
       console.log(`Gemini API error (attempt ${attempt + 1}/${maxRetries}): ${errorMessage}`);
       console.log(`Retrying in ${delay}ms...`);
       await new Promise(resolve => setTimeout(resolve, delay));
@@ -185,8 +185,8 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
     // Send initial message with retry logic for 503 errors
     let result = await retryWithBackoff(
       () => chat.sendMessage(userPrompt),
-      2, // max 2 retries (reduced to avoid timeout)
-      2000 // start with 2 second delay
+      4, // Increased retries for better 503 handling
+      5000 // 5s initial delay (5s, 10s, 20s progression)
     );
     let response = result.response;
     const toolCalls: MCPToolResult[] = [];
@@ -252,8 +252,8 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
       
       result = await retryWithBackoff(
         () => chat.sendMessage(functionResponses),
-        2, // max 2 retries (reduced to avoid timeout)
-        2000
+        3,  // Increased retries (5s, 10s, 20s delays)
+        5000 // 5s initial delay
       );
       
       const geminiTime = Date.now() - geminiStart;
