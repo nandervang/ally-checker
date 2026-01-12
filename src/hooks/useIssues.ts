@@ -19,7 +19,8 @@ export function useIssues(auditId: string | null): UseIssuesReturn {
   const [error, setError] = useState<Error | null>(null);
 
   const fetchIssues = useCallback(async () => {
-    if (!auditId) {
+    // Check for null, undefined, empty string, or literal string "null"
+    if (!auditId || auditId === 'null' || auditId === 'undefined') {
       setIssues([]);
       setLoading(false);
       return;
