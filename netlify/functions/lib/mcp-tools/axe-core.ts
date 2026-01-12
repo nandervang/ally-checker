@@ -69,34 +69,34 @@ export async function handleAxeTool(name: string, args: any): Promise<any> {
       const dom = new JSDOM(html, {
         url: context.url || "http://localhost",
         contentType: "text/html",
-        runScripts: "dangerously", // Required for axe-core
       });
       
       const { window } = dom;
       const { document } = window;
       
-      // Inject axe-core into the virtual window
-      // @ts-ignore - axe needs to be attached to window
-      window.axe = axe;
+      // Set up global window and document for axe-core
+      // @ts-ignore
+      global.window = window;
+      // @ts-ignore
+      global.document = document;
       
-      // Run axe analysis
-      const results = await new Promise<any>((resolve, reject) => {
-        try {
-          // @ts-ignore
-          window.axe.run(document, {
-            runOnly: {
-              type: 'tag',
-              values: rules
-            },
-            resultTypes: ['violations', 'passes', 'incomplete'],
-          }, (err: Error, results: any) => {
-            if (err) reject(err);
-            else resolve(results);
-          });
-        } catch (error) {
-          reject(error);
-        }
-      });
+      // Configure axe for JSDOM environment
+      const axeConfig = {
+        runOnly: {
+          type: 'tag',
+          values: rules
+        },
+        resultTypes: ['violations', 'passes', 'incomplete'],
+      };
+      
+      // Run axe analysis with explicit context
+      const results = await axe.run(document, axeConfig);
+      
+      // Clean up globals
+      // @ts-ignore
+      delete global.window;
+      // @ts-ignore
+      delete global.document;
       
       // Format results for MCP response
       return {

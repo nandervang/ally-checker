@@ -58,7 +58,20 @@ export const wcagTools: Tool[] = [
 
 // WCAG 2.2 Success Criteria Database
 interface WCAGCriterion {
-  num1.1": {
+  num: string;
+  title: string;
+  level: "A" | "AA" | "AAA";
+  principle: "Perceivable" | "Operable" | "Understandable" | "Robust";
+  guideline: string;
+  description: string;
+  understanding_url: string;
+  how_to_meet_url: string;
+  en_301_549: string;
+  examples?: string[];
+}
+
+const wcagData: Record<string, WCAGCriterion> = {
+  "1.1.1": {
     num: "1.1.1",
     title: "Non-text Content",
     level: "A",
@@ -107,19 +120,6 @@ interface WCAGCriterion {
       "Large text (18pt+) has 3:1 contrast ratio",
       "Use color contrast tools to verify ratios"
     ]
-}
-
-const wcagData: Record<string, WCAGCriterion> = {
-  "1.4.3": {
-    num: "1.4.3",
-    title: "Contrast (Minimum)",
-    level: "AA",
-    principle: "Perceivable",
-    guideline: "1.4 Distinguishable",
-    description: "The visual presentation of text and images of text has a contrast ratio of at least 4.5:1, except for large text (at least 18 point or 14 point bold) which requires at least 3:1.",
-    understanding_url: "https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html",
-    how_to_meet_url: "https://www.w3.org/WAI/WCAG22/quickref/#contrast-minimum",
-    en_301_549: "9.1.4.3"
   },
   "2.4.4": {
     num: "2.4.4",
@@ -131,17 +131,6 @@ const wcagData: Record<string, WCAGCriterion> = {
     understanding_url: "https://www.w3.org/WAI/WCAG22/Understanding/link-purpose-in-context.html",
     how_to_meet_url: "https://www.w3.org/WAI/WCAG22/quickref/#link-purpose-in-context",
     en_301_549: "9.2.4.4"
-  },
-  "1.3.1": {
-    num: "1.3.1",
-    title: "Info and Relationships",
-    level: "A",
-    principle: "Perceivable",
-    guideline: "1.3 Adaptable",
-    description: "Information, structure, and relationships conveyed through presentation can be programmatically determined or are available in text.",
-    understanding_url: "https://www.w3.org/WAI/WCAG22/Understanding/info-and-relationships.html",
-    how_to_meet_url: "https://www.w3.org/WAI/WCAG22/quickref/#info-and-relationships",
-    en_301_549: "9.1.3.1"
   },
   "2.1.1": {
     num: "2.1.1",
@@ -163,7 +152,35 @@ const wcagData: Record<string, WCAGCriterion> = {
     description: "Any keyboard operable user interface has a mode of operation where the keyboard focus indicator is visible.",
     understanding_url: "https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html",
     how_to_meet_url: "https://www.w3.org/WAI/WCAG22/quickref/#focus-visible",
-    en_301_549: "9._id = args.criterion_id || args.criterion;
+    en_301_549: "9.2.4.7"
+  },
+  "2.4.6": {
+    num: "2.4.6",
+    title: "Headings and Labels",
+    level: "AA",
+    principle: "Operable",
+    guideline: "2.4 Navigable",
+    description: "Headings and labels describe topic or purpose.",
+    understanding_url: "https://www.w3.org/WAI/WCAG22/Understanding/headings-and-labels.html",
+    how_to_meet_url: "https://www.w3.org/WAI/WCAG22/quickref/#headings-and-labels",
+    en_301_549: "9.2.4.6"
+  },
+  "4.1.1": {
+    num: "4.1.1",
+    title: "Parsing",
+    level: "A",
+    principle: "Robust",
+    guideline: "4.1 Compatible",
+    description: "In content implemented using markup languages, elements have complete start and end tags, elements are nested according to their specifications, elements do not contain duplicate attributes, and any IDs are unique.",
+    understanding_url: "https://www.w3.org/WAI/WCAG22/Understanding/parsing.html",
+    how_to_meet_url: "https://www.w3.org/WAI/WCAG22/quickref/#parsing",
+    en_301_549: "9.4.1.1"
+  }
+};
+
+export async function handleWcagTool(name: string, args: any): Promise<any> {
+  if (name === "get_wcag_criterion") {
+    const criterion_id = args.criterion_id || args.criterion;
     
     const data = wcagData[criterion_id];
     
@@ -263,46 +280,7 @@ const wcagData: Record<string, WCAGCriterion> = {
         level: criterion.level,
         principle: criterion.principle
       }))
-    }
-  "4.1.1": {
-    num: "4.1.1",
-    title: "Parsing",
-    level: "A",
-    principle: "Robust",
-    guideline: "4.1 Compatible",
-    description: "In content implemented using markup languages, elements have complete start and end tags, elements are nested according to their specifications, elements do not contain duplicate attributes, and any IDs are unique.",
-    understanding_url: "https://www.w3.org/WAI/WCAG22/Understanding/parsing.html",
-    how_to_meet_url: "https://www.w3.org/WAI/WCAG22/quickref/#parsing",
-    en_301_549: "9.4.1.1"
-  }
-};
-
-export async function handleWcagTool(name: string, args: any): Promise<any> {
-  if (name === "get_wcag_criterion") {
-    const criterion = args.criterion;
-    
-    const data = wcagData[criterion];
-    
-    if (!data) {
-      // Return generic info for unknown criteria
-      const level = criterion.startsWith("1.") ? "A" : criterion.startsWith("2.") ? "A" : "AA";
-      const principle = criterion.startsWith("1.") ? "Perceivable" : 
-                       criterion.startsWith("2.") ? "Operable" : 
-                       criterion.startsWith("3.") ? "Understandable" : "Robust";
-      
-      return {
-        num: criterion,
-        title: `WCAG ${criterion}`,
-        level,
-        principle,
-        description: `WCAG Success Criterion ${criterion}`,
-        understanding_url: `https://www.w3.org/WAI/WCAG22/Understanding/${criterion.replace(/\./g, '')}.html`,
-        how_to_meet_url: `https://www.w3.org/WAI/WCAG22/quickref/#${criterion.replace(/\./g, '')}`,
-        en_301_549: `9.${criterion}`
-      };
-    }
-    
-    return data;
+    };
   }
   
   throw new Error(`Unknown WCAG tool: ${name}`);
