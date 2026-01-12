@@ -90,6 +90,44 @@ echo "SUPABASE_DB_PASSWORD=your-password" >> .env
 python server.py
 ```
 
+### 5. WAI Tips Server (`mcp-servers/wai-tips-server`)
+Provides W3C WAI tips and ARIA patterns.
+
+**Tools:**
+- `get_wai_resource`: Access W3C WAI resources (developing, designing, writing, aria, understanding)
+- `search_wai_tips`: Search WAI tips by topic (headings, forms, images, color, keyboard)
+- `get_aria_pattern`: Get WAI-ARIA patterns for interactive components (dialog, tabs, menu, etc.)
+
+**Install:**
+```bash
+cd mcp-servers/wai-tips-server
+pip install -r requirements.txt
+```
+
+**Run:**
+```bash
+python server.py
+```
+
+### 6. Magenta A11y Server (`mcp-servers/magenta-server`)
+Provides Magenta A11y component testing checklists.
+
+**Tools:**
+- `get_magenta_component`: Get testing checklist for specific component (button, form, dialog, tabs, etc.)
+- `search_magenta_patterns`: Search components by category or description
+- `get_magenta_testing_methods`: Get keyboard/screen reader/visual testing procedures
+
+**Install:**
+```bash
+cd mcp-servers/magenta-server
+pip install -r requirements.txt
+```
+
+**Run:**
+```bash
+python server.py
+```
+
 ## Usage with Claude Desktop
 
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
@@ -117,6 +155,14 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
         "SUPABASE_DB_PORT": "54322",
         "SUPABASE_DB_PASSWORD": "postgres"
       }
+    },
+    "ally-checker-wai-tips": {
+      "command": "python",
+      "args": ["/path/to/ally-checker/mcp-servers/wai-tips-server/server.py"]
+    },
+    "ally-checker-magenta": {
+      "command": "python",
+      "args": ["/path/to/ally-checker/mcp-servers/magenta-server/server.py"]
     }
   }
 }

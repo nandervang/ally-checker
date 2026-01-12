@@ -102,7 +102,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
 
     const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
-    // Create audit record
+    // Create audit record with methodology trace
     const { data: auditData, error: auditError } = await supabase
       .from('audits')
       .insert({
@@ -124,6 +124,10 @@ export const handler: Handler = async (event: HandlerEvent) => {
         operable_issues: 0,
         understandable_issues: 0,
         robust_issues: 0,
+        // Audit methodology trace
+        audit_methodology: result.auditMethodology || {},
+        mcp_tools_used: result.mcpToolsUsed || [],
+        sources_consulted: result.sourcesConsulted || [],
       })
       .select('id')
       .single();

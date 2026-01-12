@@ -61,11 +61,29 @@ export interface AgentTraceStep {
   reasoning?: string;
 }
 
+export interface AuditMethodologyPhase {
+  phase: number;
+  name: string;
+  tools: string[];
+  description: string;
+}
+
+export interface AuditMethodology {
+  model: string;
+  phases: AuditMethodologyPhase[];
+  totalToolCalls: number;
+  uniqueToolsUsed: number;
+  sourcesConsulted: string[];
+  wcagCriteriaResearched: number;
+  ariaPatternsConsulted: number;
+}
+
 export interface AgentTrace {
   steps: AgentTraceStep[];
   tools_used: string[];
   sources_consulted: string[];
   duration_ms?: number;
+  methodology?: AuditMethodology;
 }
 
 // Executive summary from AI expert analysis
