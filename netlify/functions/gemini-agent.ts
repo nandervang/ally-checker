@@ -235,15 +235,9 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
         }
       }
 
-      // Send function responses back to Gemini with full context
-      const result = await retryWithBackoff(
-        () => model.generateContent({
-          contents: [
-            { role: "user", parts: [{ text: userPrompt }] },
-            { role: "model", parts: response.candidates[0].content.parts },
-            { role: "function", parts: functionResponses.map(fr => fr.functionResponse) },
-          ],
-        }),
+      // Send function responses back to Gemini using chat interface
+      result = await retryWithBackoff(
+        () => chat.sendMessage(functionResponses),
         3,
         2000
       );
