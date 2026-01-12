@@ -1,10 +1,34 @@
 /**
  * MCP Playwright Screenshots Tool - TypeScript Implementation
  * Captures screenshots of accessibility issues with element highlighting
+ * 
+ * NOTE: Playwright requires browser binaries which may not be available
+ * in all serverless environments. This tool gracefully degrades if unavailable.
  */
 
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { chromium, type Browser, type Page } from "playwright";
+
+// Lazy load Playwright to avoid top-level await
+let playwrightModule: any = null;
+let playwrightLoadAttempted = false;
+
+async function loadPlaywright() {
+  if (playwrightLoadAttempted) {
+    return playwrightModule;
+  }
+  
+  playwrightLoadAttempted = true;
+  
+  try {
+    playwrightModule = await import("playwright");
+    console.log("[Playwright] ✓ Loaded successfully");
+    return playwrightModule;
+  } catch (error) {
+    console.warn("[Playwright] Browser binaries not available - screenshot tools disabled");
+    console.warn("[Playwright] Error:", error instanceof Error ? error.message : error);
+    return null;
+  }
+}
 
 export const playwrightTools: Tool[] = [
   {
@@ -87,11 +111,16 @@ interface Screenshot {
   timestamp: string;
 }
 
-let browser: Browser | null = null;
+let browser: any = null;
 
-async function getBrowser(): Promise<Browser> {
+async function getBrowser(): Promise<any> {
+  const playwright = await loadPlaywright();
+  if (!playwright) {
+    throw new Error("Playwright browser not available in this environment");
+  }
+  
   if (!browser) {
-    browser = await chromium.launch({
+    browser = await playwright.chromium.launch({
       headless: true,
       args: [
         "--no-sandbox",
@@ -114,8 +143,8 @@ export async function closeBrowser() {
   }
 }
 
-async function highlightElement(page: Page, selector: string): Promise<void> {
-  await page.evaluate((sel) => {
+async function highlightElement(page: any, selector: string): Promise<void> {
+  await page.evaluate((sel: string) => {
     const element = document.querySelector(sel);
     if (element && element instanceof HTMLElement) {
       element.style.outline = "3px solid #ff0000";
@@ -129,7 +158,7 @@ async function highlightElement(page: Page, selector: string): Promise<void> {
 }
 
 async function captureElementScreenshot(
-  page: Page,
+  page: any,
   selector: string,
   highlight: boolean = true,
   fullPage: boolean = false
@@ -178,6 +207,16 @@ export async function handlePlaywrightTool(
   name: string,
   args: Record<string, any>
 ): Promise<any> {
+  // Check if Playwright is available
+  const playwright = await loadPlaywright();
+  if (!playwright) {
+    return {
+      success: false,
+      error: "Playwright not available - browser binaries not installed in this environment",
+      note: "Screenshot tools require Playwright browser binaries which are not available in standard Netlify Functions. Consider using playwright-aws-lambda or a different deployment environment.",
+    };
+  }
+
   if (name === "capture_element_screenshot") {
     const {
       url,
