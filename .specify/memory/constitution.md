@@ -1,9 +1,9 @@
 <!--
 Sync Impact Report:
-- Version change: 1.0.0 → 1.1.0
-- Modified principles: Beads Task Tracking (added mandatory verification requirements)
-- Enhanced requirements: All tasks must be tested and verified before marking complete
-- Templates requiring updates: ✅ Updated Beads workflow section with verification steps
+- Version change: 1.1.0 → 1.2.0
+- Modified principles: Added VI. MCP Tool Architecture (TypeScript implementation)
+- Enhanced requirements: Documented migration from Python to TypeScript MCP tools
+- Technical updates: Specified 13 TypeScript tools for AI accessibility analysis
 - Follow-up TODOs: None
 -->
 
@@ -137,6 +137,56 @@ Use Bun as the primary runtime and package manager:
 
 **Rationale**: TypeScript provides type safety and better developer experience. Bun offers superior performance and native TypeScript support.
 
+### VI. MCP Tool Architecture for AI Analysis (NON-NEGOTIABLE)
+
+**MUST use TypeScript-based Model Context Protocol (MCP) tools for AI accessibility analysis.**
+
+All AI heuristic analysis MUST utilize in-process TypeScript MCP tools instead of external Python servers or child processes:
+
+**Architecture Requirements:**
+- MCP tools implemented as TypeScript ES modules
+- Tools execute in-process within Netlify Functions (no child process spawning)
+- Central router aggregates and routes tool calls by prefix
+- Type-safe integration with Gemini function calling
+
+**Required MCP Tool Categories (13 tools total):**
+
+1. **Fetch Tools** (2): Web content retrieval with timeout and metadata extraction
+   - `fetch_url`: Retrieve HTML with 30s timeout and redirect handling
+   - `fetch_url_metadata`: Get headers, title, description without full download
+
+2. **Axe-Core Tools** (2): Automated WCAG testing via jsdom virtual DOM
+   - `analyze_html`: Run axe-core on HTML strings
+   - `analyze_url`: Fetch and analyze live URLs
+
+3. **WCAG Documentation Tools** (3): Success criteria reference database
+   - `get_wcag_criterion`: Retrieve specific WCAG 2.2 criterion by ID
+   - `search_wcag_by_principle`: Filter by Perceivable/Operable/Understandable/Robust
+   - `get_all_criteria`: List all criteria with level/principle filtering
+
+4. **WAI Tips Tools** (3): W3C accessibility guidance
+   - `get_wai_resource`: Fetch Developing/Designing/Writing/ARIA/Understanding resources
+   - `search_wai_tips`: Topic-based search (navigation, forms, images, etc.)
+   - `get_aria_pattern`: ARIA authoring patterns (dialog, tabs, accordion, etc.)
+
+5. **Magenta A11y Tools** (3): Component testing methodology
+   - `get_magenta_component`: Testing checklists for 16 components
+   - `search_magenta_patterns`: Search by category (interactive/form/content/navigation)
+   - `get_magenta_testing_methods`: Keyboard/screen-reader/visual testing guidance
+
+**Implementation Location**: `netlify/functions/lib/mcp-tools/`
+
+**Bundler Configuration** (netlify.toml):
+```toml
+[functions]
+  external_node_modules = ["jsdom", "axe-core"]
+```
+
+**Migration Context**: 
+Migrated from Python MCP servers (January 2026) due to Python runtime unavailability in Netlify Functions. TypeScript implementation provides better performance (in-process execution), type safety, and expanded tool coverage (6 → 13 tools).
+
+**Rationale**: AI-powered accessibility analysis requires specialized tools for content fetching, automated testing, and documentation reference. TypeScript in-process tools eliminate child process overhead, ensure production compatibility, and provide type-safe integration with Gemini function calling. This architecture enables the AI agent to perform comprehensive WCAG 2.2 AA audits with access to authoritative W3C documentation and testing methodologies.
+
 ### Technology Stack Requirements
 
 ### Required Technologies
@@ -148,6 +198,9 @@ Use Bun as the primary runtime and package manager:
 - **Version Control**: Git with Beads integration
 - **Accessibility Testing**: 
   - axe-core for automated WCAG validation
+  - MCP Tools (13 TypeScript tools) for AI-powered heuristic analysis
+  - jsdom for virtual DOM accessibility testing
+- **AI Analysis**: Google Gemini 2.5 Flash with function calling (13 MCP tools)
   - @testing-library with accessibility queries
   - Lighthouse accessibility audits
   - Manual keyboard and screen reader testing
@@ -274,7 +327,7 @@ All features MUST maintain compliance audit trail:
 
 ### Versioning Policy
 - **MAJOR**: Breaking changes to core principles
-- **MINOR**: New principles or expanded requirements
+- **MINOR**: Ne2.0 | **Ratified**: 2025-12-30 | **Last Amended**: 2026-01-12
 - **PATCH**: Clarifications or non-semantic updates
 
 **Version**: 1.1.0 | **Ratified**: 2025-12-30 | **Last Amended**: 2025-12-30
