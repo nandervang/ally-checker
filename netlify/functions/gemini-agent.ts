@@ -65,10 +65,10 @@ async function retryWithBackoff<T>(
         throw error;
       }
       
-      // Exponential backoff with longer delays for overloaded errors
-      // For overloaded: 3s, 6s, 12s
-      // For other errors: 1s, 2s, 4s
-      const baseDelay = errorMessage.includes('overloaded') ? 3000 : initialDelay;
+      // Exponential backoff with moderate delays
+      // For overloaded: 2s, 4s
+      // For other errors: 1s, 2s
+      const baseDelay = errorMessage.includes('overloaded') ? 2000 : initialDelay;
       const delay = baseDelay * Math.pow(2, attempt);
       console.log(`Gemini API error (attempt ${attempt + 1}/${maxRetries}): ${errorMessage}`);
       console.log(`Retrying in ${delay}ms...`);
@@ -88,11 +88,11 @@ export async function runGeminiAudit(request: AuditRequest) {
     throw new Error("GEMINI_API_KEY not configured");
   }
 
-  // Add timeout to prevent Netlify function timeout (leave 5s buffer for response)
+  // Add timeout to prevent Netlify function timeout (leave 10s buffer for response/overhead)
   return withTimeout(
     runGeminiAuditInternal(request, apiKey),
-    55000, // 55 seconds (60s Netlify limit - 5s buffer)
-    "Audit timed out - processing took too long. Try with a smaller HTML sample."
+    50000, // 50 seconds (60s Netlify limit - 10s buffer)
+    "The audit took too long to complete. The AI service may be experiencing high demand. Please try again in a moment, or try analyzing a smaller section of the page."
   );
 }
 
@@ -185,7 +185,7 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
     // Send initial message with retry logic for 503 errors
     let result = await retryWithBackoff(
       () => chat.sendMessage(userPrompt),
-      3, // max 3 retries
+      2, // max 2 retries (reduced to avoid timeout)
       2000 // start with 2 second delay
     );
     let response = result.response;
@@ -252,7 +252,7 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
       
       result = await retryWithBackoff(
         () => chat.sendMessage(functionResponses),
-        3,
+        2, // max 2 retries (reduced to avoid timeout)
         2000
       );
       
