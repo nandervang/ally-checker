@@ -318,6 +318,11 @@ export async function runAudit(
  * Get audit by ID with all issues
  */
 export async function getAudit(auditId: string): Promise<AuditRow | null> {
+  // Validate auditId - reject null, undefined, empty, or literal string "null"
+  if (!auditId || auditId === 'null' || auditId === 'undefined') {
+    return null;
+  }
+
   const { data, error } = await supabase
     .from('audits')
     .select('*')
@@ -338,6 +343,11 @@ export async function getAudit(auditId: string): Promise<AuditRow | null> {
  * Get issues for an audit
  */
 export async function getAuditIssues(auditId: string) {
+  // Validate auditId - reject null, undefined, empty, or literal string "null"
+  if (!auditId || auditId === 'null' || auditId === 'undefined') {
+    return [];
+  }
+
   const { data, error } = await supabase
     .from('issues')
     .select('*')
