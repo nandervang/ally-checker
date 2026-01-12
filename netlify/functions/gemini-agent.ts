@@ -85,15 +85,17 @@ export async function runGeminiAudit(request: AuditRequest) {
     throw new Error("GEMINI_API_KEY not configured");
   }
 
-  // Add timeout to prevent Netlify function timeout (leave 2s buffer)
+  // Add timeout to prevent Netlify function timeout (leave 5s buffer for response)
   return withTimeout(
     runGeminiAuditInternal(request, apiKey),
-    28000, // 28 seconds (30s Netlify limit - 2s buffer)
+    55000, // 55 seconds (60s Netlify limit - 5s buffer)
     "Audit timed out - processing took too long. Try with a smaller HTML sample."
   );
 }
 
 async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
+  const startTime = Date.now();
+  console.log('[Audit] Starting Gemini audit at', new Date().toISOString());
 
   const genAI = new GoogleGenerativeAI(apiKey);
   
@@ -193,16 +195,21 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
     
     while (functionCalls.length > 0 && iteration < maxIterations) {
       iteration++;
-      console.log(`Function calling iteration ${iteration}/${maxIterations}`);
+      const iterationStart = Date.now();
+      console.log(`[Function Calling] Iteration ${iteration}/${maxIterations} - ${functionCalls.length} tools to execute`);
       
       const calls = functionCalls;
       const functionResponses = [];
 
       for (const call of calls) {
-        console.log(`Gemini requesting tool: ${call.name} with args:`, call.args);
+        const toolStart = Date.now();
+        console.log(`[Tool] Executing ${call.name}...`);
         
         try {
           const toolResult = await executeTool(call.name, call.args);
+          const toolTime = Date.now() - toolStart;
+          console.log(`[Tool] ✓ ${call.name} completed in ${toolTime}ms`);
+          
           toolCalls.push({
             tool: call.name,
             result: toolResult,
@@ -215,7 +222,8 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
             },
           });
         } catch (error) {
-          console.error(`Tool execution failed for ${call.name}:`, error);
+          const toolTime = Date.now() - toolStart;
+          console.error(`[Tool] ✗ ${call.name} failed after ${toolTime}ms:`, error);
           const errorResult = {
             error: error instanceof Error ? error.message : 'Unknown error'
           };
@@ -236,11 +244,19 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
       }
 
       // Send function responses back to Gemini using chat interface
+      const geminiStart = Date.now();
+      console.log(`[Gemini] Sending ${functionResponses.length} tool results back to model...`);
+      
       result = await retryWithBackoff(
         () => chat.sendMessage(functionResponses),
         3,
         2000
       );
+      
+      const geminiTime = Date.now() - geminiStart;
+      const iterationTime = Date.now() - iterationStart;
+      console.log(`[Gemini] Response received in ${geminiTime}ms`);
+      console.log(`[Function Calling] Iteration ${iteration} completed in ${iterationTime}ms`);
       
       response = result.response;
       functionCalls = response.functionCalls?.() ?? [];
@@ -332,6 +348,10 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
       wcagCriteriaResearched: toolCalls.filter(tc => tc.tool === 'get_wcag_criterion').length,
       ariaPatternsConsulted: toolCalls.filter(tc => tc.tool === 'get_aria_pattern').length,
     };
+    
+    const elapsedTime = Date.now() - startTime;
+    console.log(`[Audit] Completed in ${elapsedTime}ms (${(elapsedTime/1000).toFixed(2)}s)`);
+    console.log(`[Audit] Found ${totalIssues} issues across ${toolCalls.length} tool calls`);
     
     return {
       summary: {
