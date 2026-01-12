@@ -104,7 +104,7 @@ function convertToAuditResult(
 ): AuditResult {
   // Map backend response to agent_trace format
   const agent_trace = {
-    duration_ms: undefined, // Not provided by backend currently
+    duration_ms: response.duration_ms,
     tools_used: response.mcpToolsUsed || [],
     sources_consulted: response.sourcesConsulted || [],
     steps: [

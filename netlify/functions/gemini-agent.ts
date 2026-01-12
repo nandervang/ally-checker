@@ -379,6 +379,7 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
       auditMethodology: auditMethodology,
       mcpToolsUsed: mcpToolsUsed,
       sourcesConsulted: sourcesConsulted,
+      duration_ms: elapsedTime,
     };
     
   } catch (error) {

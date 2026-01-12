@@ -115,6 +115,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
         document_type: request.documentType || null,
         status: 'complete',
         completed_at: new Date().toISOString(),
+        ai_model: result.summary.model || 'gemini-2.5-flash',
         total_issues: result.summary.totalIssues || 0,
         critical_issues: result.summary.criticalCount || 0,
         serious_issues: result.summary.seriousCount || 0,
@@ -139,7 +140,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
           }],
           tools_used: result.mcpToolsUsed || [],
           sources_consulted: result.sourcesConsulted || [],
-          duration_ms: undefined
+          duration_ms: result.duration_ms
         },
         tools_used: result.mcpToolsUsed || [],
         analysis_steps: result.auditMethodology?.phases?.map((p: any) => p.name) || [],
