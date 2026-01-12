@@ -159,6 +159,8 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
     };
 
     // Create model with MCP-based tools and structured output
+    // Note: Gemini 2.5 doesn't support responseMimeType or responseSchema
+    // We'll parse JSON from text response instead
     const modelConfig: any = {
       model: modelName,
       systemInstruction,
@@ -166,8 +168,6 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
       generationConfig: {
         temperature: 0.3,
         maxOutputTokens: 8192,
-        responseMimeType: "application/json",
-        responseSchema,
       }
     };
     
@@ -235,29 +235,42 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
         }
       }
 
-      // Send function responses back to Gemini
-      const result = await model.generateContent({
-        contents: [
-          { role: "user", parts: [{ text: prompt }] },
-          { role: "model", parts: response.candidates[0].content.parts },
-          { role: "function", parts: functionResponses.map(fr => fr.functionResponse) },
-        ],
-      });
+      // Send function responses back to Gemini with full context
+      const result = await retryWithBackoff(
+        () => model.generateContent({
+          contents: [
+            { role: "user", parts: [{ text: userPrompt }] },
+            { role: "model", parts: response.candidates[0].content.parts },
+            { role: "function", parts: functionResponses.map(fr => fr.functionResponse) },
+          ],
+        }),
+        3,
+        2000
+      );
       
       response = result.response;
       functionCalls = response.functionCalls?.() ?? [];
     }
 
-    // Get final response - now guaranteed to be JSON
+    // Get final response text
     const analysisText = response.text();
-    console.log("Gemini response (JSON):", analysisText.substring(0, 500));
+    console.log("Gemini response (first 500 chars):", analysisText.substring(0, 500));
     
-    // Parse JSON response
+    // Parse JSON response (handle markdown code fences if present)
     let structuredResponse;
     try {
-      structuredResponse = JSON.parse(analysisText);
+      // Remove markdown code fences if present
+      let jsonText = analysisText.trim();
+      if (jsonText.startsWith('```json')) {
+        jsonText = jsonText.replace(/^```json\s*\n/, '').replace(/\n```\s*$/, '');
+      } else if (jsonText.startsWith('```')) {
+        jsonText = jsonText.replace(/^```\s*\n/, '').replace(/\n```\s*$/, '');
+      }
+      
+      structuredResponse = JSON.parse(jsonText);
     } catch (error) {
       console.error("Failed to parse Gemini JSON response:", error);
+      console.error("Raw response:", analysisText.substring(0, 1000));
       // Fallback to old parser for backward compatibility
       const parsedIssues = parseGeminiResponse(analysisText);
       structuredResponse = {
@@ -557,11 +570,14 @@ For each issue, provide comprehensive testing instructions:
 
 **CRITICAL: Output Format**
 
-You MUST return a JSON object with two properties:
+You MUST return ONLY valid JSON (no markdown, no explanations, no code fences).
+Return a single JSON object with exactly two properties:
 1. "summary": Executive summary of audit findings (string)
 2. "issues": Array of accessibility issue objects
 
-The JSON schema is enforced automatically. Each issue must include:
+Do NOT wrap the JSON in markdown code blocks. Output raw JSON only.
+
+Each issue in the array must include:
 - wcag_criterion: WCAG number (e.g., "1.4.3")
 - wcag_level: "A", "AA", or "AAA"
 - wcag_principle: "perceivable", "operable", "understandable", or "robust"
