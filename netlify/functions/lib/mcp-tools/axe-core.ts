@@ -64,6 +64,8 @@ export async function handleAxeTool(name: string, args: any): Promise<any> {
     const rules = args.rules || ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"];
     const context = args.context || {};
     
+    console.log(`[Axe] Analyzing HTML (${html.length} chars) with rules:`, rules);
+    
     try {
       // Create a virtual DOM using happy-dom
       const window = new Window();
@@ -72,15 +74,21 @@ export async function handleAxeTool(name: string, args: any): Promise<any> {
       // Set HTML content - use documentElement for full page, body for fragments
       if (html.trim().toLowerCase().startsWith('<!doctype') || html.trim().toLowerCase().startsWith('<html')) {
         // Full HTML document
+        console.log('[Axe] Loading full HTML document');
         document.write(html);
       } else {
         // HTML fragment
+        console.log('[Axe] Loading HTML fragment');
         document.body.innerHTML = html;
       }
+      
+      console.log('[Axe] DOM loaded, document has', document.body.children.length, 'child elements');
       
       // Inject axe-core into the window context
       // @ts-ignore - axeCore has run method
       window.axe = axeCore;
+      
+      console.log('[Axe] axe-core injected, type:', typeof window.axe);
       
       // Configure axe for this window
       const axeConfig = {
@@ -91,9 +99,16 @@ export async function handleAxeTool(name: string, args: any): Promise<any> {
         resultTypes: ['violations', 'passes', 'incomplete'],
       };
       
+      console.log('[Axe] Running axe-core analysis...');
+      const startTime = Date.now();
+      
       // Run axe analysis in the window context
       // @ts-ignore - window.axe exists after injection
       const results = await window.axe.run(document.documentElement, axeConfig);
+      
+      const duration = Date.now() - startTime;
+      console.log(`[Axe] Analysis complete in ${duration}ms`);
+      console.log(`[Axe] Found ${results.violations.length} violations, ${results.passes.length} passes, ${results.incomplete.length} incomplete`);
       
       // Close the window
       await window.close();
