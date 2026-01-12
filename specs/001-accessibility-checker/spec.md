@@ -277,28 +277,64 @@ A non-technical user (e.g., content writer) wants to understand if something mig
 
 ### MCP Architecture Overview
 
-The system uses Model Context Protocol (MCP) to enable AI agents to interact with specialized accessibility analysis tools. Three Python-based MCP servers provide modular capabilities connected via stdio transport:
+**Migration Status**: Migrated from Python to TypeScript (January 2026)
 
-1. **fetch-server**: Web content retrieval with timeout control and metadata extraction
-2. **wcag-docs-server**: WCAG 2.2 criterion documentation and search capabilities
-3. **axe-core-server**: Automated accessibility testing using axe-core library
+The system uses Model Context Protocol (MCP) to enable AI agents to interact with specialized accessibility analysis tools. Originally implemented as Python-based MCP servers, the architecture was migrated to **TypeScript/Node.js in-process tools** for Netlify Functions compatibility.
 
-This architecture separates concerns, allowing the AI model to orchestrate complex analysis workflows while specialized tools handle technical operations.
+**Migration Rationale**:
+- Python runtime not available in Netlify Functions (only in build phase)
+- Eliminated child process spawn overhead and stdio communication
+- Type-safe integration with TypeScript codebase
+- Simplified deployment (no Python dependencies in production)
+- Faster execution (in-process vs. child processes)
+
+**Current Architecture** (TypeScript):
+1. **fetch tools**: Web content retrieval with native fetch API and timeout control
+2. **wcag-docs tools**: WCAG 2.2 criterion documentation database and search
+3. **axe-core tools**: Automated accessibility testing using jsdom + axe-core
+4. **wai-tips tools**: W3C WAI accessibility tips and ARIA patterns
+5. **magenta tools**: Magenta A11y component testing patterns
+
+All tools run **in-process** within the Netlify Function, providing modular capabilities without external dependencies or process spawning.
 
 ### Available MCP Tools
 
-The AI agent has access to 6 MCP tools for comprehensive accessibility auditing:
+The AI agent has access to **13 TypeScript MCP tools** for comprehensive accessibility auditing:
 
-| Tool | Server | Purpose |
-|------|--------|---------|
-| `fetch_url` | fetch-server | Retrieve HTML content from URLs with configurable timeout |
-| `fetch_url_metadata` | fetch-server | Get HTTP headers and metadata without downloading full content |
-| `analyze_html` | axe-core-server | Run axe-core WCAG checks on HTML strings |
-| `analyze_url` | axe-core-server | Fetch and analyze live URLs with axe-core |
-| `get_wcag_criterion` | wcag-docs-server | Retrieve specific WCAG criterion details by ID (e.g., 1.1.1) |
-| `search_wcag_by_principle` | wcag-docs-server | Find WCAG criteria filtered by principle (Perceivable/Operable/Understandable/Robust) |
+**Fetch Tools** (2):
+| Tool | Module | Purpose |
+|------|--------|---------|  
+| `fetch_url` | fetch.ts | Retrieve HTML content from URLs with 30s timeout and redirect handling |
+| `fetch_url_metadata` | fetch.ts | Get HTTP headers, title, and description without full content download |
 
-### AI Model Integration
+**Axe-Core Tools** (2):
+| Tool | Module | Purpose |
+|------|--------|---------|  
+| `analyze_html` | axe-core.ts | Run axe-core WCAG checks on HTML strings using jsdom |
+| `analyze_url` | axe-core.ts | Fetch and analyze live URLs with axe-core (combines fetch + analyze) |
+
+**WCAG Documentation Tools** (3):
+| Tool | Module | Purpose |
+|------|--------|---------|  
+| `get_wcag_criterion` | wcag-docs.ts | Retrieve specific WCAG 2.2 criterion details by ID (e.g., 1.1.1) |
+| `search_wcag_by_principle` | wcag-docs.ts | Find criteria by principle (Perceivable/Operable/Understandable/Robust) |
+| `get_all_criteria` | wcag-docs.ts | List all WCAG criteria with optional level/principle filtering |
+
+**WAI Tips Tools** (3):
+| Tool | Module | Purpose |
+|------|--------|---------|  
+| `get_wai_resource` | wai-tips.ts | Fetch W3C WAI resources (Developing/Designing/Writing/ARIA/Understanding) |
+| `search_wai_tips` | wai-tips.ts | Search accessibility tips by topic (navigation, forms, images, multimedia, etc.) |
+| `get_aria_pattern` | wai-tips.ts | Get ARIA authoring patterns (dialog, tabs, accordion, menu, etc.) |
+
+**Magenta A11y Tools** (3):
+| Tool | Module | Purpose |
+|------|--------|---------|  
+| `get_magenta_component` | magenta.ts | Component testing checklists (button, form, table, dialog, etc.) |
+| `search_magenta_patterns` | magenta.ts | Search patterns by category (interactive/form/content/navigation) |
+| `get_magenta_testing_methods` | magenta.ts | Testing methodology guidance (keyboard/screen-reader/visual) |
+
+**Implementation**: All tools located in `netlify/functions/lib/mcp-tools/` with central routing via `index.ts`
 
 **Primary Model**: Google Gemini 2.5 Flash with native MCP support
 
@@ -308,13 +344,18 @@ Gemini was selected for its:
 - **Cost Efficiency**: Better pricing than Claude for high-volume function calling
 - **Reliability**: Temperature 0.3 for consistent, reproducible analysis
 
-**Integration Flow**:
-1. Initialize MCP servers via stdio transport (spawn Python processes)
-2. Discover available tools via `client.listTools()`
-3. Convert MCP tool schemas to Gemini function declarations
+**Integration Flow** (TypeScript Architecture):
+1. Load TypeScript MCP tools via `getAllTools()` from `netlify/functions/lib/mcp-tools/index.ts`
+2. Convert tool schemas to Gemini function declarations via `convertToGeminiFormat()`
+3. Initialize Gemini model with tools array (13 tools available)
 4. Execute analysis with system instructions for accessibility auditing
-5. Function calling loop: Model requests tools → Execute against MCP → Feed results back → Continue until complete
-6. Parse final response into structured AuditResult
+5. Function calling loop:
+   - Model requests tool execution (e.g., `fetch_url`, `analyze_html`)
+   - Route to handler via `executeTool(toolName, args)` (prefix-based routing)
+   - Execute TypeScript tool in-process (no child processes)
+   - Feed results back to model as function response
+   - Continue until model generates final answer
+6. Parse final response into structured AuditResult with WCAG categorization
 
 **System Instructions**: The AI agent receives comprehensive context about accessibility principles, WCAG 2.2 criteria, common violations, and remediation strategies. It's instructed to use MCP tools systematically: fetch content, run automated checks, search WCAG documentation, and provide actionable remediation guidance.
 
@@ -323,19 +364,31 @@ Gemini was selected for its:
 **Required Environment Variables**:
 - `GEMINI_API_KEY`: Google AI Studio API key for Gemini 2.5 Flash access
 
-**MCP Server Configuration**: Servers are spawned as child processes with stdio transport. Paths configured in `gemini-agent.ts`:
-- `fetch-server`: `netlify/mcp-servers/fetch/server.py`
-- `wcag-docs-server`: `netlify/mcp-servers/wcag-docs/server.py`
-- `axe-core-server`: `netlify/mcp-servers/axe-core/server.py`
+**MCP Tool Configuration**: TypeScript tools loaded as ES modules (no child processes). Implementation in `netlify/functions/lib/mcp-tools/`:
+- **fetch.ts**: Native fetch API with AbortSignal timeout (30s)
+- **wcag-docs.ts**: In-memory WCAG 2.2 criterion database (86 criteria)
+- **axe-core.ts**: jsdom virtual DOM + axe-core npm package
+- **wai-tips.ts**: W3C WAI resource fetching and ARIA pattern URLs
+- **magenta.ts**: Magenta A11y component testing checklist database
+- **index.ts**: Tool aggregation and routing logic
+
+**Netlify Bundler Configuration** (`netlify.toml`):
+```toml
+[functions]
+  external_node_modules = ["jsdom", "axe-core"]
+```
+Marking jsdom and axe-core as external prevents bundling issues with CSS assets and browser compatibility modules.
 
 ## Assumptions
 
 - Users have basic understanding of HTML structure (for HTML input methods)
 - Target websites for URL analysis are publicly accessible and don't require authentication
 - JavaScript-rendered content analysis is out of scope for initial version (static HTML only)
-- **AI heuristic analysis uses Google Gemini 2.5 Flash with native MCP support for tool calling**
-- **MCP servers (fetch, wcag-docs, axe-core) are operational and accessible via stdio transport**
+- **AI heuristic analysis uses Google Gemini 2.5 Flash with function calling (13 TypeScript MCP tools)**
+- **MCP tools run in-process as TypeScript modules (no Python dependencies or child processes)**
+- **jsdom and axe-core are marked as external in Netlify bundler configuration**
 - **GEMINI_API_KEY is configured in Netlify environment variables**
+- **Node.js 20 runtime with Bun 1.3 for build (configured in netlify.toml)**
 - Users have modern browsers supporting ES6+ JavaScript features
 - Swedish Lag (2018:1937) compliance requirements are met by ensuring WCAG 2.2 AA compliance (Swedish law references WCAG standards)
 - Analysis is performed client-side for HTML snippets and server-side for URL fetching (for security and CORS reasons)
