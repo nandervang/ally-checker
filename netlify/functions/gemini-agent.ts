@@ -65,8 +65,11 @@ async function retryWithBackoff<T>(
         throw error;
       }
       
-      // Exponential backoff: 1s, 2s, 4s
-      const delay = initialDelay * Math.pow(2, attempt);
+      // Exponential backoff with longer delays for overloaded errors
+      // For overloaded: 3s, 6s, 12s
+      // For other errors: 1s, 2s, 4s
+      const baseDelay = errorMessage.includes('overloaded') ? 3000 : initialDelay;
+      const delay = baseDelay * Math.pow(2, attempt);
       console.log(`Gemini API error (attempt ${attempt + 1}/${maxRetries}): ${errorMessage}`);
       console.log(`Retrying in ${delay}ms...`);
       await new Promise(resolve => setTimeout(resolve, delay));
@@ -380,6 +383,19 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
     
   } catch (error) {
     console.error('[Audit] Error during audit:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    // Provide user-friendly error messages for common issues
+    if (errorMessage.includes('overloaded') || errorMessage.includes('503')) {
+      throw new Error('The AI service is currently experiencing high demand. Please try again in a few moments.');
+    }
+    if (errorMessage.includes('rate limit') || errorMessage.includes('quota exceeded')) {
+      throw new Error('Rate limit exceeded. Please wait a moment before trying again.');
+    }
+    if (errorMessage.includes('timeout') || errorMessage.includes('timed out')) {
+      throw new Error('The audit took too long to complete. Try analyzing a smaller section of the page or simplify the HTML.');
+    }
+    
     throw error;
   }
 }
