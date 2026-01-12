@@ -115,7 +115,7 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
     // Build user prompt based on mode
     const userPrompt = buildUserPrompt(request);
 
-    // Use specific Gemini model if provided, otherwise default to 2.5 Flash
+    // Use specific Gemini model if provided, otherwise default to 2.5 Flash (stable)
     const modelName = request.geminiModel || "gemini-2.5-flash";
     console.log(`Using Gemini model: ${modelName}`);
 
