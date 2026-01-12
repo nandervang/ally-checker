@@ -299,7 +299,19 @@ export async function runAudit(
       throw new Error(errorMessage);
     }
 
-    const { auditId } = await response.json();
+    const responseData = await response.json();
+    const { auditId } = responseData;
+
+    // If auditId is null, it means the audit results weren't saved to database
+    // (likely due to missing environment variables), but we still have the results
+    // Store the full response for the caller to handle
+    if (!auditId || auditId === 'null' || auditId === 'undefined') {
+      console.warn('[Audit] No auditId returned - results not saved to database. Returning response data.');
+      // Attach the response data to the error for the caller to extract
+      const error: any = new Error('AUDIT_NOT_SAVED');
+      error.responseData = responseData;
+      throw error;
+    }
 
     onProgress?.({
       status: 'complete',
