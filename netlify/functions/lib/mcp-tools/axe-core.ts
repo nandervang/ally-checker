@@ -8,7 +8,7 @@
 
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { Window } from "happy-dom";
-import axe from "axe-core";
+import * as axeCore from "axe-core";
 
 export const axeTools: Tool[] = [
   {
@@ -69,17 +69,20 @@ export async function handleAxeTool(name: string, args: any): Promise<any> {
       const window = new Window();
       const document = window.document;
       
-      // Set HTML content
-      document.body.innerHTML = html;
-      document.documentElement.innerHTML = html;
+      // Set HTML content - use documentElement for full page, body for fragments
+      if (html.trim().toLowerCase().startsWith('<!doctype') || html.trim().toLowerCase().startsWith('<html')) {
+        // Full HTML document
+        document.write(html);
+      } else {
+        // HTML fragment
+        document.body.innerHTML = html;
+      }
       
-      // Set up global window and document for axe-core
-      // @ts-ignore
-      global.window = window;
-      // @ts-ignore
-      global.document = document;
+      // Inject axe-core into the window context
+      // @ts-ignore - axeCore has run method
+      window.axe = axeCore;
       
-      // Configure axe for happy-dom environment
+      // Configure axe for this window
       const axeConfig = {
         runOnly: {
           type: 'tag',
@@ -88,16 +91,12 @@ export async function handleAxeTool(name: string, args: any): Promise<any> {
         resultTypes: ['violations', 'passes', 'incomplete'],
       };
       
-      // Run axe analysis with explicit context
-      const results = await axe.run(document, axeConfig);
-      
-      // Clean up globals
-      // @ts-ignore
-      delete global.window;
-      // @ts-ignore
-      delete global.document;
+      // Run axe analysis in the window context
+      // @ts-ignore - window.axe exists after injection
+      const results = await window.axe.run(document.documentElement, axeConfig);
       
       // Close the window
+      await window.close();
       await window.close();
       
       // Format results for MCP response
