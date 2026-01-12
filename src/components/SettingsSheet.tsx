@@ -182,6 +182,26 @@ export function SettingsSheet({ open, onOpenChange, onSettingsChange }: Settings
     
     // Notify parent component for real-time updates (e.g., icon library switching)
     onSettingsChange?.(newSettings);
+    
+    // Auto-save certain critical settings immediately
+    const autoSaveKeys: (keyof UserSettings)[] = [
+      'defaultReportTemplate',
+      'defaultLanguage',
+      'theme',
+      'iconLibrary',
+      'includeScreenshots',
+      'includeCodeSnippets',
+    ];
+    
+    if (autoSaveKeys.includes(key)) {
+      void updateUserSettings(newSettings).then((updated) => {
+        setSettings(updated);
+        console.log(`Auto-saved setting: ${key}`);
+      }).catch((error) => {
+        console.error(`Failed to auto-save ${key}:`, error);
+        toast.error(`Failed to save ${key} preference`);
+      });
+    }
   }
 
   async function applyPreset(updates: Partial<UserSettings>) {
