@@ -101,9 +101,17 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
               element_context: { type: "string", description: "Surrounding HTML (optional)" },
               how_to_fix: { type: "string", description: "Remediation steps" },
               code_example: { type: "string", description: "Before/after code (optional)" },
-              wcag_url: { type: "string", description: "WCAG documentation link (optional)" }
+              wcag_url: { type: "string", description: "WCAG documentation link (optional)" },
+              // ETU Swedish report fields
+              wcag_explanation: { type: "string", description: "Full Swedish/English explanation of WCAG criterion (e.g., 'Text ska kunna förstoras upp till 200% utan att innehåll går förlorat')" },
+              how_to_reproduce: { type: "string", description: "Step-by-step numbered instructions to reproduce (e.g., '1. Öppna startsidan\n2. Öka textstorleken till 200%')" },
+              user_impact: { type: "string", description: "Specific consequence for users with disabilities (e.g., 'Användare med nedsatt syn som förstorar text riskerar att missa viktig information')" },
+              fix_priority: { type: "string", enum: ["MÅSTE", "BÖR", "KAN", "MUST", "SHOULD", "CAN"], description: "Swedish: MÅSTE (critical/must fix), BÖR (should fix), KAN (can fix). English: MUST, SHOULD, CAN" },
+              en_301_549_ref: { type: "string", description: "EN 301 549 reference (e.g., '9.1.4.4' for Resize Text)" },
+              webbriktlinjer_url: { type: "string", description: "Swedish Webbriktlinjer link (e.g., 'https://webbriktlinjer.se/riktlinjer/96-se-till-att-text-gar-att-forstora/')" },
+              screenshot_url: { type: "string", description: "Screenshot URL or base64 data (optional - to be generated later)" }
             },
-            required: ["wcag_criterion", "wcag_level", "wcag_principle", "title", "description", "severity", "source", "how_to_fix"]
+            required: ["wcag_criterion", "wcag_level", "wcag_principle", "title", "description", "severity", "source", "how_to_fix", "wcag_explanation", "how_to_reproduce", "user_impact", "fix_priority"]
           }
         }
       },
@@ -191,6 +199,56 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
     const minorCount = issues.filter((i: any) => i.severity === 'minor').length;
     const totalIssues = issues.length;
     
+    // Build audit methodology trace
+    const mcpToolsUsed = [...new Set(toolCalls.map(tc => tc.tool))];
+    const sourcesConsulted = [];
+    
+    // Identify which authoritative sources were consulted
+    if (mcpToolsUsed.some(t => t.includes('wcag') || t === 'get_wcag_criterion')) {
+      sourcesConsulted.push('WCAG 2.2 Official Documentation (W3C)');
+    }
+    if (mcpToolsUsed.some(t => t.includes('aria') || t === 'get_aria_pattern')) {
+      sourcesConsulted.push('WAI-ARIA Authoring Practices Guide (W3C)');
+    }
+    if (mcpToolsUsed.some(t => t.includes('wai') || t === 'search_wai_tips')) {
+      sourcesConsulted.push('W3C WAI Tips (Developing/Designing/Writing)');
+    }
+    if (mcpToolsUsed.some(t => t.includes('magenta'))) {
+      sourcesConsulted.push('Magenta A11y Component Testing Checklists');
+    }
+    if (mcpToolsUsed.some(t => t.includes('axe') || t === 'analyze_html' || t === 'analyze_url')) {
+      sourcesConsulted.push('axe-core Automated Testing Engine');
+    }
+    
+    const auditMethodology = {
+      model: "gemini-2.5-flash-with-mcp",
+      phases: [
+        {
+          phase: 1,
+          name: "Automated Testing",
+          tools: toolCalls.filter(tc => tc.tool.includes('analyze') || tc.tool.includes('audit')).map(tc => tc.tool),
+          description: "Ran automated accessibility tests using axe-core and document audit tools"
+        },
+        {
+          phase: 2,
+          name: "Research & Documentation",
+          tools: toolCalls.filter(tc => tc.tool.includes('wcag') || tc.tool.includes('wai') || tc.tool.includes('aria')).map(tc => tc.tool),
+          description: "Consulted official WCAG documentation, WAI-ARIA patterns, and W3C WAI tips for accurate explanations"
+        },
+        {
+          phase: 3,
+          name: "Testing Procedures",
+          tools: toolCalls.filter(tc => tc.tool.includes('magenta')).map(tc => tc.tool),
+          description: "Referenced Magenta A11y component testing checklists for reproduction steps and testing methods"
+        }
+      ],
+      totalToolCalls: toolCalls.length,
+      uniqueToolsUsed: mcpToolsUsed.length,
+      sourcesConsulted: sourcesConsulted,
+      wcagCriteriaResearched: toolCalls.filter(tc => tc.tool === 'get_wcag_criterion').length,
+      ariaPatternsConsulted: toolCalls.filter(tc => tc.tool === 'get_aria_pattern').length,
+    };
+    
     return {
       summary: {
         url: request.mode === "url" ? request.content : undefined,
@@ -211,6 +269,9 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
       },
       rawAnalysis: `${summary}\n\n${JSON.stringify({ issues }, null, 2)}`,
       toolResults: toolCalls,
+      auditMethodology: auditMethodology,
+      mcpToolsUsed: mcpToolsUsed,
+      sourcesConsulted: sourcesConsulted,
     };
     
   } finally {
@@ -286,6 +347,36 @@ async function initializeMCPTools() {
     allTools.push(...docAccessTools.tools.map(t => convertMCPToolToGemini(t, "document")));
   } catch (error) {
     console.warn("Failed to initialize document-accessibility-server:", error);
+  }
+
+  // Initialize wai-tips-server
+  try {
+    const waiClient = await initializeMCPServer(
+      "wai-tips",
+      "python3",
+      [path.join(serversDir, "wai-tips-server/server.py")]
+    );
+    clients.set("wai-tips", waiClient);
+    
+    const waiTools = await waiClient.listTools();
+    allTools.push(...waiTools.tools.map(t => convertMCPToolToGemini(t, "wai")));
+  } catch (error) {
+    console.warn("Failed to initialize wai-tips-server:", error);
+  }
+
+  // Initialize magenta-server
+  try {
+    const magentaClient = await initializeMCPServer(
+      "magenta",
+      "python3",
+      [path.join(serversDir, "magenta-server/server.py")]
+    );
+    clients.set("magenta", magentaClient);
+    
+    const magentaTools = await magentaClient.listTools();
+    allTools.push(...magentaTools.tools.map(t => convertMCPToolToGemini(t, "magenta")));
+  } catch (error) {
+    console.warn("Failed to initialize magenta-server:", error);
   }
 
   return { clients, tools: allTools };
@@ -395,38 +486,81 @@ async function cleanupMCPClients(clients: Map<string, Client>) {
  * Build system instruction for Gemini
  */
 function buildSystemInstruction(): string {
-  return `You are an expert accessibility auditor with deep knowledge of WCAG 2.2 guidelines.
+  return `You are an expert accessibility auditor with deep knowledge of WCAG 2.2, WAI-ARIA, and Swedish accessibility standards.
 
-**CRITICAL: Efficiency Requirements**
-- You have a 60-second execution limit
-- Use tools strategically: prioritize analyze_url or analyze_html first
-- After automated tests, focus manual review on 4-6 most critical issues
-- Do NOT repeatedly call get_wcag_criterion for every issue - reference criteria by number only
-- Provide concise, actionable findings
+**CRITICAL: Research-Based Audit Process**
+You have a 60-second execution limit. Use this workflow:
 
-**Available MCP Tools:**
+1. **Run automated testing first** (analyze_html or analyze_url)
+2. **For each unique WCAG criterion violated, call get_wcag_criterion** to get official W3C documentation
+3. **Use WCAG docs to write accurate wcag_explanation** - don't guess, use the official text
+4. **Reference Magenta A11y patterns** for testing instructions when applicable
+5. **Consult WAI-ARIA specs** for interactive components (buttons, forms, landmarks, etc.)
+6. **Apply heuristic evaluation** for issues automated tools miss
+
+**Available MCP Tools - USE THEM EXTENSIVELY!**
+
+**Phase 1: Automated Testing**
+- **analyze_html / analyze_url**: Run axe-core automated testing (use FIRST)
+- audit_pdf/audit_docx: Document accessibility audits
 - fetch_url: Retrieve HTML content from URLs
-- fetch_url_metadata: Get HTTP headers and metadata
-- analyze_html: Run axe-core automated testing on HTML
-- analyze_url: Navigate to URL and analyze with axe-core
-- get_wcag_criterion: Get details for a specific WCAG criterion (e.g., "1.1.1")
-- search_wcag_by_principle: Search criteria by principle (Perceivable, Operable, Understandable, Robust)
-- get_all_criteria: List all available WCAG criteria
-- audit_pdf: Comprehensive PDF accessibility audit (PDF/UA compliance)
-- audit_docx: Comprehensive DOCX accessibility audit (WCAG for documents)
-- extract_pdf_structure: Get PDF outline, bookmarks, pages
-- extract_docx_structure: Get DOCX headings, sections, tables
-- check_pdf_tags: Verify PDF tagging (PDF/UA requirement)
-- check_alt_text: Check for images and alternative text
-- check_reading_order: Analyze logical reading order
-- check_color_contrast: Color contrast guidance for documents
 
-**Audit Process:**
-1. For URLs: Use fetch_url or analyze_url to get content and run automated tests
-2. For HTML/snippets: Use analyze_html to run axe-core tests
-3. For Documents (PDF/DOCX): Use document-specific audit tools (audit_pdf, audit_docx)
-4. Reference specific WCAG criteria using get_wcag_criterion for accuracy
-5. Apply heuristic evaluation for issues automated tools miss:
+**Phase 2: Research & Documentation (MANDATORY)**
+- **get_wcag_criterion**: Get official WCAG documentation for a criterion (e.g., "1.1.1")
+  → ALWAYS USE for every unique WCAG criterion to get accurate explanations
+  → Example: If axe finds 1.4.3 and 2.4.7, call get_wcag_criterion twice
+- **search_wcag_by_principle**: Find all criteria for a principle (Perceivable, Operable, etc.)
+- **get_wai_resource**: Access W3C WAI tips (developing, designing, writing, aria, understanding)
+  → Use for best practices and implementation guidance
+- **search_wai_tips**: Search WAI tips by topic (headings, forms, images, color, keyboard)
+- **get_aria_pattern**: Get WAI-ARIA patterns for components (dialog, tabs, menu, button, etc.)
+  → ALWAYS use for interactive components
+
+**Phase 3: Testing Procedures (MANDATORY)**
+- **get_magenta_component**: Get Magenta A11y testing checklist for components
+  → Use to populate how_to_reproduce field with professional testing steps
+- **search_magenta_patterns**: Find Magenta patterns by category
+- **get_magenta_testing_methods**: Get keyboard/screen reader/visual testing procedures
+  → Reference for user_impact and testing instructions
+
+**MANDATORY: Use WCAG Docs for Accuracy**
+After axe-core returns violations:
+1. Extract unique WCAG criteria (e.g., 1.4.3, 2.4.7, 1.1.1)
+2. Call get_wcag_criterion for EACH unique criterion
+3. Use the returned official documentation to populate:
+   - wcag_explanation (official WCAG requirement text)
+   - how_to_reproduce (based on Understanding document)
+   - user_impact (from WCAG's benefit descriptions)
+   - Related techniques and failures
+
+**MANDATORY 3-PHASE AUDIT PROCESS:**
+
+**PHASE 1: Automated Testing (First 10 seconds)**
+1. For URLs: Use analyze_url to run axe-core
+2. For HTML/snippets: Use analyze_html to run axe-core
+3. For Documents: Use audit_pdf or audit_docx
+4. Collect all automated test results
+
+**PHASE 2: Research & Documentation (Next 30 seconds) - MANDATORY!**
+5. **For EACH unique WCAG criterion found:**
+   - Call get_wcag_criterion to get official W3C documentation
+   - Use returned text to populate wcag_explanation field accurately
+6. **For EACH interactive component (button, form, dialog, tabs, etc.):**
+   - Call get_aria_pattern to get WAI-ARIA best practices
+   - Call get_magenta_component to get testing procedures
+7. **For general guidance:**
+   - Call search_wai_tips for relevant topics (headings, forms, images, etc.)
+   - Use get_magenta_testing_methods for keyboard/screen reader testing procedures
+
+**PHASE 3: Second Analysis Pass (Final 20 seconds) - CRITICAL!**
+8. **Re-analyze ALL findings using MCP sources as authoritative references:**
+   - Validate wcag_explanation against official WCAG docs
+   - Enhance how_to_reproduce with Magenta A11y testing procedures
+   - Improve user_impact with WCAG Understanding docs benefit descriptions
+   - Add EN 301 549 references (9. prefix + WCAG number)
+   - Include Webbriktlinjer URLs for Swedish reports
+   - Reference WAI-ARIA patterns for interactive components
+9. Apply heuristic evaluation for issues automated tools miss:
    - Semantic HTML structure and logical document flow
    - Heading hierarchy (proper h1-h6 nesting, no skipped levels)
    - Form controls with proper labels and error identification
@@ -436,6 +570,9 @@ function buildSystemInstruction(): string {
    - Focus management and visible focus indicators
    - Landmark regions and page structure
 
+**CRITICAL: The second analysis pass using MCP sources is MANDATORY!**
+Do NOT skip research phase. Professional reports require authoritative sources.
+
 **For Each Issue Found:**
 - WCAG criterion violated (use get_wcag_criterion to get accurate info)
 - Severity: critical (Level A blocker) / serious (Level AA blocker) / moderate (UX issue) / minor (enhancement)
@@ -443,6 +580,43 @@ function buildSystemInstruction(): string {
 - Clear explanation of the problem in plain language
 - Concrete remediation steps with code examples
 - Link to official WCAG Understanding document
+
+**REQUIRED FIELDS FOR ALL ISSUES:**
+
+1. **wcag_explanation**: Full Swedish/English explanation of the WCAG success criterion
+   - Swedish example: "Text ska kunna förstoras upp till 200 % utan att innehåll eller funktionalitet går förlorad."
+   - English example: "Text must be resizable up to 200% without loss of content or functionality."
+   - Explain WHAT the criterion requires, not just the rule number
+
+2. **how_to_reproduce**: Numbered step-by-step instructions to reproduce the issue
+   - Format: "1. [First step]\n2. [Second step]\n3. [Observed problem]"
+   - Swedish example: "1. Öppna startsidan\n2. Öka textstorleken till 200% via webbläsarens zoom\n3. Observera att rubriken täcks av progressbar"
+   - Be specific about navigation, actions, and observation
+
+3. **user_impact**: Describe specific consequences for users with disabilities
+   - Focus on WHO is affected and HOW
+   - Swedish example: "Användare med nedsatt syn som förstorar text för att kunna läsa riskerar att missa viktig information. Det försämrar läsbarheten och kan skapa förvirring."
+   - English example: "Users with low vision who magnify text risk missing important information, creating confusion and reduced usability."
+
+4. **fix_priority**: Categorize using Swedish MÅSTE/BÖR/KAN or English MUST/SHOULD/CAN
+   - MÅSTE/MUST: Critical accessibility barriers (Level A failures, severe usability blockers)
+   - BÖR/SHOULD: Important issues that should be fixed (Level AA failures, significant barriers)
+   - KAN/CAN: Nice-to-have improvements (Level AAA enhancements, minor issues)
+   - Map from severity: critical → MÅSTE, serious → BÖR, moderate/minor → KAN
+
+5. **en_301_549_ref**: European standard reference (for Swedish ETU reports)
+   - Format: Chapter.Section.Subsection (e.g., "9.1.4.4" for Resize Text)
+   - Maps to WCAG 2.1 with "9." prefix (9.1.4.4 = WCAG 1.4.4)
+   - Only include for Swedish locale or ETU template
+
+6. **webbriktlinjer_url**: Swedish Web Guidelines link (for Swedish reports)
+   - Example: "https://webbriktlinjer.se/riktlinjer/96-se-till-att-text-gar-att-forstora/"
+   - Find relevant Webbriktlinjer guideline matching the WCAG criterion
+   - Only include for Swedish locale or ETU template
+
+7. **screenshot_url**: Leave null/empty - screenshots generated separately via browser automation
+   - Will be populated later by screenshot capture process
+   - Just set to null in JSON output
 
 **Testing Guidance (Magenta A11y Style):**
 For each issue, provide comprehensive testing instructions:

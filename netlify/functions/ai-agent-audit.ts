@@ -102,7 +102,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
 
     const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
-    // Create audit record
+    // Create audit record with methodology trace
     const { data: auditData, error: auditError } = await supabase
       .from('audits')
       .insert({
@@ -124,6 +124,10 @@ export const handler: Handler = async (event: HandlerEvent) => {
         operable_issues: 0,
         understandable_issues: 0,
         robust_issues: 0,
+        // Audit methodology trace
+        audit_methodology: result.auditMethodology || {},
+        mcp_tools_used: result.mcpToolsUsed || [],
+        sources_consulted: result.sourcesConsulted || [],
       })
       .select('id')
       .single();
@@ -165,6 +169,14 @@ export const handler: Handler = async (event: HandlerEvent) => {
         how_to_fix: issue.how_to_fix || issue.remediation || issue.fix || 'Review WCAG guidelines for remediation steps.',
         code_example: issue.code_example || issue.code || issue.codeSnippet || null,
         wcag_url: issue.wcag_url || issue.wcagUrl || issue.helpUrl || null,
+        // ETU Swedish report fields
+        wcag_explanation: issue.wcag_explanation || null,
+        how_to_reproduce: issue.how_to_reproduce || null,
+        user_impact: issue.user_impact || null,
+        fix_priority: issue.fix_priority || (issue.severity === 'critical' ? 'MÅSTE' : issue.severity === 'serious' ? 'BÖR' : 'KAN'),
+        en_301_549_ref: issue.en_301_549_ref || null,
+        webbriktlinjer_url: issue.webbriktlinjer_url || null,
+        screenshot_url: issue.screenshot_url || null,
       }));
 
       console.log(`Attempting to save ${issuesData.length} issues for audit ${auditId}`);

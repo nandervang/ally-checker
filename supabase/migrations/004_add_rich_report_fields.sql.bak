@@ -1,0 +1,44 @@
+-- Add rich report fields for ETU-format reporting
+-- These fields support comprehensive accessibility reports per spec requirements
+
+ALTER TABLE issues 
+  -- Testing and reproduction
+  ADD COLUMN IF NOT EXISTS how_to_reproduce TEXT,
+  ADD COLUMN IF NOT EXISTS keyboard_testing TEXT,
+  ADD COLUMN IF NOT EXISTS screen_reader_testing TEXT,
+  ADD COLUMN IF NOT EXISTS visual_testing TEXT,
+  ADD COLUMN IF NOT EXISTS expected_behavior TEXT,
+  
+  -- User impact
+  ADD COLUMN IF NOT EXISTS user_impact TEXT,
+  
+  -- ETU-specific references
+  ADD COLUMN IF NOT EXISTS en301549_chapter TEXT, -- e.g., "9.1.4.4"
+  ADD COLUMN IF NOT EXISTS webbriktlinjer_url TEXT,
+  ADD COLUMN IF NOT EXISTS wcag_explanation TEXT, -- Plain language explanation
+  
+  -- Remediation priority (MÅSTE, BÖR, KAN)
+  ADD COLUMN IF NOT EXISTS fix_priority TEXT CHECK (fix_priority IN ('must', 'should', 'could')),
+  
+  -- Screenshot/evidence
+  ADD COLUMN IF NOT EXISTS screenshot_url TEXT,
+  
+  -- Formatted report text per template
+  ADD COLUMN IF NOT EXISTS report_text TEXT;
+
+-- Add index for filtering by fix priority
+CREATE INDEX IF NOT EXISTS idx_issues_fix_priority ON issues(fix_priority);
+
+-- Comment on new columns
+COMMENT ON COLUMN issues.how_to_reproduce IS 'Step-by-step instructions to reproduce the issue (Magenta A11y format)';
+COMMENT ON COLUMN issues.keyboard_testing IS 'Keyboard navigation testing instructions';
+COMMENT ON COLUMN issues.screen_reader_testing IS 'Screen reader testing guidance (Name, Role, State, Value)';
+COMMENT ON COLUMN issues.visual_testing IS 'Visual verification steps';
+COMMENT ON COLUMN issues.expected_behavior IS 'How the element should work according to WCAG';
+COMMENT ON COLUMN issues.user_impact IS 'Description of impact on users with disabilities';
+COMMENT ON COLUMN issues.en301549_chapter IS 'EN 301 549 chapter reference (e.g., "9.1.4.4")';
+COMMENT ON COLUMN issues.webbriktlinjer_url IS 'Link to Swedish Webbriktlinjer guideline';
+COMMENT ON COLUMN issues.wcag_explanation IS 'Plain language explanation of WCAG criterion';
+COMMENT ON COLUMN issues.fix_priority IS 'Remediation priority: must (MÅSTE), should (BÖR), could (KAN)';
+COMMENT ON COLUMN issues.screenshot_url IS 'URL to screenshot showing the issue';
+COMMENT ON COLUMN issues.report_text IS 'Formatted report text according to selected template';
