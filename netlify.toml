@@ -11,8 +11,8 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  # Mark entire jsdom dependency tree as external to avoid ES Module bundling issues
-  external_node_modules = ["jsdom", "axe-core", "@exodus/*", "html-encoding-sniffer", "whatwg-*", "w3c-*"]
+  # happy-dom instead of jsdom - no ES Module bundling issues
+  external_node_modules = ["axe-core", "happy-dom"]
 
 # Configure individual functions with timeout and memory
 [functions."ai-agent-audit"]

@@ -2,12 +2,12 @@
  * MCP Axe-Core Tool - TypeScript Implementation
  * Runs axe-core accessibility analysis on HTML content
  * 
- * Note: This uses axe-core npm package directly instead of Playwright
- * for serverless environment compatibility.
+ * Note: Uses happy-dom instead of jsdom to avoid ES Module bundling issues.
+ * happy-dom is faster, lighter, and has better CommonJS/ESM compatibility.
  */
 
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { JSDOM } from "jsdom";
+import { Window } from "happy-dom";
 import axe from "axe-core";
 
 export const axeTools: Tool[] = [
@@ -65,14 +65,13 @@ export async function handleAxeTool(name: string, args: any): Promise<any> {
     const context = args.context || {};
     
     try {
-      // Create a virtual DOM using JSDOM
-      const dom = new JSDOM(html, {
-        url: context.url || "http://localhost",
-        contentType: "text/html",
-      });
+      // Create a virtual DOM using happy-dom
+      const window = new Window();
+      const document = window.document;
       
-      const { window } = dom;
-      const { document } = window;
+      // Set HTML content
+      document.body.innerHTML = html;
+      document.documentElement.innerHTML = html;
       
       // Set up global window and document for axe-core
       // @ts-ignore
@@ -80,7 +79,7 @@ export async function handleAxeTool(name: string, args: any): Promise<any> {
       // @ts-ignore
       global.document = document;
       
-      // Configure axe for JSDOM environment
+      // Configure axe for happy-dom environment
       const axeConfig = {
         runOnly: {
           type: 'tag',
@@ -97,6 +96,9 @@ export async function handleAxeTool(name: string, args: any): Promise<any> {
       delete global.window;
       // @ts-ignore
       delete global.document;
+      
+      // Close the window
+      await window.close();
       
       // Format results for MCP response
       return {
