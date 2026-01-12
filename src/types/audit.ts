@@ -36,6 +36,14 @@ export interface Issue {
   expected_behavior?: string; // How it should work according to WCAG success criteria
   // Swedish ETU-style formatted report
   report_text?: string; // Complete formatted report text in Swedish following ETU template
+  // Screenshot evidence
+  screenshot?: {
+    base64: string;
+    mimeType: string;
+    width: number;
+    height: number;
+    timestamp: string;
+  };
 }
 
 // Aggregated metrics by category
