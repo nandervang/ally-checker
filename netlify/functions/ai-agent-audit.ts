@@ -177,6 +177,11 @@ export const handler: Handler = async (event: HandlerEvent) => {
         en_301_549_ref: issue.en_301_549_ref || null,
         webbriktlinjer_url: issue.webbriktlinjer_url || null,
         screenshot_url: issue.screenshot_url || null,
+        // Testing methodology fields
+        keyboard_testing: issue.keyboard_testing || null,
+        screen_reader_testing: issue.screen_reader_testing || null,
+        visual_testing: issue.visual_testing || null,
+        expected_behavior: issue.expected_behavior || null,
       }));
 
       console.log(`Attempting to save ${issuesData.length} issues for audit ${auditId}`);

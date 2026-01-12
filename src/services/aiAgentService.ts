@@ -33,6 +33,16 @@ interface AIAuditResponse {
   };
   rawAnalysis: string;
   toolResults: Array<{ tool: string; result: unknown; error?: string }>;
+  mcpToolsUsed?: string[];
+  sourcesConsulted?: string[];
+  auditMethodology?: {
+    model: string;
+    phases: Array<{ phase: string; description: string }>;
+    totalToolCalls: number;
+    uniqueToolsUsed: number;
+    wcagCriteriaResearched: number;
+    ariaPatternsConsulted: number;
+  };
 }
 
 interface ErrorResponse {
@@ -92,6 +102,22 @@ function convertToAuditResult(
   response: AIAuditResponse,
   request: AIAuditRequest
 ): AuditResult {
+  // Map backend response to agent_trace format
+  const agent_trace = {
+    duration_ms: undefined, // Not provided by backend currently
+    tools_used: response.mcpToolsUsed || [],
+    sources_consulted: response.sourcesConsulted || [],
+    steps: [
+      {
+        action: 'ai_agent_analysis',
+        timestamp: response.summary.timestamp,
+        tool: response.summary.model,
+        reasoning: `Analyzed ${request.mode} using ${response.summary.model}`,
+        output: `Found ${response.summary.totalIssues} accessibility issues across ${response.issues.filter(i => i.wcag_principle).length} WCAG principles`,
+      },
+    ],
+  };
+
   return {
     url: request.mode === "url" ? request.content : undefined,
     timestamp: response.summary.timestamp,
@@ -105,6 +131,7 @@ function convertToAuditResult(
       failed: response.summary.totalIssues,
     },
     issues: response.issues,
+    agent_trace,
   };
 }
 
