@@ -11,7 +11,7 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  external_node_modules = ["jsdom", "axe-core"]
+  external_node_modules = ["jsdom", "axe-core", "@exodus/bytes", "html-encoding-sniffer"]
 
 # Configure individual functions with timeout and memory
 [functions."ai-agent-audit"]
