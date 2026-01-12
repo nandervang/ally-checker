@@ -8,19 +8,26 @@
 
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
-// Dynamically import Playwright to handle missing binaries gracefully
-let chromium: any = null;
-let Browser: any = null;
-let Page: any = null;
+// Lazy load Playwright to avoid top-level await
+let playwrightModule: any = null;
+let playwrightLoadAttempted = false;
 
-try {
-  const playwright = await import("playwright");
-  chromium = playwright.chromium;
-  Browser = playwright.Browser;
-  Page = playwright.Page;
-} catch (error) {
-  console.warn("[Playwright] Browser binaries not available - screenshot tools disabled");
-  console.warn("[Playwright] Error:", error instanceof Error ? error.message : error);
+async function loadPlaywright() {
+  if (playwrightLoadAttempted) {
+    return playwrightModule;
+  }
+  
+  playwrightLoadAttempted = true;
+  
+  try {
+    playwrightModule = await import("playwright");
+    console.log("[Playwright] ✓ Loaded successfully");
+    return playwrightModule;
+  } catch (error) {
+    console.warn("[Playwright] Browser binaries not available - screenshot tools disabled");
+    console.warn("[Playwright] Error:", error instanceof Error ? error.message : error);
+    return null;
+  }
 }
 
 export const playwrightTools: Tool[] = [
@@ -107,12 +114,13 @@ interface Screenshot {
 let browser: any = null;
 
 async function getBrowser(): Promise<any> {
-  if (!chromium) {
+  const playwright = await loadPlaywright();
+  if (!playwright) {
     throw new Error("Playwright browser not available in this environment");
   }
   
   if (!browser) {
-    browser = await chromium.launch({
+    browser = await playwright.chromium.launch({
       headless: true,
       args: [
         "--no-sandbox",
@@ -131,7 +139,11 @@ async function getBrowser(): Promise<any> {
 export async function closeBrowser() {
   if (browser) {
     await browser.close();
-    browser = null;any, selector: string): Promise<void> {
+    browser = null;
+  }
+}
+
+async function highlightElement(page: any, selector: string): Promise<void> {
   await page.evaluate((sel: string) => {
     const element = document.querySelector(sel);
     if (element && element instanceof HTMLElement) {
@@ -146,11 +158,7 @@ export async function closeBrowser() {
 }
 
 async function captureElementScreenshot(
-  page: any.waitForTimeout(500);
-}
-
-async function captureElementScreenshot(
-  page: Page,
+  page: any,
   selector: string,
   highlight: boolean = true,
   fullPage: boolean = false
@@ -200,7 +208,8 @@ export async function handlePlaywrightTool(
   args: Record<string, any>
 ): Promise<any> {
   // Check if Playwright is available
-  if (!chromium) {
+  const playwright = await loadPlaywright();
+  if (!playwright) {
     return {
       success: false,
       error: "Playwright not available - browser binaries not installed in this environment",
