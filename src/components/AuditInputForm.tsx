@@ -388,11 +388,24 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
         attempt++;
 
         if (attempt >= maxRetries) {
-          setAuditError(
-            error instanceof Error 
-              ? error.message 
-              : t("error.network")
-          );
+          // Enhanced error messaging for specific API errors
+          let errorMessage = t("error.network");
+          
+          if (error instanceof Error) {
+            const msg = error.message.toLowerCase();
+            
+            if (msg.includes('overloaded') || msg.includes('503')) {
+              errorMessage = "The AI service is currently overloaded. This is a temporary issue with Google's API. Please try again in a few minutes.";
+            } else if (msg.includes('rate limit') || msg.includes('quota')) {
+              errorMessage = "Rate limit exceeded. Please wait a moment before trying again.";
+            } else if (msg.includes('timeout')) {
+              errorMessage = "Request timed out. The audit is taking longer than expected. Please try a smaller page or try again later.";
+            } else {
+              errorMessage = error.message;
+            }
+          }
+          
+          setAuditError(errorMessage);
           setAuditStep("idle");
           return;
         }
