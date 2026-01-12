@@ -128,6 +128,21 @@ export const handler: Handler = async (event: HandlerEvent) => {
         audit_methodology: result.auditMethodology || {},
         mcp_tools_used: result.mcpToolsUsed || [],
         sources_consulted: result.sourcesConsulted || [],
+        // Agent trace for frontend display
+        agent_trace: {
+          steps: [{
+            timestamp: new Date().toISOString(),
+            action: 'ai_agent_analysis',
+            tool: result.summary.model || 'gemini-2.5-flash',
+            reasoning: `Analyzed ${request.mode} using ${result.summary.model || 'gemini-2.5-flash'}`,
+            output: `Found ${result.summary.totalIssues || 0} accessibility issues`
+          }],
+          tools_used: result.mcpToolsUsed || [],
+          sources_consulted: result.sourcesConsulted || [],
+          duration_ms: undefined
+        },
+        tools_used: result.mcpToolsUsed || [],
+        analysis_steps: result.auditMethodology?.phases?.map((p: any) => p.name) || [],
       })
       .select('id')
       .single();
