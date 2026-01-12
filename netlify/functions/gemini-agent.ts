@@ -101,9 +101,17 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
               element_context: { type: "string", description: "Surrounding HTML (optional)" },
               how_to_fix: { type: "string", description: "Remediation steps" },
               code_example: { type: "string", description: "Before/after code (optional)" },
-              wcag_url: { type: "string", description: "WCAG documentation link (optional)" }
+              wcag_url: { type: "string", description: "WCAG documentation link (optional)" },
+              // ETU Swedish report fields
+              wcag_explanation: { type: "string", description: "Full Swedish/English explanation of WCAG criterion (e.g., 'Text ska kunna förstoras upp till 200% utan att innehåll går förlorat')" },
+              how_to_reproduce: { type: "string", description: "Step-by-step numbered instructions to reproduce (e.g., '1. Öppna startsidan\n2. Öka textstorleken till 200%')" },
+              user_impact: { type: "string", description: "Specific consequence for users with disabilities (e.g., 'Användare med nedsatt syn som förstorar text riskerar att missa viktig information')" },
+              fix_priority: { type: "string", enum: ["MÅSTE", "BÖR", "KAN", "MUST", "SHOULD", "CAN"], description: "Swedish: MÅSTE (critical/must fix), BÖR (should fix), KAN (can fix). English: MUST, SHOULD, CAN" },
+              en_301_549_ref: { type: "string", description: "EN 301 549 reference (e.g., '9.1.4.4' for Resize Text)" },
+              webbriktlinjer_url: { type: "string", description: "Swedish Webbriktlinjer link (e.g., 'https://webbriktlinjer.se/riktlinjer/96-se-till-att-text-gar-att-forstora/')" },
+              screenshot_url: { type: "string", description: "Screenshot URL or base64 data (optional - to be generated later)" }
             },
-            required: ["wcag_criterion", "wcag_level", "wcag_principle", "title", "description", "severity", "source", "how_to_fix"]
+            required: ["wcag_criterion", "wcag_level", "wcag_principle", "title", "description", "severity", "source", "how_to_fix", "wcag_explanation", "how_to_reproduce", "user_impact", "fix_priority"]
           }
         }
       },
@@ -443,6 +451,43 @@ function buildSystemInstruction(): string {
 - Clear explanation of the problem in plain language
 - Concrete remediation steps with code examples
 - Link to official WCAG Understanding document
+
+**REQUIRED FIELDS FOR ALL ISSUES:**
+
+1. **wcag_explanation**: Full Swedish/English explanation of the WCAG success criterion
+   - Swedish example: "Text ska kunna förstoras upp till 200 % utan att innehåll eller funktionalitet går förlorad."
+   - English example: "Text must be resizable up to 200% without loss of content or functionality."
+   - Explain WHAT the criterion requires, not just the rule number
+
+2. **how_to_reproduce**: Numbered step-by-step instructions to reproduce the issue
+   - Format: "1. [First step]\n2. [Second step]\n3. [Observed problem]"
+   - Swedish example: "1. Öppna startsidan\n2. Öka textstorleken till 200% via webbläsarens zoom\n3. Observera att rubriken täcks av progressbar"
+   - Be specific about navigation, actions, and observation
+
+3. **user_impact**: Describe specific consequences for users with disabilities
+   - Focus on WHO is affected and HOW
+   - Swedish example: "Användare med nedsatt syn som förstorar text för att kunna läsa riskerar att missa viktig information. Det försämrar läsbarheten och kan skapa förvirring."
+   - English example: "Users with low vision who magnify text risk missing important information, creating confusion and reduced usability."
+
+4. **fix_priority**: Categorize using Swedish MÅSTE/BÖR/KAN or English MUST/SHOULD/CAN
+   - MÅSTE/MUST: Critical accessibility barriers (Level A failures, severe usability blockers)
+   - BÖR/SHOULD: Important issues that should be fixed (Level AA failures, significant barriers)
+   - KAN/CAN: Nice-to-have improvements (Level AAA enhancements, minor issues)
+   - Map from severity: critical → MÅSTE, serious → BÖR, moderate/minor → KAN
+
+5. **en_301_549_ref**: European standard reference (for Swedish ETU reports)
+   - Format: Chapter.Section.Subsection (e.g., "9.1.4.4" for Resize Text)
+   - Maps to WCAG 2.1 with "9." prefix (9.1.4.4 = WCAG 1.4.4)
+   - Only include for Swedish locale or ETU template
+
+6. **webbriktlinjer_url**: Swedish Web Guidelines link (for Swedish reports)
+   - Example: "https://webbriktlinjer.se/riktlinjer/96-se-till-att-text-gar-att-forstora/"
+   - Find relevant Webbriktlinjer guideline matching the WCAG criterion
+   - Only include for Swedish locale or ETU template
+
+7. **screenshot_url**: Leave null/empty - screenshots generated separately via browser automation
+   - Will be populated later by screenshot capture process
+   - Just set to null in JSON output
 
 **Testing Guidance (Magenta A11y Style):**
 For each issue, provide comprehensive testing instructions:

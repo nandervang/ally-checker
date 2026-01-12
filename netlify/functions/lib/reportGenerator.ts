@@ -36,10 +36,20 @@ export interface ReportIssue {
   severity: "critical" | "serious" | "moderate" | "minor";
   description: string;
   element_snippet?: string;
+  element_selector?: string;
+  element_context?: string;
   code_location?: string;
   detection_source: "axe-core" | "ai-heuristic";
   remediation: string;
   wcag_reference_url?: string;
+  // ETU Swedish report fields
+  wcag_explanation?: string;
+  how_to_reproduce?: string;
+  user_impact?: string;
+  fix_priority?: string;
+  en_301_549_ref?: string;
+  webbriktlinjer_url?: string;
+  screenshot_url?: string;
 }
 
 export interface AuditData {
@@ -134,8 +144,15 @@ const TRANSLATIONS = {
     codeExample: "Kodexempel:",
     beforeFix: "Före åtgärd:",
     afterFix: "Efter åtgärd:",
-    en301549: "EN 301 549 Referens:",
+    en301549: "EN 301 549 Kapitel:",
     webbriktlinjer: "Webbriktlinjer:",
+    // ETU Swedish specific
+    wcagExplanation: "WCAG-förklaring:",
+    howToReproduce: "Hur man återskapar felet",
+    userImpact: "Konsekvens för användaren",
+    fixPriority: "Åtgärda:",
+    category: "Kategori:",
+    relatedCriteria: "Relaterade krav",
   },
   "en-US": {
     reportTitle: "Accessibility Audit Report",
@@ -170,6 +187,13 @@ const TRANSLATIONS = {
     afterFix: "After Fix:",
     en301549: "EN 301 549 Reference:",
     webbriktlinjer: "Webbriktlinjer:",
+    // ETU Swedish specific (English versions)
+    wcagExplanation: "WCAG Explanation:",
+    howToReproduce: "How to Reproduce",
+    userImpact: "User Impact",
+    fixPriority: "Fix Priority:",
+    category: "Category:",
+    relatedCriteria: "Related Criteria",
   }
 };
 
@@ -450,6 +474,17 @@ function createIssuesList(
       spacing: { before: templateConfig.minimal ? 120 : 200, after: 100 },
     }));
 
+    // ETU Swedish template: Show category/principle prominently
+    if (config.template === "etu-swedish") {
+      paragraphs.push(new Paragraph({
+        children: [
+          new TextRun({ text: `${t.category} `, bold: true }),
+          new TextRun({ text: issue.wcag_principle }),
+        ],
+        spacing: { after: 60 },
+      }));
+    }
+
     // WCAG criterion
     paragraphs.push(new Paragraph({
       children: [
@@ -459,27 +494,100 @@ function createIssuesList(
       spacing: { after: 60 },
     }));
 
-    // Severity
-    paragraphs.push(new Paragraph({
-      children: [
-        new TextRun({ text: `${t.severity} `, bold: true }),
-        new TextRun({ 
-          text: issue.severity,
-          color: getSeverityColor(issue.severity)
-        }),
-      ],
-      spacing: { after: 60 },
-    }));
+    // ETU Swedish: EN 301 549 and Webbriktlinjer
+    if (config.template === "etu-swedish") {
+      if (issue.en_301_549_ref) {
+        paragraphs.push(new Paragraph({
+          children: [
+            new TextRun({ text: `${t.en301549} `, bold: true }),
+            new TextRun({ text: issue.en_301_549_ref }),
+          ],
+          spacing: { after: 60 },
+        }));
+      }
+      if (issue.webbriktlinjer_url) {
+        paragraphs.push(new Paragraph({
+          children: [
+            new TextRun({ text: `${t.webbriktlinjer} `, bold: true }),
+            new TextRun({ text: issue.webbriktlinjer_url }),
+          ],
+          spacing: { after: 60 },
+        }));
+      }
+    }
 
-    // Description
+    // ETU Swedish: WCAG Explanation
+    if (config.template === "etu-swedish" && issue.wcag_explanation) {
+      paragraphs.push(new Paragraph({
+        children: [new TextRun({ text: t.wcagExplanation, bold: true })],
+        spacing: { before: 120, after: 60 },
+      }));
+      paragraphs.push(new Paragraph({
+        text: issue.wcag_explanation,
+        spacing: { after: 120 },
+      }));
+    }
+
+    // Severity (for non-ETU templates, ETU uses priority instead)
+    if (config.template !== "etu-swedish") {
+      paragraphs.push(new Paragraph({
+        children: [
+          new TextRun({ text: `${t.severity} `, bold: true }),
+          new TextRun({ 
+            text: issue.severity,
+            color: getSeverityColor(issue.severity)
+          }),
+        ],
+        spacing: { after: 60 },
+      }));
+    }
+
+    // Description (labeled differently for ETU)
     paragraphs.push(new Paragraph({
-      children: [new TextRun({ text: t.description, bold: true })],
+      children: [new TextRun({ text: config.template === "etu-swedish" ? "Beskrivning av felet" : t.description, bold: true })],
       spacing: { before: 120, after: 60 },
     }));
     paragraphs.push(new Paragraph({
       text: issue.description,
       spacing: { after: 120 },
     }));
+
+    // Screenshot (if available - ETU Swedish shows this prominently)
+    if (config.template === "etu-swedish" && issue.screenshot_url) {
+      paragraphs.push(new Paragraph({
+        children: [new TextRun({ text: "Skärmdump:", bold: true })],
+        spacing: { after: 60 },
+      }));
+      paragraphs.push(new Paragraph({
+        text: `[Bild: ${issue.screenshot_url}]`,
+        spacing: { after: 120 },
+        run: { italics: true, color: "666666" }
+      }));
+    }
+
+    // ETU Swedish: How to Reproduce
+    if (config.template === "etu-swedish" && issue.how_to_reproduce) {
+      paragraphs.push(new Paragraph({
+        children: [new TextRun({ text: t.howToReproduce, bold: true })],
+        spacing: { before: 120, after: 60 },
+      }));
+      paragraphs.push(new Paragraph({
+        text: issue.how_to_reproduce,
+        spacing: { after: 120 },
+      }));
+    }
+
+    // ETU Swedish: User Impact
+    if (config.template === "etu-swedish" && issue.user_impact) {
+      paragraphs.push(new Paragraph({
+        children: [new TextRun({ text: t.userImpact, bold: true })],
+        spacing: { before: 120, after: 60 },
+      }));
+      paragraphs.push(new Paragraph({
+        text: issue.user_impact,
+        spacing: { after: 120 },
+      }));
+    }
 
     // Template-specific: Code examples for simple template
     if (templateConfig.includeCodeExamples && issue.element_snippet) {
@@ -533,8 +641,23 @@ function createIssuesList(
       }));
     }
 
-    // Remediation (always included but placement varies)
-    if (!templateConfig.includeCodeExamples) {
+    // Remediation (ETU Swedish shows priority, others show standard remediation)
+    if (config.template === "etu-swedish") {
+      // ETU format: Åtgärda with priority prefix (MÅSTE/BÖR/KAN)
+      paragraphs.push(new Paragraph({
+        children: [new TextRun({ text: t.fixPriority, bold: true })],
+        spacing: { before: 120, after: 60 },
+      }));
+      const priorityPrefix = issue.fix_priority || "BÖR";
+      paragraphs.push(new Paragraph({
+        children: [
+          new TextRun({ text: `${priorityPrefix}  `, bold: true, color: priorityPrefix === "MÅSTE" ? "DC143C" : priorityPrefix === "BÖR" ? "FFA500" : "4CAF50" }),
+          new TextRun({ text: issue.remediation })
+        ],
+        spacing: { after: 120 },
+      }));
+    } else if (!templateConfig.includeCodeExamples) {
+      // Standard format
       paragraphs.push(new Paragraph({
         children: [new TextRun({ text: t.remediation, bold: true })],
         spacing: { after: 60 },
@@ -542,6 +665,18 @@ function createIssuesList(
       paragraphs.push(new Paragraph({
         text: issue.remediation,
         spacing: { after: 120 },
+      }));
+    }
+
+    // ETU Swedish: Related Criteria
+    if (config.template === "etu-swedish" && issue.wcag_reference_url) {
+      paragraphs.push(new Paragraph({
+        children: [new TextRun({ text: t.relatedCriteria, bold: true })],
+        spacing: { before: 120, after: 60 },
+      }));
+      paragraphs.push(new Paragraph({
+        text: `WCAG 2.1: ${issue.success_criterion}, EN 301 549: ${issue.en_301_549_ref || 'N/A'}`,
+        spacing: { after: 200 },
       }));
     }
 
