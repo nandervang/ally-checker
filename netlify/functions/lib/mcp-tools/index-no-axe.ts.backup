@@ -1,0 +1,65 @@
+/**
+ * TypeScript MCP Tools - WITHOUT AXE-CORE
+ * Fallback configuration if jsdom/axe-core cause bundling issues
+ * 
+ * To use this: rename to index.ts and replace existing index.ts
+ */
+
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { fetchTools, handleFetchTool } from "./fetch.js";
+// DISABLED: import { axeTools, handleAxeTool } from "./axe-core.js";
+import { wcagTools, handleWcagTool } from "./wcag-docs.js";
+import { waiTools, handleWaiTool } from "./wai-tips.js";
+import { magentaTools, handleMagentaTool } from "./magenta.js";
+
+/**
+ * Get all available MCP tools (11 tools - axe-core disabled)
+ */
+export function getAllTools(): Tool[] {
+  return [
+    ...fetchTools,
+    // DISABLED: ...axeTools,  // Requires jsdom which has ES Module bundling issues
+    ...wcagTools,
+    ...waiTools,
+    ...magentaTools,
+  ];
+}
+
+/**
+ * Execute an MCP tool
+ */
+export async function executeTool(toolName: string, args: Record<string, any>): Promise<any> {
+  if (toolName.startsWith("fetch_")) {
+    return await handleFetchTool(toolName, args);
+  }
+  
+  // DISABLED: Axe-core tools
+  // if (toolName.startsWith("analyze_")) {
+  //   return await handleAxeTool(toolName, args);
+  // }
+  
+  if (toolName.startsWith("get_wcag_") || toolName.startsWith("search_wcag_")) {
+    return await handleWcagTool(toolName, args);
+  }
+  
+  if (toolName.startsWith("get_wai_") || toolName.startsWith("search_wai_") || toolName.startsWith("get_aria_")) {
+    return await handleWaiTool(toolName, args);
+  }
+  
+  if (toolName.startsWith("get_magenta_") || toolName.startsWith("search_magenta_")) {
+    return await handleMagentaTool(toolName, args);
+  }
+  
+  throw new Error(`Unknown tool: ${toolName}`);
+}
+
+/**
+ * Convert TypeScript tool to Gemini function declaration format
+ */
+export function convertToGeminiFormat(tool: Tool): any {
+  return {
+    name: tool.name,
+    description: tool.description,
+    parameters: tool.inputSchema,
+  };
+}
