@@ -6,11 +6,8 @@
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { spawn } from "child_process";
-import path from "path";
 import { parseGeminiResponse } from "../../src/lib/audit/response-parser.js";
+import { getAllTools, executeTool, convertToGeminiFormat } from "./lib/mcp-tools/index.js";
 
 interface AuditRequest {
   mode: "url" | "html" | "snippet" | "document";
@@ -100,8 +97,11 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
 
   const genAI = new GoogleGenerativeAI(apiKey);
   
-  // Initialize MCP clients for all three servers
-  const { clients, tools } = await initializeMCPTools();
+  // Use TypeScript MCP tools (runs natively in Node.js - no Python required!)
+  console.log('[MCP] Initializing TypeScript MCP tools...');
+  const mcpTools = getAllTools();
+  const tools = mcpTools.map(convertToGeminiFormat);
+  console.log(`[MCP] ✓ Loaded ${tools.length} tools: ${tools.map(t => t.name).join(', ')}`);
   
   try {
     // Build comprehensive system instruction
@@ -159,17 +159,20 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
     };
 
     // Create model with MCP-based tools and structured output
-    const model = genAI.getGenerativeModel({
+    const modelConfig: any = {
       model: modelName,
       systemInstruction,
       tools: [{ functionDeclarations: tools }],
       generationConfig: {
         temperature: 0.3,
-        maxOutputTokens: 8192, // Increased to allow full responses
+        maxOutputTokens: 8192,
         responseMimeType: "application/json",
         responseSchema,
       }
-    });
+    };
+    
+    const model = genAI.getGenerativeModel(modelConfig);
+    console.log(`[Gemini] Model configured with ${tools.length} tools`);
 
     // Start chat
     const chat = model.startChat();
@@ -202,17 +205,40 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
         toolCalls.push(toolResult);
         
         functionResponses.push({
-          functionResponse: {
-            name: call.name,
-            response: toolResult.result,
-          },
-        });
-      }
-
-      // Send function results back to model with retry logic
-      result = await retryWithBackoff(
-        () => chat.sendMessage(functionResponses),
-        3,
+          functionResponse: { with args:`, call.args);
+        
+        try {
+          const toolResult = await executeTool(call.name, call.args);
+          toolCalls.push({
+            tool: call.name,
+            result: toolResult,
+          });
+          
+          functionResponses.push({
+            functionResponse: {
+              name: call.name,
+              response: toolResult,
+            },
+          });
+        } catch (error) {
+          console.error(`Tool execution failed for ${call.name}:`, error);
+          const errorResult = {
+            error: error instanceof Error ? error.message : 'Unknown error'
+          };
+          
+          toolCalls.push({
+            tool: call.name,
+            result: errorResult,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+          
+          functionResponses.push({
+            functionResponse: {
+              name: call.name,
+              response: errorResult,
+            },
+          });
+        }
         2000
       );
       response = result.response;
@@ -339,6 +365,7 @@ async function initializeMCPTools() {
 
   // Initialize fetch-server
   try {
+    console.log('[MCP] Initializing fetch-server...');
     const fetchClient = await initializeMCPServer(
       "fetch",
       "python3",
@@ -347,9 +374,10 @@ async function initializeMCPTools() {
     clients.set("fetch", fetchClient);
     
     const fetchTools = await fetchClient.listTools();
+    console.log(`[MCP] ✓ fetch-server initialized with ${fetchTools.tools.length} tools`);
     allTools.push(...fetchTools.tools.map(t => convertMCPToolToGemini(t, "fetch")));
   } catch (error) {
-    console.warn("Failed to initialize fetch-server:", error);
+    console.error("[MCP] ✗ Failed to initialize fetch-server:", error instanceof Error ? error.message : error);
   }
 
   // Initialize wcag-docs-server
@@ -804,13 +832,8 @@ Process:
       return `Audit the accessibility of this ${docType.toUpperCase()} document: ${filePath}
 
 Process:
-1. Use ${docType === "pdf" ? "audit_pdf" : "audit_docx"} tool for comprehensive document accessibility audit
-2. Check document structure using extract_${docType}_structure
-3. Verify specific requirements:
-   ${docType === "pdf" 
-     ? "- Tagged PDF (PDF/UA requirement) using check_pdf_tags\n   - Alternative text for images\n   - Logical reading order\n   - Form field accessibility" 
-     : "- Heading hierarchy and structure\n   - Alternative text for images and objects\n   - Table accessibility\n   - Hyperlink descriptiveness"}
-4. Cross-reference findings with WCAG criteria using get_wcag_criterion
-5. Provide comprehensive document accessibility report with ${docType === "pdf" ? "PDF/UA" : "WCAG 2.2 AA"} remediation guidance`;
+1. Check document structure and accessibility features
+2. Cross-reference findings with WCAG criteria using get_wcag_criterion
+3. Provide comprehensive document accessibility report with remediation guidance`;
   }
 }
