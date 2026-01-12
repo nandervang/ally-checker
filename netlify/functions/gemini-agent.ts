@@ -40,6 +40,46 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: st
 }
 
 /**
+ * Retry helper for handling transient API errors (503, rate limits, etc.)
+ */
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<T> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      // Check if it's a retryable error (503, overloaded, rate limit)
+      const isRetryable = 
+        errorMessage.includes('503') ||
+        errorMessage.includes('overloaded') ||
+        errorMessage.includes('rate limit') ||
+        errorMessage.includes('quota exceeded') ||
+        errorMessage.includes('temporarily unavailable');
+      
+      if (!isRetryable || attempt === maxRetries - 1) {
+        throw error;
+      }
+      
+      // Exponential backoff: 1s, 2s, 4s
+      const delay = initialDelay * Math.pow(2, attempt);
+      console.log(`Gemini API error (attempt ${attempt + 1}/${maxRetries}): ${errorMessage}`);
+      console.log(`Retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError || new Error('Max retries exceeded');
+}
+
+/**
  * Run audit using Google Gemini 2.5 Flash with MCP tools
  */
 export async function runGeminiAudit(request: AuditRequest) {
@@ -134,8 +174,12 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
     // Start chat
     const chat = model.startChat();
 
-    // Send initial message
-    let result = await chat.sendMessage(userPrompt);
+    // Send initial message with retry logic for 503 errors
+    let result = await retryWithBackoff(
+      () => chat.sendMessage(userPrompt),
+      3, // max 3 retries
+      2000 // start with 2 second delay
+    );
     let response = result.response;
     const toolCalls: MCPToolResult[] = [];
 
@@ -165,8 +209,12 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
         });
       }
 
-      // Send function results back to model
-      result = await chat.sendMessage(functionResponses);
+      // Send function results back to model with retry logic
+      result = await retryWithBackoff(
+        () => chat.sendMessage(functionResponses),
+        3,
+        2000
+      );
       response = result.response;
       functionCalls = response.functionCalls?.() ?? [];
     }
