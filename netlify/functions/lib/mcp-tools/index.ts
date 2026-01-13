@@ -10,6 +10,7 @@ import { wcagTools, handleWcagTool } from "./wcag-docs.js";
 import { waiTools, handleWaiTool } from "./wai-tips.js";
 import { magentaTools, handleMagentaTool } from "./magenta.js";
 import { playwrightTools, handlePlaywrightTool } from "./playwright.js";
+import { documentTools, handleDocumentTool } from "./document-accessibility.js";
 
 /**
  * Get all available MCP tools
@@ -22,6 +23,7 @@ export function getAllTools(): Tool[] {
     ...waiTools,
     ...magentaTools,
     ...playwrightTools,
+    ...documentTools,
   ];
 }
 
@@ -36,6 +38,10 @@ export async function executeTool(toolName: string, args: any): Promise<any> {
   
   if (toolName.startsWith("analyze_")) {
     return await handleAxeTool(toolName, args);
+  }
+  
+  if (toolName.startsWith("audit_pdf") || toolName.startsWith("audit_docx")) {
+    return await handleDocumentTool(toolName, args);
   }
   
   if (toolName.startsWith("get_wcag_") || toolName.startsWith("search_wcag_") || toolName === "get_all_criteria") {

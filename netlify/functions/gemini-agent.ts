@@ -704,8 +704,8 @@ Process:
       return `Audit the accessibility of this ${docType.toUpperCase()} document: ${filePath}
 
 Process:
-1. Check document structure and accessibility features
-2. Cross-reference findings with WCAG criteria using get_wcag_criterion
-3. Provide comprehensive document accessibility report with remediation guidance`;
+1. Use the appropriate tool (${docType === 'docx' ? 'audit_docx' : 'audit_pdf'}) to parse and check the document. This is MANDATORY.
+2. Cross-reference findings with WCAG criteria using get_wcag_criterion if needed for more context.
+3. Provide comprehensive document accessibility report with remediation guidance.`;
   }
 }
