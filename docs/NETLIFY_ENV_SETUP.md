@@ -204,6 +204,21 @@ This will:
    - Monitor API usage for your AI providers
    - Set up billing alerts
 
+#### **Required for Playwright (Visual & Interaction Testing)**
+
+To run Playwright on Netlify Functions (which don't have browser binaries), you MUST use a remote browser service like [Browserless.io](https://www.browserless.io).
+
+\`\`\`bash
+BROWSERLESS_TOKEN=your_browserless_api_token
+# OR
+PLAYWRIGHT_WS_ENDPOINT=wss://chrome.browserless.io?token=your_token
+\`\`\`
+
+**Where to find this:**
+1. Create a free account at [Browserless.io](https://www.browserless.io)
+2. Copy your API Token from the dashboard
+3. Add it to Netlify Environment Variables
+
 ## Additional Resources
 
 - [Netlify Environment Variables Documentation](https://docs.netlify.com/environment-variables/get-started/)

@@ -150,18 +150,39 @@ async function getBrowser(): Promise<any> {
   }
   
   if (!browser) {
-    browser = await playwright.chromium.launch({
-      headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--no-first-run",
-        "--no-zygote",
-        "--disable-gpu",
-      ],
-    });
+    // Check for remote browser endpoint (e.g. Browserless.io)
+    // Supports explicit WS endpoint or constructing one from BROWSERLESS_TOKEN
+    const wsEndpoint = process.env.PLAYWRIGHT_WS_ENDPOINT || 
+                      (process.env.BROWSERLESS_TOKEN ? `wss://chrome.browserless.io?token=${process.env.BROWSERLESS_TOKEN}` : null);
+
+    if (wsEndpoint) {
+      console.log(`[Playwright] Connecting to remote browser: ${wsEndpoint.split('?')[0]}...`);
+      try {
+        browser = await playwright.chromium.connect(wsEndpoint);
+      } catch (error) {
+        console.warn("[Playwright] Failed to connect to remote browser:", error);
+        throw error;
+      }
+    } else {
+      console.log("[Playwright] Launching local browser...");
+      try {
+        browser = await playwright.chromium.launch({
+          headless: true,
+          args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-accelerated-2d-canvas",
+            "--no-first-run",
+            "--no-zygote",
+            "--disable-gpu",
+          ],
+        });
+      } catch (error) {
+         console.warn("[Playwright] Failed to launch local browser. If running on Serverless/Netlify, ensure BROWSERLESS_TOKEN is set env var.");
+         throw error;
+      }
+    }
   }
   return browser;
 }
