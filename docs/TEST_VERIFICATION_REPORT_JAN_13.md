@@ -34,6 +34,18 @@
     - Verify messages change (Queue -> Initializing -> Axe -> AI -> Saving).
     - Verify completion triggers results view.
 
-## 3. Next Steps
-- **Screenshot Data Storage (`ally-checker-o5i`)**: The background worker captures screenshots but the `issues` table needs a `screenshot_data` JSONB column to store the full object (base64, mimeType) properly, as `screenshot_url` is for hosted images.
-- **Playwright Production Setup**: Ensure Netlify has the necessary environment for Playwright (browser binaries) or use a service like Browserless.io.
+## 3. Playwright & Agent Logic Integration
+
+### Status: ✅ Complete
+- **System Prompt**: Updated `src/lib/audit/gemini-agent.ts` to include Playwright tools (`capture_element_screenshot`, `test_keyboard_navigation`, `test_reflow`).
+- **Syntax Validation**: Fixed template literal escaping issue in prompt definition.
+- **Migration**: Added `017_add_screenshot_data_to_issues.sql` to support storing screenshot data in the database.
+
+### Verification Steps
+1.  **Build Verification**: `bun run build` passes successfully.
+2.  **Lint Check**: `bun run lint` shows no new errors in modified files.
+3.  **Prompt Inspection**: Confirmed `SYSTEM_PROMPT` correctly instructs the agent to use the new tools as a mandatory validation layer.
+
+## 4. Next Steps
+- **Production Setup**: Ensure Netlify environment supports Playwright (or configure Browserless).
+- **End-to-End Testing**: Execute a full audit cycle to confirm the agent actually calls the Playwright tools and stores results in the new `screenshot_data` column.
