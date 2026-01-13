@@ -168,7 +168,7 @@
     "fileSuccess": "{{name}} ({{size}} KB)"
   },
   "results": {
-    "title": "Tillgänglighetsrapport",
+    "title": "A11y-Fynd",
     "url": "URL",
     "file": "Fil",
     "type": "Typ",

@@ -168,7 +168,7 @@
     "fileSuccess": "{{name}} ({{size}} KB)"
   },
   "results": {
-    "title": "Accessibility Report",
+    "title": "A11y Findings",
     "url": "URL",
     "file": "File",
     "type": "Type",
