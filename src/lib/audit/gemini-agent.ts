@@ -59,9 +59,9 @@ CRITICAL: Your analysis must include THREE LAYERS:
    - These are just the starting point
 
 2. VISUAL & INTERACTION VALIDATION (Playwright)
-   - You MUST run `test_keyboard_navigation` to verify focus order and trap freedom.
-   - You MUST run `test_reflow` to verify responsive behavior (WCAG 1.4.10).
-   - You MUST use `capture_element_screenshot` to inspect focus indicators (WCAG 2.4.7) on interactive elements.
+   - You MUST run \`test_keyboard_navigation\` to verify focus order and trap freedom.
+   - You MUST run \`test_reflow\` to verify responsive behavior (WCAG 1.4.10).
+   - You MUST use \`capture_element_screenshot\` to inspect focus indicators (WCAG 2.4.7) on interactive elements.
 
 3. HEURISTIC EXPERT ANALYSIS (your expertise)
    - Issues automated tools CANNOT detect:
