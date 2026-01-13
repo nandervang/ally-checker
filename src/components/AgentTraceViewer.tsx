@@ -2,7 +2,7 @@ import type { AgentTrace } from '@/types/audit';
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
-import { Clock, Wrench, BookOpen, CheckCircle2 } from 'lucide-react';
+import { Clock, Wrench, BookOpen, CheckCircle2, BrainCircuit, ListRestart } from 'lucide-react';
 
 interface AgentTraceViewerProps {
   trace: AgentTrace;
@@ -16,20 +16,24 @@ export function AgentTraceViewer({ trace }: AgentTraceViewerProps) {
   };
 
   const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      second: '2-digit',
-      fractionalSecondDigits: 3
-    });
+    try {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit',
+        fractionalSecondDigits: 3
+      });
+    } catch (e) {
+      return timestamp;
+    }
   };
 
   return (
     <Card className="mt-6">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <CheckCircle2 className="h-5 w-5 text-accent-foreground" />
+          <BrainCircuit className="h-5 w-5 text-accent-foreground" />
           Agent Audit Trail
         </CardTitle>
         <CardDescription>
@@ -38,7 +42,7 @@ export function AgentTraceViewer({ trace }: AgentTraceViewerProps) {
       </CardHeader>
       <CardContent>
         {/* Summary Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div className="flex items-center gap-2 p-3 bg-primary/10 dark:bg-primary/20 rounded-lg">
             <Clock className="h-5 w-5 text-primary" />
             <div>
@@ -66,7 +70,50 @@ export function AgentTraceViewer({ trace }: AgentTraceViewerProps) {
               </div>
             </div>
           </div>
+          <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+            <ListRestart className="h-5 w-5 text-muted-foreground" />
+            <div>
+              <div className="text-sm font-medium text-foreground">Steps</div>
+              <div className="text-lg font-semibold text-muted-foreground">
+                {trace.steps.length}
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Methodology Section */}
+        {trace.methodology && trace.methodology.phases.length > 0 && (
+          <div className="mb-6 border rounded-lg p-4 bg-card">
+             <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <BrainCircuit className="h-4 w-4" />
+              Audit Strategy & Methodology
+            </h3>
+            <div className="space-y-4">
+              <div className="grid gap-2">
+                {trace.methodology.phases.map((phase) => (
+                  <div key={phase.phase} className="flex items-start gap-3 p-3 bg-secondary/10 rounded-md border border-secondary/20">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center text-xs font-bold">
+                      {phase.phase}
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold">{phase.name}</div>
+                      <div className="text-sm text-muted-foreground mt-1">{phase.description}</div>
+                      {phase.tools.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {phase.tools.map((tool, i) => (
+                            <Badge key={i} variant="outline" className="text-[10px] h-5">
+                              {tool}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Tools Used */}
         {trace.tools_used.length > 0 && (

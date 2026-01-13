@@ -379,8 +379,9 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
             agent_trace: audit.agent_trace ? {
               steps: (audit.agent_trace as any).steps || [],
               tools_used: audit.tools_used || [],
-              sources_consulted: (audit.agent_trace as any).sources_consulted || [],
+              sources_consulted: audit.sources_consulted || (audit.agent_trace as any).sources_consulted || [],
               duration_ms: (audit.agent_trace as any).duration_ms,
+              methodology: audit.audit_methodology as any,
             } : (audit.ai_model ? {
               // Fallback trace if agent ran but didn't populate trace
               steps: [
