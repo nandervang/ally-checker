@@ -190,6 +190,9 @@ function settingsToDb(settings: UserSettings): Record<string, unknown> {
  * Get settings from localStorage
  */
 function getLocalSettings(): UserSettings {
+  if (typeof localStorage === 'undefined') {
+    return DEFAULT_SETTINGS;
+  }
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {

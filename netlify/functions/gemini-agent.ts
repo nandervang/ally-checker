@@ -157,7 +157,17 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
               fix_priority: { type: "string", enum: ["MÅSTE", "BÖR", "KAN", "MUST", "SHOULD", "CAN"], description: "Swedish: MÅSTE (critical/must fix), BÖR (should fix), KAN (can fix). English: MUST, SHOULD, CAN" },
               en_301_549_ref: { type: "string", description: "EN 301 549 reference (e.g., '9.1.4.4' for Resize Text)" },
               webbriktlinjer_url: { type: "string", description: "Swedish Webbriktlinjer link (e.g., 'https://webbriktlinjer.se/riktlinjer/96-se-till-att-text-gar-att-forstora/')" },
-              screenshot_url: { type: "string", description: "Screenshot URL or base64 data (optional - to be generated later)" }
+              screenshot_url: { type: "string", description: "Legacy screenshot URL" },
+              screenshot_data: { 
+                type: "object", 
+                properties: {
+                  data: { type: "string", description: "Base64 encoded image data" },
+                  mime_type: { type: "string", description: "Mime type (e.g. image/png)" },
+                  width: { type: "number" },
+                  height: { type: "number" }
+                },
+                description: "Screenshot data from tool execution (e.g. keyboard trace)"
+              }
             },
             required: ["wcag_criterion", "wcag_level", "wcag_principle", "title", "description", "severity", "source", "how_to_fix", "wcag_explanation", "how_to_reproduce", "user_impact", "fix_priority"]
           }
@@ -655,10 +665,12 @@ function buildUserPrompt(request: AuditRequest): string {
 
 Process:
 1. Use analyze_url to run axe-core automated tests
-2. If needed, use fetch_url to examine the HTML structure
-3. Cross-reference any violations with get_wcag_criterion
-4. Apply manual heuristic evaluation
-5. Provide comprehensive audit report with prioritized remediation steps`;
+2. TEST KEYBOARD NAVIGATION: Use test_keyboard_navigation to capture a visible tab trace. This is CRITICAL for detecting focus issues.
+3. If needed, use fetch_url to examine the HTML structure
+4. Cross-reference any violations with get_wcag_criterion
+5. Apply manual heuristic evaluation
+6. Provide comprehensive audit report with prioritized remediation steps
+   - IMPORTANT: If test_keyboard_navigation returned a screenshot (in 'screenshot' property), include it in the issue reporting under the 'screenshot_data' field (map 'base64' to 'data').`;
     
     case "html":
       return `Audit the accessibility of this HTML content:

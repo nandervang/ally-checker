@@ -164,5 +164,9 @@ Steps:
     },
     rawAnalysis: analysisText,
     toolResults: [] as MCPToolResult[],
+    auditMethodology: undefined,
+    mcpToolsUsed: [],
+    sourcesConsulted: [],
+    duration_ms: undefined
   };
 }

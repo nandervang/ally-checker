@@ -234,6 +234,7 @@ export type Database = {
           keyboard_testing: string | null
           report_text: string | null
           screen_reader_testing: string | null
+          screenshot_data: Json | null
           screenshot_url: string | null
           severity: string
           source: string
@@ -266,6 +267,7 @@ export type Database = {
           keyboard_testing?: string | null
           report_text?: string | null
           screen_reader_testing?: string | null
+          screenshot_data?: Json | null
           screenshot_url?: string | null
           severity: string
           source: string
@@ -298,6 +300,7 @@ export type Database = {
           keyboard_testing?: string | null
           report_text?: string | null
           screen_reader_testing?: string | null
+          screenshot_data?: Json | null
           screenshot_url?: string | null
           severity?: string
           source?: string

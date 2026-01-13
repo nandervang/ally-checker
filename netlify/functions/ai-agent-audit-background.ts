@@ -32,8 +32,10 @@ export const handler: Handler = async (event: HandlerEvent) => {
 
   const supabase = createClient<Database>(supabaseUrl, supabaseKey);
   
+  let payload: any = {};
+
   try {
-    const payload = JSON.parse(event.body || "{}");
+    payload = JSON.parse(event.body || "{}");
     const { auditId } = payload;
 
     if (!auditId) {
@@ -169,9 +171,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
         screen_reader_testing: issue.screen_reader_testing || null,
         visual_testing: issue.visual_testing || null,
         expected_behavior: issue.expected_behavior || null,
-        // New: Handle structured screenshot data if present
-        // Note: DB schema might not have screenshot_data column yet, but issue said "update schema".
-        // For now we skip it or put it in metadata if available.
+        screenshot_data: issue.screenshot_data || null,
       }));
 
       const { error: issuesError } = await supabase

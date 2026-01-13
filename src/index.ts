@@ -9,6 +9,10 @@ import type { Database } from "./types/database";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL!;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
 
+console.log("[Server] Environment Variables Check:");
+console.log("  VITE_SUPABASE_URL in process.env:", process.env.VITE_SUPABASE_URL ? "✓" : "✗");
+console.log("  VITE_SUPABASE_URL in import.meta.env:", import.meta.env.VITE_SUPABASE_URL ? "✓" : "✗");
+
 function createAuthenticatedClient(authToken: string) {
   return createClient<Database>(supabaseUrl, supabaseAnonKey, {
     global: {
@@ -19,7 +23,181 @@ function createAuthenticatedClient(authToken: string) {
   });
 }
 
+if (!process.env.VITE_SUPABASE_URL) {
+  console.warn("WARNING: VITE_SUPABASE_URL is not set in the server environment processes.");
+}
+
+// Request body format from frontend (audit-service.ts)
+interface AuditRequestBody {
+  mode: "url" | "html" | "snippet" | "document";
+  content: string;
+  model: string;
+  geminiModel?: string;
+  language?: string;
+  documentType?: "pdf" | "docx";
+  filePath?: string;
+  sessionId?: string;
+  userId?: string; // Optional in body, but enforced via auth token
+}
+
+async function handleRunAudit(req: Request) {
+  try {
+    // Get auth token from header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return Response.json(
+        { error: 'Unauthorized - missing auth token' },
+        { status: 401 }
+      );
+    }
+
+    const authToken = authHeader.replace('Bearer ', '');
+    
+    // Create authenticated Supabase client for this request
+    const authedSupabase = createAuthenticatedClient(authToken);
+    
+    const requestBody: AuditRequestBody = await req.json();
+
+    // Verify token and get user
+    const { data: { user }, error: authError } = await authedSupabase.auth.getUser();
+    if (authError || !user) {
+      return Response.json(
+        { error: 'Unauthorized - invalid token' },
+        { status: 401 }
+      );
+    }
+
+    // Construct AuditInput for internal processing
+    // NOTE: user_id is forced to the authenticated user's ID
+    const input: AuditInput = {
+      input_type: requestBody.mode,
+      input_value: requestBody.content,
+      user_id: user.id, 
+      session_id: requestBody.sessionId,
+      document_path: requestBody.filePath,
+      document_type: requestBody.documentType,
+    };
+
+    // Create audit record with authenticated client
+    const auditData = {
+      user_id: user.id, // Enforce RLS
+      session_id: input.session_id,
+      input_type: input.input_type,
+      input_value: input.input_value,
+      url: input.input_type === 'url' ? input.input_value : null,
+      document_path: input.document_path,
+      document_type: input.document_type,
+      suspected_issue: input.suspected_issue,
+      status: 'queued' as const,
+      total_issues: 0,
+      critical_issues: 0,
+      serious_issues: 0,
+      moderate_issues: 0,
+      minor_issues: 0,
+      perceivable_issues: 0,
+      operable_issues: 0,
+      understandable_issues: 0,
+      robust_issues: 0,
+    };
+
+    const { data: audit, error: createError } = await authedSupabase
+      .from('audits')
+      .insert(auditData)
+      .select('id')
+      .single();
+
+    if (createError) {
+      throw new Error(`Failed to create audit: ${createError.message}`);
+    }
+
+    const auditId = audit.id;
+
+    // Start audit in background (fire and forget)
+    // We don't await this promise so the response returns immediately
+    (async () => {
+      try {
+        // Update status to analyzing
+        await authedSupabase
+          .from('audits')
+          .update({ status: 'analyzing' })
+          .eq('id', auditId);
+
+        // Run Gemini audit server-side (has access to process.env)
+        const result = await runGeminiAudit(input);
+
+        // Save results
+        await authedSupabase
+          .from('audits')
+          .update({
+            status: 'complete',
+            ai_model: result.ai_model,
+            agent_trace: result.agent_trace,
+            tools_used: result.agent_trace?.tools_used || [],
+            total_issues: result.metrics.total_issues,
+            critical_issues: result.metrics.critical_issues,
+            serious_issues: result.metrics.serious_issues,
+            moderate_issues: result.metrics.moderate_issues,
+            minor_issues: result.metrics.minor_issues,
+            perceivable_issues: result.metrics.perceivable_issues,
+            operable_issues: result.metrics.operable_issues,
+            understandable_issues: result.metrics.understandable_issues,
+            robust_issues: result.metrics.robust_issues,
+            completed_at: new Date().toISOString(),
+          })
+          .eq('id', auditId);
+
+        // Save issues
+        if (result.issues.length > 0) {
+          const issuesData = result.issues.map(issue => ({
+            audit_id: auditId,
+            wcag_criterion: issue.wcag_criterion,
+            wcag_level: issue.wcag_level,
+            wcag_principle: issue.wcag_principle,
+            title: issue.title,
+            description: issue.description,
+            severity: issue.severity,
+            source: issue.source,
+            confidence_score: issue.confidence_score,
+            element_selector: issue.element_selector,
+            element_html: issue.element_html,
+            element_context: issue.element_context,
+            how_to_fix: issue.how_to_fix,
+            code_example: issue.code_example,
+            wcag_url: issue.wcag_url,
+          }));
+
+          await authedSupabase
+            .from('issues')
+            .insert(issuesData);
+        }
+      } catch (error) {
+        // Mark as failed
+        console.error('Background Audit Error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        await authedSupabase
+          .from('audits')
+          .update({ 
+            status: 'failed',
+            error_message: errorMessage,
+          })
+          .eq('id', auditId);
+      }
+    })();
+
+    return Response.json({ auditId, success: true });
+  } catch (error) {
+    console.error('Audit API error:', error);
+    return Response.json(
+      {
+        error: error instanceof Error ? error.message : 'Internal server error',
+      },
+      { status: 500 }
+    );
+  }
+}
+
 const server = serve({
+  port: 0,
   routes: {
     // Serve index.html for all unmatched routes.
     "/*": index,
@@ -48,143 +226,14 @@ const server = serve({
 
     "/api/run-audit": {
       async POST(req) {
-        try {
-          // Get auth token from header
-          const authHeader = req.headers.get('Authorization');
-          if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return Response.json(
-              { error: 'Unauthorized - missing auth token' },
-              { status: 401 }
-            );
-          }
+        return handleRunAudit(req);
+      }
+    },
 
-          const authToken = authHeader.replace('Bearer ', '');
-          
-          // Create authenticated Supabase client for this request
-          const authedSupabase = createAuthenticatedClient(authToken);
-          
-          const input: AuditInput = await req.json();
-
-          // Verify token and get user
-          const { data: { user }, error: authError } = await authedSupabase.auth.getUser();
-          if (authError || !user) {
-            return Response.json(
-              { error: 'Unauthorized - invalid token' },
-              { status: 401 }
-            );
-          }
-
-          // Create audit record with authenticated client
-          const auditData = {
-            user_id: input.user_id,
-            session_id: input.session_id,
-            input_type: input.input_type,
-            input_value: input.input_value,
-            url: input.input_type === 'url' ? input.input_value : null,
-            suspected_issue: input.suspected_issue,
-            status: 'queued' as const,
-            total_issues: 0,
-            critical_issues: 0,
-            serious_issues: 0,
-            moderate_issues: 0,
-            minor_issues: 0,
-            perceivable_issues: 0,
-            operable_issues: 0,
-            understandable_issues: 0,
-            robust_issues: 0,
-          };
-
-          const { data: audit, error: createError } = await authedSupabase
-            .from('audits')
-            .insert(auditData)
-            .select('id')
-            .single();
-
-          if (createError) {
-            throw new Error(`Failed to create audit: ${createError.message}`);
-          }
-
-          const auditId = audit.id;
-
-          try {
-            // Update status to analyzing
-            await authedSupabase
-              .from('audits')
-              .update({ status: 'analyzing' })
-              .eq('id', auditId);
-
-            // Run Gemini audit server-side (has access to process.env)
-            const result = await runGeminiAudit(input);
-
-            // Save results
-            await authedSupabase
-              .from('audits')
-              .update({
-                status: 'complete',
-                ai_model: result.ai_model,
-                agent_trace: result.agent_trace,
-                tools_used: result.agent_trace?.tools_used || [],
-                total_issues: result.metrics.total_issues,
-                critical_issues: result.metrics.critical_issues,
-                serious_issues: result.metrics.serious_issues,
-                moderate_issues: result.metrics.moderate_issues,
-                minor_issues: result.metrics.minor_issues,
-                perceivable_issues: result.metrics.perceivable_issues,
-                operable_issues: result.metrics.operable_issues,
-                understandable_issues: result.metrics.understandable_issues,
-                robust_issues: result.metrics.robust_issues,
-                completed_at: new Date().toISOString(),
-              })
-              .eq('id', auditId);
-
-            // Save issues
-            if (result.issues.length > 0) {
-              const issuesData = result.issues.map(issue => ({
-                audit_id: auditId,
-                wcag_criterion: issue.wcag_criterion,
-                wcag_level: issue.wcag_level,
-                wcag_principle: issue.wcag_principle,
-                title: issue.title,
-                description: issue.description,
-                severity: issue.severity,
-                source: issue.source,
-                confidence_score: issue.confidence_score,
-                element_selector: issue.element_selector,
-                element_html: issue.element_html,
-                element_context: issue.element_context,
-                how_to_fix: issue.how_to_fix,
-                code_example: issue.code_example,
-                wcag_url: issue.wcag_url,
-              }));
-
-              await authedSupabase
-                .from('issues')
-                .insert(issuesData);
-            }
-
-            return Response.json({ auditId, success: true });
-          } catch (error) {
-            // Mark as failed
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            await authedSupabase
-              .from('audits')
-              .update({ 
-                status: 'failed',
-                error_message: errorMessage,
-              })
-              .eq('id', auditId);
-            throw error;
-          }
-        } catch (error) {
-          console.error('Audit API error:', error);
-          return Response.json(
-            {
-              error: error instanceof Error ? error.message : 'Internal server error',
-            },
-            { status: 500 }
-          );
-        }
-      },
+    "/.netlify/functions/ai-agent-audit": {
+      async POST(req) {
+        return handleRunAudit(req);
+      }
     },
   },
 

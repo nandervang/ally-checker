@@ -22,24 +22,27 @@ Ally Checker supports two analysis modes:
        ├─ Agent Mode
        │      │
        │      v
-       │ ┌──────────────────┐
-       │ │ Netlify Function │
-       │ │ ai-agent-audit   │
-       │ └────────┬─────────┘
-       │          │
-       │          v
-       │ ┌────────────────────────┐
-       │ │   AI Model Service     │
-       │ │ (Claude/Gemini/GPT-4)  │
-       │ └────────┬───────────────┘
-       │          │
-       │          └─> MCP Tools (stdio)
-       │               │
-       │               ├─ fetch-server
-       │               ├─ wcag-docs-server
-       │               └─ axe-core-server
+       │ ┌───────────────────────────┐
+       │ │   Netlify Function        │
+       │ │   ai-agent-audit (API)    │
+       │ └────────────┬──────────────┘
+       │              │
+       │      (Trigger Background Job)
+       │              │
+       │              v
+       │ ┌───────────────────────────┐
+       │ │   Netlify Function        │
+       │ │ ai-agent-audit-background │
+       │ └────────────┬──────────────┘
+       │              │
+       │              v
+       │       ┌──────────────┐      ┌─> MCP Tools (in-process)
+       │       │   AI Engine  │─────>│      ├─ fetch
+       │       │    Gemini    │<─────│      ├─ wcag-docs
+       │       └──────────────┘      │      ├─ axe-core
+       │                             │      └─ playwright (visual)
        │
-       └─> Results Display
+       └─> Results Display (Streaming/Polling)
 ```
 
 ## Components
@@ -85,19 +88,25 @@ interface AIAuditRequest {
 }
 ```
 
-### 3. Netlify Function
+### 3. Netlify Function (Async Architecture)
 
-**Location**: `netlify/functions/ai-agent-audit.ts`
+**Trigger Function**: `netlify/functions/ai-agent-audit.ts`
+- Receives POST request
+- Creates Supabase audit record (status: 'queued')
+- Triggers background worker `ai-agent-audit-background`
+- Returns `auditId` immediately
 
-**Purpose**: Serverless function that orchestrates AI-powered audits
+**Background Worker**: `netlify/functions/ai-agent-audit-background.ts`
+- Runs the long-running analysis
+- Updates Supabase record with `progress` (0-100) and `current_stage`
+- Executes MCP tools including Playwright
+- Saves final results to database
 
 **Responsibilities**:
 - Receive audit requests from frontend
 - Route to appropriate AI model service
-- Manage MCP server lifecycle (planned)
-- Return structured audit results
-
-**Current Implementation**:
+- Manage MCP server lifecycle (in-process)
+- Return structured audit results via database
 - ✅ Claude integration via Anthropic SDK
 - ✅ Comprehensive WCAG prompt engineering
 - ⏳ MCP tools integration (pending API support)

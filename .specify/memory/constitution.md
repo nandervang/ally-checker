@@ -146,8 +146,15 @@ All AI heuristic analysis MUST utilize in-process TypeScript MCP tools instead o
 **Architecture Requirements:**
 - MCP tools implemented as TypeScript ES modules
 - Tools execute in-process within Netlify Functions (no child process spawning)
+- Asynchronous Background Processing: Audit analysis MUST run in background tasks with real-time progress polling
 - Central router aggregates and routes tool calls by prefix
 - Type-safe integration with Gemini function calling
+
+**Authorized Tool Sets:**
+1. **Core Analysis**: `fetch`, `axe-core`, `wcag-docs`, `wai-tips`, `magenta-checklist`
+2. **Visual & Interaction**: `playwright` (with graceful degradation for environments without browser binaries)
+
+**Rationale**: TypeScript-first, in-process architecture ensures compatibility with serverless environments (Netlify) where runtime restrictions prevent Python servers or process spawning. Asynchronous processing prevents timeouts during long-running Playwright simulations.
 
 **Required MCP Tool Categories (13 tools total):**
 

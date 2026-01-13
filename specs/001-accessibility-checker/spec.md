@@ -164,6 +164,22 @@ A non-technical user (e.g., content writer) wants to understand if something mig
 
 ---
 
+### User Story 6 - Visual & Interaction Validation (Priority: P2)
+
+A developer wants to verify that their interactive components (modals, menus) work correctly with keyboard navigation and have visible focus states. They run an audit that includes Playwright-driven simulated user interactions.
+
+**Why this priority**: Automated static analysis (axe-core) cannot verify dynamic behaviors like keyboard traps, focus management, or visual reflow. This bridges the gap between static analysis and manual testing.
+
+**Independent Test**: Can be tested by auditing a page with a modal and verifying the report confirms whether focus is trapped correctly or leaks out.
+
+**Acceptance Scenarios**:
+
+1. **Given** the user audits a page with interactive elements, **When** analysis runs, **Then** the report includes "Visual Validation" results showing focus indicator screenshots
+2. **Given** the page has a keyboard trap (focus gets stuck), **When** the keyboard navigation test runs, **Then** it is flagged as a Critical "Keyboard Trap" issue
+3. **Given** the user wants to check responsiveness, **When** the "Reflow" test runs, **Then** it verifies content allows 320px width without horizontal scrolling (WCAG 1.4.10)
+
+---
+
 ### Edge Cases
 
 - What happens when the HTML contains inline SVGs with complex accessibility requirements?
@@ -191,16 +207,23 @@ A non-technical user (e.g., content writer) wants to understand if something mig
 **Analysis Engine**
 - **FR-007**: System MUST use axe-core library for automated WCAG 2.2 AA compliance checking
 - **FR-008**: System MUST employ AI agent (Gemini 2.5 Flash) with MCP tools to evaluate subjective accessibility concerns (e.g., alt text meaningfulness via analyze_html, button label clarity, heading structure logic), using WCAG documentation retrieval (get_wcag_criterion, search_wcag_by_principle) for accurate criterion mapping
+- **FR-008a**: **[NEW]** System MUST integrate Playwright for visual and interaction testing (focus styles, keyboard navigation, reflow)
 - **FR-009**: When a suspected issue is provided, AI agent MUST perform focused investigation on that specific concern in addition to standard audit
 - **FR-010**: System MUST detect and report violations across all four WCAG principles: Perceivable, Operable, Understandable, Robust
 - **FR-011**: System MUST identify WCAG 2.2 AA success criteria violated by each issue
-- **FR-012**: Analysis MUST complete within 30 seconds for typical HTML documents (< 50 KB)
+- **FR-012**: Analysis MUST run asynchronously in the background. The API MUST return an audit ID immediately, allowing the client to poll for progress.
+- **FR-012a**: **[NEW]** System MUST provide real-time progress updates (0-100%) and current stage description (e.g., "Analyzing Layout", "Checking Contrast", "Generating Report")
+
+**Visual & Interaction Testing**
+- **FR-042**: **[NEW]** System MUST capture screenshots of element focus states to verify WCAG 2.4.7 (Focus Visible)
+- **FR-043**: **[NEW]** System MUST simulate keyboard navigation (Tab/Shift+Tab) to detect logical reading order and focus traps (WCAG 2.4.3, 2.1.2)
+- **FR-044**: **[NEW]** System MUST verify "Reflow" (WCAG 1.4.10) by simulating a 320px viewport and detecting horizontal scrollbars
 
 **URL Fetching**
 - **FR-013**: System MUST fetch HTML content from provided URLs using HTTP/HTTPS protocols
 - **FR-014**: System MUST handle common fetch errors (404, timeout, DNS failure) with clear user-friendly messages
 - **FR-015**: System MUST respect robots.txt and implement reasonable rate limiting to avoid overwhelming target servers
-- **FR-016**: System MUST set a timeout of 15 seconds for URL fetch operations
+- **FR-016**: System MUST set a timeout of 60 seconds for full audit operations (increased for Playwright tests)
 - **FR-017**: System MUST inform users when JavaScript-rendered content cannot be analyzed from URL-based input
 
 **Output & Reporting**
@@ -215,6 +238,7 @@ A non-technical user (e.g., content writer) wants to understand if something mig
 - **FR-024**: Issues MUST be sortable and filterable by severity, WCAG principle, and success criterion
 - **FR-025**: **[NEW]** System MUST provide collapsible testing sections (keyboard, screen reader, visual) for each issue in the UI
 - **FR-026**: **[NEW]** System MUST provide copy-to-clipboard functionality for formatted report text
+- **FR-026a**: **[NEW]** Frontend MUST stream or poll analysis progress, showing users exactly what the agent is doing (e.g., "Step 2/5: Verifying contrast...")
 
 **User Interface**
 - **FR-027**: UI MUST be modern, simple, and desktop-optimized while remaining fully responsive
@@ -241,7 +265,7 @@ A non-technical user (e.g., content writer) wants to understand if something mig
 
 - **Analysis Input**: Represents user-submitted content for analysis, containing one or more of: URL string, HTML source code, code snippet, suspected issue description. Tracks input type and timestamp.
 
-- **Audit Report**: Comprehensive results of accessibility analysis, organized by WCAG principles. Contains collections of violations, warnings, and passes. Includes metadata like analysis timestamp, input type, and total issue count.
+- **Audit Report**: Comprehensive results of accessibility analysis, organized by WCAG principles. Contains collections of violations, warnings, and passes. Includes metadata like analysis timestamp, input type, total issue count, **[NEW]** progress (0-100), and **[NEW]** current_stage.
 
 - **Accessibility Issue**: Individual violation or warning identified during analysis. Contains: description, WCAG success criterion reference (e.g., 1.4.3), severity level (critical/serious/moderate/minor), code location, affected HTML element, detection source (axe-core or AI heuristic), suggested remediation steps, **[NEW]** how_to_reproduce (step-by-step reproduction instructions), **[NEW]** keyboard_testing (keyboard-specific testing procedures), **[NEW]** screen_reader_testing (screen reader testing instructions), **[NEW]** visual_testing (visual verification steps), **[NEW]** expected_behavior (description of correct accessible behavior), **[NEW]** report_text (formatted report text according to selected template).
 
