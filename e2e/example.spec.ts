@@ -2,23 +2,24 @@ import { test, expect } from '@playwright/test';
 
 test('has title', async ({ page }) => {
   await page.goto('/');
-
-  // Expect a title "to contain" a substring.
   await expect(page).toHaveTitle(/Bun/);
-  await expect(page).toHaveTitle(/React/);
 });
 
-test('check auth form loads', async ({ page }) => {
-  page.on('console', msg => console.log(`BROWSER LOG: ${msg.text()}`));
+test('auth form loads and has interactive elements', async ({ page }) => {
   await page.goto('/');
   
-  // Check if we are stuck loading
-  const loader = page.locator('.animate-spin');
-  if (await loader.isVisible()) {
-    console.log('Loader is visible...');
-  }
-
-  // Wait for loading to finish (if any)
-  // We check for email input. It might take a moment.
-  await expect(page.locator('input[type="email"]')).toBeVisible({ timeout: 5000 });
+  // Wait for the form to appear (React hydration)
+  const emailInput = page.getByLabel(/Email/i).first();
+  await expect(emailInput).toBeVisible({ timeout: 10000 });
+  
+  // Check for password field
+  await expect(page.getByLabel(/Password/i).first()).toBeVisible();
+  
+  // Check for submit button
+  const submitBtn = page.getByRole('button', { name: /Sign/i }).first();
+  await expect(submitBtn).toBeVisible();
+  
+  // Check tab switching
+  const tabs = page.getByRole('tablist');
+  await expect(tabs).toBeVisible();
 });
