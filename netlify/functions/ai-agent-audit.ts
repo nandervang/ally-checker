@@ -131,13 +131,23 @@ export const handler: Handler = async (event: HandlerEvent) => {
         sources_consulted: result.sourcesConsulted || [],
         // Agent trace for frontend display
         agent_trace: {
-          steps: [{
-            timestamp: new Date().toISOString(),
-            action: 'ai_agent_analysis',
-            tool: result.summary.model || 'gemini-2.5-flash',
-            reasoning: `Analyzed ${request.mode} using ${result.summary.model || 'gemini-2.5-flash'}`,
-            output: `Found ${result.summary.totalIssues || 0} accessibility issues`
-          }],
+          steps: [
+            ...result.toolResults.map((tr: any) => ({
+              timestamp: tr.timestamp,
+              action: 'tool_execution',
+              tool: tr.tool,
+              input: tr.args,
+              output: typeof tr.result === 'string' ? tr.result.substring(0, 200) + (tr.result.length > 200 ? '...' : '') : 'Success (JSON result)',
+              duration_ms: tr.duration
+            })),
+            {
+              timestamp: new Date().toISOString(),
+              action: 'ai_agent_analysis',
+              tool: result.summary.model || 'gemini-2.5-flash',
+              reasoning: `Analyzed ${request.mode} using ${result.summary.model || 'gemini-2.5-flash'}`,
+              output: `Found ${result.summary.totalIssues || 0} accessibility issues`
+            }
+          ],
           tools_used: result.mcpToolsUsed || [],
           sources_consulted: result.sourcesConsulted || [],
           duration_ms: result.duration_ms
