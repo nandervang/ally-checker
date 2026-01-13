@@ -6,8 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Icon } from "@/lib/icons";
 import { useIconLibrary } from "@/contexts/IconLibraryContext";
 import { LoadingSpinner } from "./LoadingSpinner";
@@ -57,6 +55,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
   const [auditError, setAuditError] = useState<string | null>(null);
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [progressMessage, setProgressMessage] = useState<string>("");
+  const [progressPercent, setProgressPercent] = useState<number>(0);
 
   // Load settings on mount
   useEffect(() => {
@@ -233,30 +232,32 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
 
           // Progress callback
           const onProgress = (progress: AuditProgress) => {
-            setProgressMessage(progress.message);
+            if (progress.message) setProgressMessage(progress.message);
+            if (progress.progress !== undefined) setProgressPercent(progress.progress);
             
             switch (progress.status) {
               case "queued":
-                setProgressMessage("⏳ Audit queued, connecting to AI agent...");
+              case "pending": // Handle both legacy and new status
+                if (!progress.message) setProgressMessage("⏳ Audit queued, waiting for worker...");
                 setAuditStep("analyzing");
                 break;
               case "analyzing":
-                // Provide detailed messages based on input type
-                if (inputType === "url") {
-                  setProgressMessage("🤖 AI agent analyzing page structure, semantics, and ARIA patterns...");
-                } else if (inputType === "html") {
-                  setProgressMessage("🤖 AI agent checking WCAG 2.2 compliance and accessibility patterns...");
-                } else if (inputType === "snippet") {
-                  setProgressMessage("🤖 AI agent evaluating component accessibility and best practices...");
-                } else if (inputType === "document") {
-                  const docType = documentType?.toUpperCase();
-                  setProgressMessage(`🤖 AI agent validating ${docType} against ${documentType === 'pdf' ? 'PDF/UA standards' : 'WCAG document guidelines'}...`);
+                // If message isn't provided by backend, provide default
+                if (!progress.message) {
+                    if (inputType === "url") {
+                    setProgressMessage("🤖 AI agent analyzing page structure, semantics, and ARIA patterns...");
+                    } else {
+                    setProgressMessage("🤖 AI agent checking WCAG 2.2 compliance...");
+                    }
                 }
                 setAuditStep("analyzing");
                 break;
               case "complete":
-                setProgressMessage("✨ Analysis complete, compiling findings into report...");
+              case "completed": // Handle both variations
+                setProgressMessage("✨ Analysis complete, compiling report...");
                 setAuditStep("generating");
+                // Force 100%
+                setProgressPercent(100);
                 break;
               case "failed":
                 setAuditStep("idle");
@@ -529,6 +530,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
             currentStep={getStepNumber()}
             totalSteps={3}
             stepLabel={progressMessage || getStepLabel()}
+            percentage={progressPercent > 0 ? progressPercent : undefined}
           />
         </div>
       )}

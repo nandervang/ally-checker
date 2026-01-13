@@ -137,6 +137,8 @@ export interface AuditProgress {
   status: AuditStatus;
   message: string;
   issues_found?: number;
+  progress?: number;
+  current_stage?: string;
 }
 
 export type AuditProgressCallback = (progress: AuditProgress) => void;

@@ -313,9 +313,116 @@ export async function runAudit(
       throw error;
     }
 
-    onProgress?.({
-      status: 'complete',
-      message: 'Audit complete!',
+    // Since the audit runs asynchronously in the background, we need to wait for it to complete.
+    // If the backend returned 'pending' or 'analyzing', we subscribe to Supabase Realtime updates.
+    
+    // Check if it's already done (rare but possible)
+    if (responseData.status === 'completed' || responseData.status === 'complete' || responseData.status === 'failed') {
+       if (responseData.status === 'failed') {
+          const msg = responseData.error_message || 'Audit failed immediately';
+          onProgress?.({ status: 'failed', message: msg });
+          throw new Error(msg);
+       }
+       onProgress?.({ status: 'complete', message: 'Audit complete!', progress: 100 });
+       return auditId;
+    }
+
+    // Wait for completion using Realtime with Polling Fallback
+    await new Promise<void>((resolve, reject) => {
+        let isResolved = false;
+        
+        // Subscription setup
+        const channel = supabase
+            .channel(`audit-${auditId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'audits',
+                    filter: `id=eq.${auditId}`,
+                },
+                (payload) => {
+                    if (isResolved) return;
+                    const newRow = payload.new as AuditRow;
+                    
+                    if (newRow.status === 'completed' || newRow.status === 'complete') {
+                        onProgress?.({ status: 'complete', message: 'Audit complete!', progress: 100 });
+                        cleanup();
+                        resolve();
+                    } else if (newRow.status === 'failed') {
+                         const msg = newRow.error_message || 'Audit failed during processing';
+                         onProgress?.({ status: 'failed', message: msg });
+                         cleanup();
+                         reject(new Error(msg));
+                    } else {
+                        // Update progress
+                         onProgress?.({ 
+                             status: (newRow.status as any) || 'analyzing', 
+                             message: newRow.current_stage || `Analyzing... (${newRow.progress || 0}%)`,
+                             progress: newRow.progress || 0
+                        });
+                    }
+                }
+            )
+            .subscribe((status) => {
+              if (status === 'SUBSCRIBED') {
+                 console.log(`[Audit] Subscribed to real-time updates for ${auditId}`);
+              }
+            });
+            
+        // Polling fallback (every 2s)
+        const intervalId = setInterval(async () => {
+             if (isResolved) return;
+             
+             const { data, error } = await supabase
+                .from('audits')
+                .select('status, progress, current_stage, error_message')
+                .eq('id', auditId)
+                .single();
+                
+             if (error) {
+                 console.warn('[Audit] Polling error:', error);
+                 return; 
+             }
+             
+             if (data) {
+                 if (data.status === 'completed' || data.status === 'complete') {
+                     onProgress?.({ status: 'complete', message: 'Audit complete!', progress: 100 });
+                     cleanup();
+                     resolve();
+                 } else if (data.status === 'failed') {
+                     const msg = data.error_message || 'Audit failed';
+                     onProgress?.({ status: 'failed', message: msg });
+                     cleanup();
+                     reject(new Error(msg));
+                 } else {
+                     onProgress?.({ 
+                         status: (data.status as any) || 'analyzing', 
+                         message: data.current_stage || `Analyzing... (${data.progress || 0}%)`,
+                         progress: data.progress || 0
+                     });
+                 }
+             }
+        }, 2000);
+        
+        // Timeout (5 minutes max by default for client waiting, though background can run longer)
+        // We set it high because background functions can take time.
+        const timeoutId = setTimeout(() => {
+            if (isResolved) return;
+            // Don't reject, just stop waiting? No, frontend needs result.
+            // But we don't want to kill the background process, just stop the UI waiting?
+            // Let's reject for now so UI shows error.
+            cleanup();
+            reject(new Error('Audit timed out waiting for results (client-side timeout)'));
+        }, 300000); // 5 mins
+
+        function cleanup() {
+            isResolved = true;
+            clearInterval(intervalId);
+            clearTimeout(timeoutId);
+            supabase.removeChannel(channel);
+        }
     });
 
     return auditId;
