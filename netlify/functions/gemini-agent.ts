@@ -20,8 +20,11 @@ interface AuditRequest {
 
 interface MCPToolResult {
   tool: string;
+  args?: any;
   result: unknown;
   error?: string;
+  timestamp: string;
+  duration: number;
 }
 
 /**
@@ -215,7 +218,10 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
           
           toolCalls.push({
             tool: call.name,
+            args: call.args,
             result: toolResult,
+            timestamp: new Date(toolStart).toISOString(),
+            duration: toolTime
           });
           
           functionResponses.push({
@@ -233,8 +239,11 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
           
           toolCalls.push({
             tool: call.name,
+            args: call.args,
             result: errorResult,
             error: error instanceof Error ? error.message : 'Unknown error',
+            timestamp: new Date(toolStart).toISOString(),
+            duration: toolTime
           });
           
           functionResponses.push({
@@ -424,6 +433,8 @@ You have a 60-second execution limit. Use this workflow:
 - **analyze_html / analyze_url**: Run axe-core automated testing (use FIRST)
 - audit_pdf/audit_docx: Document accessibility audits
 - fetch_url: Retrieve HTML content from URLs
+- **capture_element_screenshot**: Capture visual evidence of specific elements (use for high priority issues)
+- **capture_violations_screenshots**: Capture screenshots for a list of violations
 
 **Phase 2: Research & Documentation (MANDATORY)**
 - **get_wcag_criterion**: Get official WCAG documentation for a criterion (e.g., "1.1.1")
@@ -460,6 +471,7 @@ After axe-core returns violations:
 2. For HTML/snippets: Use analyze_html to run axe-core
 3. For Documents: Use audit_pdf or audit_docx
 4. Collect all automated test results
+5. **Capture Visual Evidence**: Use capture_element_screenshot for critical visual issues (contrast, layout, missing alt text rendering)
 
 **PHASE 2: Research & Documentation (Next 30 seconds) - MANDATORY!**
 5. **For EACH unique WCAG criterion found:**
@@ -534,9 +546,10 @@ Do NOT skip research phase. Professional reports require authoritative sources.
    - Find relevant Webbriktlinjer guideline matching the WCAG criterion
    - Only include for Swedish locale or ETU template
 
-7. **screenshot_url**: Leave null/empty - screenshots generated separately via browser automation
-   - Will be populated later by screenshot capture process
-   - Just set to null in JSON output
+7. **screenshot**: If you captured a screenshot for this issue using capture_element_screenshot, include the result object here
+   - Format: { "base64": "...", "mimeType": "image/png", ... }
+   - Populate from the tool output
+   - If no screenshot captured, omit or set to null
 
 **Testing Guidance (Magenta A11y Style):**
 For each issue, provide comprehensive testing instructions:
@@ -621,7 +634,7 @@ Each issue in the array must include:
 - severity: "critical", "serious", "moderate", or "minor"
 - source: "axe-core", "ai-heuristic", or "manual"
 - how_to_fix: Remediation steps
-- Optional but recommended: element_selector, element_html, code_example, user_impact, how_to_reproduce, keyboard_testing, screen_reader_testing, visual_testing, expected_behavior, wcag_url
+- Optional but recommended: element_selector, element_html, code_example, user_impact, how_to_reproduce, keyboard_testing, screen_reader_testing, visual_testing, expected_behavior, wcag_url, screenshot
 
 **Severity Guidelines:**
 - critical: Level A violations blocking access
