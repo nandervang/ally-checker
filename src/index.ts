@@ -197,7 +197,7 @@ async function handleRunAudit(req: Request) {
 }
 
 const server = serve({
-  port: 0,
+  port: Number(process.env.PORT) || 3000,
   routes: {
     // Serve index.html for all unmatched routes.
     "/*": index,

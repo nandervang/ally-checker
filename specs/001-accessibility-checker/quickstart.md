@@ -529,3 +529,38 @@ For questions or issues:
 2. Review specification in [spec.md](spec.md)
 3. Create Beads issue: `bd create --title "Question: <topic>"`
 4. Check project constitution: `.specify/memory/constitution.md`
+
+## Testing
+
+The project uses **Vitest** for unit/integration tests and **Playwright** for end-to-end (E2E) testing.
+
+### Running Unit Tests
+
+Run all unit and component tests:
+
+```bash
+bun run test
+# OR
+bun run test:run
+```
+
+Run with coverage report:
+
+```bash
+bun run test:coverage
+```
+
+### Running E2E Tests
+
+End-to-end tests run the full application in a browser environment.
+
+```bash
+bun run test:e2e
+```
+
+### Writing Tests
+
+- **Unit Tests**: Place in `src/**/__tests__` or next to files as `*.test.ts`.
+- **Component Tests**: Place next to components as `*.test.tsx`. Use `@testing-library/react`.
+- **E2E Tests**: Place in `e2e/` directory.
+

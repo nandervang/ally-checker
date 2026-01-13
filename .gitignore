@@ -28,3 +28,11 @@ yarn-error.log*
 # Build output
 /dist
 
+
+# Playwright
+playwright-report/
+test-results/
+
+# Local Env
+.env
+package-lock.json
