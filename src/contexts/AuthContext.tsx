@@ -19,6 +19,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check for E2E test mode
+    const e2eUser = localStorage.getItem('E2E_TEST_USER');
+    if (e2eUser) {
+      const mockUser = { id: 'test-user', email: 'test@example.com' } as User;
+      setUser(mockUser);
+      setSession({ user: mockUser } as Session);
+      setLoading(false);
+      return;
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);

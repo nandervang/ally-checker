@@ -532,11 +532,41 @@ For questions or issues:
 
 ## Testing
 
-The project uses **Vitest** for unit/integration tests and **Playwright** for end-to-end (E2E) testing.
+The project uses a comprehensive testing strategy:
 
-### Running Unit Tests
+- **Unit Tests**: `bun run test` (Vitest)
+  - Located in `src/**/*.test.ts`
+  - Covers hooks (`src/hooks`), utilities (`src/lib`), and services.
+  - Mocks external dependencies like Supabase.
 
-Run all unit and component tests:
+- **Component Tests**: `bun run test` (Vitest + React Testing Library)
+  - Located in `src/components/**/*.test.tsx`.
+  - Tests UI interactions and rendering.
+
+- **E2E Tests**: `bun run test:e2e` (Playwright)
+  - Located in `e2e/`.
+  - Tests critical user journeys like Snippet Analysis.
+  - Uses a test user bypass (localStorage `E2E_TEST_USER`) to skip auth.
+
+- **Coverage**: `bun run test:coverage`
+  - Generates coverage reports in `coverage/`.
+  - Aiming for high coverage on core logic (`src/lib/audit`).
+
+#### Running Tests
+
+```bash
+# Run all unit/component tests
+bun run test
+
+# Run specific file
+bun run test src/lib/audit/audit-service.test.ts
+
+# Run E2E tests (requires dev server to be usable)
+bun run test:e2e
+
+# Check coverage
+bun run test:coverage
+```
 
 ```bash
 bun run test
