@@ -9,7 +9,7 @@ import { axeTools, handleAxeTool } from "./axe-core.js";
 import { wcagTools, handleWcagTool } from "./wcag-docs.js";
 import { waiTools, handleWaiTool } from "./wai-tips.js";
 import { magentaTools, handleMagentaTool } from "./magenta.js";
-import { playwrightTools, handlePlaywrightTool } from "./playwright-screenshots.js";
+import { playwrightTools, handlePlaywrightTool } from "./playwright.js";
 
 /**
  * Get all available MCP tools
