@@ -46,6 +46,19 @@ Add to your MCP settings file (e.g., `~/.config/Code/User/globalStorage/rooveter
 }
 ```
 
+## Testing / Verification
+
+To verify the auditors against generated bad files:
+
+```bash
+# 1. Generate test artifacts
+python3 create_test_docs.py
+python3 create_test_pdf.py
+
+# 2. Run the auditor verification
+python3 verify_auditors.py
+```
+
 ## Tools
 
 ### audit_pdf
