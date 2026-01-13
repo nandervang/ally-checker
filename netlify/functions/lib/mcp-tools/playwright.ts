@@ -388,6 +388,7 @@ export async function handlePlaywrightTool(
         
         const focusInfo = await page.evaluate(() => {
           const active = document.activeElement;
+          const rect = active?.getBoundingClientRect();
           return {
             tagName: active?.tagName.toLowerCase(),
             id: active?.id,
@@ -397,7 +398,14 @@ export async function handlePlaywrightTool(
             // Check specific focus styles
             outline: window.getComputedStyle(active as Element).outline,
             boxShadow: window.getComputedStyle(active as Element).boxShadow,
-            border: window.getComputedStyle(active as Element).border
+            border: window.getComputedStyle(active as Element).border,
+            // Coordinates for visualization
+            rect: rect ? { 
+                x: rect.left + window.scrollX, 
+                y: rect.top + window.scrollY, 
+                width: rect.width, 
+                height: rect.height 
+            } : null
           };
         });
         
@@ -410,11 +418,78 @@ export async function handlePlaywrightTool(
         }
       }
 
+      // Generate visualization overlay
+      await page.evaluate((traceData: any[]) => {
+          const container = document.createElement('div');
+          container.style.position = 'absolute';
+          container.style.top = '0';
+          container.style.left = '0';
+          container.style.width = '100%';
+          container.style.height = '100%';
+          container.style.pointerEvents = 'none';
+          container.style.zIndex = '2147483647'; // Max z-index
+          document.body.appendChild(container);
+
+          traceData.forEach((item, index) => {
+              if (!item.focus?.rect) return;
+              const { x, y, width, height } = item.focus.rect;
+              
+              // Draw box
+              const box = document.createElement('div');
+              box.style.position = 'absolute';
+              box.style.left = `${x}px`;
+              box.style.top = `${y}px`;
+              box.style.width = `${width}px`;
+              box.style.height = `${height}px`;
+              box.style.border = '2px solid #2563eb'; // Blue
+              box.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
+              box.style.borderRadius = '4px';
+              container.appendChild(box);
+
+              // Draw badge
+              const badge = document.createElement('div');
+              badge.textContent = `${index}`;
+              badge.style.position = 'absolute';
+              badge.style.left = `${x - 10}px`;
+              badge.style.top = `${y - 10}px`;
+              badge.style.backgroundColor = '#2563eb';
+              badge.style.color = 'white';
+              badge.style.borderRadius = '50%';
+              badge.style.width = '20px';
+              badge.style.height = '20px';
+              badge.style.display = 'flex';
+              badge.style.alignItems = 'center';
+              badge.style.justifyContent = 'center';
+              badge.style.fontSize = '12px';
+              badge.style.fontWeight = 'bold';
+              badge.style.zIndex = '10';
+              container.appendChild(badge);
+              
+              // Draw connector line to next point
+              if (index < traceData.length - 1) {
+                  const nextRect = traceData[index + 1].focus?.rect;
+                  if (nextRect) {
+                      // Simple SVG for line
+                      // Note: For simplicity in this injected script, creating a large SVG for all lines might be heavy
+                      // skipping lines for now to keep it lightweight, boxes+numbers are good enough
+                  }
+              }
+          });
+      }, trace);
+
+      // Capture screenshot of the visualization
+      const screenshotBuffer = await page.screenshot({ fullPage: true, type: 'png' });
+      const base64Screenshot = screenshotBuffer.toString('base64');
+
       return {
         success: true,
         stepsTaken: trace.length,
         trace,
-        analysis: "Review the trace to ensure logical order. Check if 'outline' or 'boxShadow' styles indicate visible focus."
+        analysis: "Review the trace to ensure logical order. Check if 'outline' or 'boxShadow' styles indicate visible focus.",
+        screenshot: {
+            base64: base64Screenshot,
+            mimeType: "image/png"
+        }
       };
     } catch (error) {
        return { success: false, error: error instanceof Error ? error.message : "Keyboard navigation failed" };
