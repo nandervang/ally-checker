@@ -4,7 +4,7 @@
  * Run: bun test-mcp-tools.ts
  */
 
-import { getAllTools, executeTool } from "./netlify/functions/lib/mcp-tools/index.js";
+import { getAllTools, executeTool } from "../netlify/functions/lib/mcp-tools/index.js";
 
 console.log("🧪 Testing MCP Tools\n");
 
