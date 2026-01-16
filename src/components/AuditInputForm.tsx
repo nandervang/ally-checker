@@ -228,6 +228,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
             user_id: user.id,
             document_path: documentPath,
             document_type: documentType,
+            reportTemplate: settings?.defaultReportTemplate,
           };
 
           // Progress callback

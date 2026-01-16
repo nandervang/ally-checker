@@ -14,6 +14,7 @@ interface AuditRequest {
   filePath?: string;
   userId?: string;
   sessionId?: string;
+  reportTemplate?: string;
 }
 
 /**
@@ -100,6 +101,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
         ai_model: request.geminiModel || request.model,
         wcag_version: '2.1',
         created_at: new Date().toISOString(),
+        agent_trace: request.reportTemplate ? { configuration: { reportTemplate: request.reportTemplate as string } } : null,
       })
       .select()
       .single();

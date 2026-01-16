@@ -69,6 +69,9 @@ export const handler: Handler = async (event: HandlerEvent) => {
     }
 
     // Reconstruct AuditRequest
+    const agentTracePayload = audit.agent_trace as any;
+    const reportTemplate = agentTracePayload?.configuration?.reportTemplate;
+
     const request: AuditRequest = {
       mode: audit.input_type as "url" | "html" | "snippet" | "document",
       content: audit.input_value || audit.url || "",
@@ -77,7 +80,8 @@ export const handler: Handler = async (event: HandlerEvent) => {
       documentType: audit.document_type as any,
       filePath: audit.document_path || undefined,
       sessionId: audit.session_id,
-      userId: audit.user_id || undefined
+      userId: audit.user_id || undefined,
+      reportTemplate: reportTemplate,
     };
 
     // Update progress: Automated Analysis

@@ -264,6 +264,7 @@ export async function runAudit(
       language: 'en',
       documentType: input.document_type,
       filePath: input.document_path,
+      reportTemplate: input.reportTemplate,
     };
 
     // Call Netlify function for AI agent audit

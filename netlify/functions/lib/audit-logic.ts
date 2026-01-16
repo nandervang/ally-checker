@@ -12,6 +12,7 @@ export interface AuditRequest {
   filePath?: string;
   userId?: string;
   sessionId?: string;
+  reportTemplate?: string;
 }
 
 export interface MCPToolResult {

@@ -130,6 +130,7 @@ export interface AuditInput {
   session_id?: string;
   document_path?: string;
   document_type?: 'pdf' | 'docx';
+  reportTemplate?: string;
 }
 
 // Progress callback for streaming updates

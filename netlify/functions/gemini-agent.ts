@@ -16,6 +16,7 @@ interface AuditRequest {
   geminiModel?: "gemini-2.5-flash" | "gemini-2.5-pro"; // Specific Gemini variant
   documentType?: "pdf" | "docx";
   filePath?: string;
+  reportTemplate?: string;
 }
 
 interface MCPToolResult {
@@ -113,7 +114,7 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
   
   try {
     // Build comprehensive system instruction
-    const systemInstruction = buildSystemInstruction();
+    const systemInstruction = buildSystemInstruction(request.reportTemplate);
     
     // Build user prompt based on mode
     const userPrompt = buildUserPrompt(request);
@@ -424,7 +425,8 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
 /**
  * Build system instruction for Gemini
  */
-function buildSystemInstruction(): string {
+function buildSystemInstruction(reportTemplate?: string): string {
+  const currentTemplate = reportTemplate || 'wcag-international';
   return `You are an expert accessibility auditor with deep knowledge of WCAG 2.2, WAI-ARIA, and Swedish accessibility standards.
 
 **CRITICAL: Research-Based Audit Process**
@@ -436,6 +438,9 @@ You have a 60-second execution limit. Use this workflow:
 4. **Reference Magenta A11y patterns** for testing instructions when applicable
 5. **Consult WAI-ARIA specs** for interactive components (buttons, forms, landmarks, etc.)
 6. **Apply heuristic evaluation** for issues automated tools miss
+
+**Template Selection Rules:**
+- You MUST generate the report using the following template: ${currentTemplate}
 
 **Available MCP Tools - USE THEM EXTENSIVELY!**
 
