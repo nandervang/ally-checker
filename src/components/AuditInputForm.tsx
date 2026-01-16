@@ -310,6 +310,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
                   helpUrl: issue.wcag_url || `https://www.w3.org/WAI/WCAG22/Understanding/${issue.wcag_criterion?.replace(/\./g, '')}.html`,
                   occurrences: 1,
                   codeExample: issue.code_example,
+                  screenshot_data: issue.screenshot_data,
                 })),
                 agent_trace: apiResult.auditMethodology ? {
                   steps: [],
@@ -381,6 +382,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
               helpUrl: issue.wcag_url || `https://www.w3.org/WAI/WCAG22/Understanding/${issue.wcag_criterion.replace(/\./g, '')}.html`,
               occurrences: 1,
               codeExample: issue.code_example,
+              screenshot_data: issue.screenshot_data,
             })),
             agent_trace: audit.agent_trace ? {
               steps: (audit.agent_trace as any).steps || [],

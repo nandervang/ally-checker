@@ -363,6 +363,20 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
                               <h5 className="font-semibold mb-1">{t("results.details.description")}</h5>
                               <p className="text-sm">{issue.description}</p>
                             </div>
+                            {(issue as any).screenshot_data && (issue as any).screenshot_data.data && (
+                                <div className="mt-3 border rounded-md p-3 bg-muted/20">
+                                  <h5 className="font-semibold mb-2 flex items-center gap-2 text-sm">
+                                    Capture Evidence
+                                  </h5>
+                                  <div className="bg-background border rounded p-2">
+                                    <img 
+                                      src={`data:${(issue as any).screenshot_data.mime_type || 'image/png'};base64,${(issue as any).screenshot_data.data}`}
+                                      alt="Issue screenshot"
+                                      className="max-w-full h-auto rounded" 
+                                    />
+                                  </div>
+                                </div>
+                            )}
                             <div>
                               <h5 className="font-semibold mb-1">{t("results.details.element")}</h5>
                               <code className="text-xs bg-muted p-2 rounded block overflow-x-auto">
@@ -456,6 +470,20 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
                               <h5 className="font-semibold mb-1">{t("results.details.description")}</h5>
                               <p className="text-sm">{issue.description}</p>
                             </div>
+                            {(issue as any).screenshot_data && (issue as any).screenshot_data.data && (
+                                <div className="mt-3 border rounded-md p-3 bg-muted/20">
+                                  <h5 className="font-semibold mb-2 flex items-center gap-2 text-sm">
+                                    Capture Evidence
+                                  </h5>
+                                  <div className="bg-background border rounded p-2">
+                                    <img 
+                                      src={`data:${(issue as any).screenshot_data.mime_type || 'image/png'};base64,${(issue as any).screenshot_data.data}`}
+                                      alt="Issue screenshot"
+                                      className="max-w-full h-auto rounded" 
+                                    />
+                                  </div>
+                                </div>
+                            )}
                             <div>
                               <h5 className="font-semibold mb-1">{t("results.details.element")}</h5>
                               <code className="text-xs bg-muted p-2 rounded block overflow-x-auto">

@@ -198,6 +198,28 @@ export function SelectableIssueCard({
                 </AccordionItem>
               )}
 
+              {/* Screenshot Data (New Schema) */}
+              {(issue as any).screenshot_data && (issue as any).screenshot_data.data && (
+                <AccordionItem value="screenshot-data" className="border border-border rounded-lg px-3 mb-2">
+                  <AccordionTrigger className="text-sm hover:no-underline py-3">
+                    <div className="flex items-center gap-2">
+                      <FileCode className="h-4 w-4 text-primary" />
+                      <span className="font-medium">Evidence (Screenshot)</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm pb-3">
+                    <div className="bg-muted/30 p-3 rounded-md">
+                      <p className="mb-2 font-medium text-xs text-muted-foreground">{(issue as any).screenshot_data.description || 'Captured screenshot'}</p>
+                      <img 
+                        src={`data:${(issue as any).screenshot_data.mime_type || 'image/png'};base64,${(issue as any).screenshot_data.data}`}
+                        alt="Issue screenshot"
+                        className="max-w-full h-auto rounded border border-border" 
+                      />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
               {/* Keyboard Testing */}
               {issue.keyboard_testing && (
                 <AccordionItem value="keyboard" className="border border-border rounded-lg px-3 mb-2">
