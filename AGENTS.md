@@ -20,6 +20,10 @@ bd sync               # Sync with git
 
 1. **File issues for remaining work** - Create issues for anything that needs follow-up
 2. **Run quality gates** (if code changed) - Tests, linters, builds
+   - `bun run lint` (ensure no new errors)
+   - `bun run build` (must pass)
+   - `bun run test:run` (unit tests must pass)
+   - `bun run test:e2e` (if UI flows changed)
 3. **Update issue status** - Close finished work, update in-progress items
 4. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
