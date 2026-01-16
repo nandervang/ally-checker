@@ -13,6 +13,9 @@
   node_bundler = "esbuild"
   # Force ES Module output instead of CommonJS to support happy-dom/axe-core
   # This allows dynamic import() of ES Module dependencies
+  # Include Python MCP servers for document accessibility (requires external Python runtime if used)
+  included_files = ["mcp-servers/document-accessibility-server/**"]
+
   [functions.esbuild]
     format = "esm"
   external_node_modules = ["axe-core", "happy-dom"]

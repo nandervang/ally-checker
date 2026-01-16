@@ -8,6 +8,7 @@
 import { exec } from "child_process";
 import path from "path";
 import util from "util";
+import fs from "fs";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 const execAsync = util.promisify(exec);
@@ -55,12 +56,31 @@ export const documentTools: Tool[] = [
 
 export async function handleDocumentTool(name: string, args: any): Promise<any> {
   // Locate the Python CLI script
-  // In development, it's in mcp-servers/document-accessibility-server/
-  const projectRoot = path.resolve(__dirname, "../../../../");
-  const scriptPath = path.join(
-    projectRoot, 
-    "mcp-servers/document-accessibility-server/cli.py"
-  );
+  // We check multiple locations to handle local dev, bundled functions, and diverse environments
+  const possiblePaths = [
+    // 1. Relative to this file (Source structure: netlify/functions/lib/mcp-tools/ -> mcp-servers/...)
+    path.resolve(__dirname, "../../../../mcp-servers/document-accessibility-server/cli.py"),
+    // 2. From CWD (Project root in local dev)
+    path.join(process.cwd(), "mcp-servers/document-accessibility-server/cli.py"),
+    // 3. Fallback for potential flattened structure
+    path.join(process.cwd(), "mcp-servers/document-accessibility-server/cli.py"),
+    // 4. Absolute path fallback (if env var is set)
+    process.env.MCP_DOC_SERVER_PATH || ""
+  ].filter(Boolean);
+
+  let scriptPath = "";
+  for (const p of possiblePaths) {
+     if (fs.existsSync(p)) {
+        scriptPath = p;
+        break;
+     }
+  }
+
+  // If still not found, default to the relative one but warn
+  if (!scriptPath) {
+     console.warn(`⚠️ Could not find document auditor script in checked paths: ${possiblePaths.join(", ")}`);
+     scriptPath = path.resolve(__dirname, "../../../../mcp-servers/document-accessibility-server/cli.py");
+  }
 
   const filePath = args.file_path;
   if (!filePath) {
