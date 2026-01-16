@@ -284,7 +284,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
                 auditId: null as any, // No audit ID since it wasn't saved
                 url: inputType === 'url' ? inputValue : undefined,
                 fileName: inputType === 'snippet' ? 'HTML Snippet' : inputType === 'html' ? 'HTML Document' : inputType === 'document' ? inputValue : undefined,
-                documentType: inputType === 'url' ? 'html' : inputType as 'html' | 'snippet',
+                documentType: inputType === 'document' ? (documentType || 'pdf') : 'html',
                 timestamp: apiResult.summary?.timestamp || new Date().toISOString(),
                 summary: {
                   totalIssues: apiResult.summary?.totalIssues || 0,
@@ -349,8 +349,13 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
           const result: AuditResult = {
             auditId: audit.id,
             url: audit.input_type === 'url' ? audit.input_value : undefined,
-            fileName: audit.input_type === 'snippet' ? 'HTML Snippet' : audit.input_type === 'html' ? 'HTML Document' : undefined,
-            documentType: audit.input_type === 'url' ? 'html' : audit.input_type as 'html' | 'snippet',
+            fileName: audit.input_type === 'snippet' ? 'HTML Snippet' 
+              : audit.input_type === 'html' ? 'HTML Document' 
+              : audit.input_type === 'document' ? (audit.document_path?.split('/').pop() || 'Document') 
+              : undefined,
+            documentType: (audit.input_type === 'url' || audit.input_type === 'html' || audit.input_type === 'snippet') 
+              ? 'html' 
+              : (audit.document_type as any || 'pdf'),
             timestamp: audit.created_at,
             summary: {
               totalIssues: audit.total_issues || 0,
