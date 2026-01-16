@@ -198,14 +198,38 @@ test.describe('Screenshot Schema Support', () => {
         // Look for the "Capture Evidence" section name (as rendered in AuditResults.tsx)
         await expect(page.getByText('Capture Evidence')).toBeVisible();
 
-        // Verify the image is rendered
-        const img = page.locator('img[alt="Issue screenshot"]');
-        await expect(img).toBeVisible();
+        // Verify the image thumbnail is rendered
+        const thumbnail = page.locator('img[alt="Issue screenshot thumbnail"]');
+        await expect(thumbnail).toBeVisible();
         
         // Verify src starts with data:image/png;base64
-        const src = await img.getAttribute('src');
+        const src = await thumbnail.getAttribute('src');
         expect(src).toContain('data:image/png;base64,iVBORw0KGgoAAA');
 
+        // Verify Lightbox functionality
+        // Target the wrapper div which acts as the DialogTrigger
+        const thumbnailWrapper = page.locator('div.group.relative.cursor-pointer').first();
+        await expect(thumbnailWrapper).toBeVisible();
+
+        // Scroll into view comfortably to avoid sticky header
+        await thumbnailWrapper.scrollIntoViewIfNeeded();
         
+        // Click the wrapper (force used if overlay is still considered 'intercepting')
+        await thumbnailWrapper.click({ force: true });
+
+        // Wait for the dialog to appear
+        // The mock data has a specific description: "Red Pixel Verification Image"
+        const dialogTitle = page.locator('[role="dialog"]').getByText(/Red Pixel Verification Image/i);
+        await expect(dialogTitle).toBeVisible();
+
+        // Verify dialog contains full size image
+        const dialogImage = page.locator('[role="dialog"] img[alt="Issue screenshot full size"]');
+        await expect(dialogImage).toBeVisible();
+
+        // Capture a screenshot of the rendered evidence (with lightbox open) for user verification
+        await page.screenshot({ path: 'verification-evidence-lightbox.png', fullPage: true });
+
+        // Close lightbox by clicking outside or pressing Escape
+        await page.keyboard.press('Escape');
     });
 });

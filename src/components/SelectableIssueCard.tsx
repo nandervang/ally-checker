@@ -3,7 +3,8 @@ import { Badge } from './ui/badge';
 import { Card, CardContent } from './ui/card';
 import { Separator } from './ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
-import { AlertCircle, ExternalLink, Check, Code2, User, Lightbulb, FileCode, Keyboard, AudioLines, Eye, CheckCircle2, PlayCircle, FileText, Copy } from 'lucide-react';
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogHeader } from './ui/dialog';
+import { AlertCircle, ExternalLink, Check, Code2, User, Lightbulb, FileCode, Keyboard, AudioLines, Eye, CheckCircle2, PlayCircle, FileText, Copy, Maximize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SelectableIssueCardProps {
@@ -210,11 +211,35 @@ export function SelectableIssueCard({
                   <AccordionContent className="text-sm pb-3">
                     <div className="bg-muted/30 p-3 rounded-md">
                       <p className="mb-2 font-medium text-xs text-muted-foreground">{(issue as any).screenshot_data.description || 'Captured screenshot'}</p>
-                      <img 
-                        src={`data:${(issue as any).screenshot_data.mime_type || 'image/png'};base64,${(issue as any).screenshot_data.data}`}
-                        alt="Issue screenshot"
-                        className="max-w-full h-auto rounded border border-border" 
-                      />
+                      
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <div className="group relative cursor-pointer inline-block">
+                             <img 
+                               src={`data:${(issue as any).screenshot_data.mime_type || 'image/png'};base64,${(issue as any).screenshot_data.data}`}
+                               alt="Issue screenshot thumbnail"
+                               className="max-w-full h-auto max-h-60 rounded border border-border transition-opacity group-hover:opacity-90" 
+                             />
+                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded">
+                               <div className="bg-background/80 p-2 rounded-full shadow-sm">
+                                  <Maximize2 className="h-5 w-5 text-primary" />
+                               </div>
+                             </div>
+                          </div>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+                          <DialogHeader>
+                             <DialogTitle>{(issue as any).screenshot_data.description || 'Evidence Screenshot'}</DialogTitle>
+                          </DialogHeader>
+                          <div className="mt-2 text-center">
+                            <img 
+                               src={`data:${(issue as any).screenshot_data.mime_type || 'image/png'};base64,${(issue as any).screenshot_data.data}`}
+                               alt="Issue screenshot full size"
+                               className="max-w-full h-auto rounded border border-border mx-auto" 
+                             />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
