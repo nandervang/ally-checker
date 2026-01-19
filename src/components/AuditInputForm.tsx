@@ -29,7 +29,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { getUserSettings, type UserSettings } from "@/services/settingsService";
 
-type InputMode = "url" | "html" | "snippet" | "document";
+type InputMode = "url" | "html" | "snippet" | "document" | "manual";
 
 interface ValidationError {
   field: string;
@@ -50,6 +50,8 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
   const [url, setUrl] = useState("");
   const [snippet, setSnippet] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [manualDescription, setManualDescription] = useState("");
+  const [manualImage, setManualImage] = useState<File | null>(null);
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [auditStep, setAuditStep] = useState<AuditStep>("idle");
   const [auditError, setAuditError] = useState<string | null>(null);
@@ -87,6 +89,23 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
 
     return true;
   };
+  const validateImage = (uploadedFile: File): boolean => {
+      const validTypes = ["image/png", "image/jpeg", "image/webp"];
+      const maxSize = 5 * 1024 * 1024; // 5MB for images (strict to avoid payload issues)
+
+      if (!validTypes.includes(uploadedFile.type)) {
+        setErrors([{ field: "manualImage", message: "Only PNG, JPEG, and WebP images are supported." }]);
+        return false;
+      }
+
+      if (uploadedFile.size > maxSize) {
+        setErrors([{ field: "manualImage", message: "Image must be less than 5MB." }]);
+        return false;
+      }
+
+      return true;
+  };
+
   const validateDocument = (uploadedFile: File): boolean => {
     const validTypes = [
       "application/pdf",
@@ -118,15 +137,25 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      const isValid = mode === "document" 
-        ? validateDocument(selectedFile) 
-        : validateFile(selectedFile);
-      
-      if (isValid) {
-        setFile(selectedFile);
-        setErrors([]);
+      if (mode === "manual") {
+          const isValid = validateImage(selectedFile);
+          if (isValid) {
+            setManualImage(selectedFile);
+            setErrors([]);
+          } else {
+             setManualImage(null);
+          }
       } else {
-        setFile(null);
+        const isValid = mode === "document" 
+            ? validateDocument(selectedFile) 
+            : validateFile(selectedFile);
+        
+        if (isValid) {
+            setFile(selectedFile);
+            setErrors([]);
+        } else {
+            setFile(null);
+        }
       }
     }
   };
@@ -156,6 +185,11 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
         setErrors([{ field: "snippet", message: t("audit.validation.snippetRequired") }]);
         return;
       }
+    } else if (mode === "manual") {
+       if (!manualDescription.trim()) {
+           setErrors([{ field: "manualDescription", message: "Please describe the issue." }]);
+           return;
+       }
     } else {
       // mode === "document"
       if (!file) {
@@ -186,10 +220,10 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
           setProgressMessage("🔧 Initializing AI accessibility audit...");
           
           // Prepare input for audit service
-          let inputType: "url" | "html" | "snippet" | "document" = "html";
+          let inputType: "url" | "html" | "snippet" | "document" | "manual" = "html";
           let inputValue = "";
           let documentPath: string | undefined = undefined;
-          let documentType: "pdf" | "docx" | undefined = undefined;
+          let documentType: "pdf" | "docx" | "image" | undefined = undefined;
           
           if (mode === "url") {
             inputType = "url";
@@ -204,6 +238,20 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
             inputType = "snippet";
             inputValue = snippet;
             setProgressMessage("🔍 Preparing code snippet for analysis...");
+          } else if (mode === "manual") {
+              inputType = "manual";
+              setProgressMessage("📝 Preparing manual issue report...");
+              
+              if (manualImage) {
+                 // Upload image
+                 setProgressMessage(`📤 Uploading image ${manualImage.name}...`);
+                 const uploadResult = await uploadDocumentForAudit(manualImage, user.id);
+                 documentPath = uploadResult.documentPath;
+                 documentType = "image"; // We map this locally, backend might treat it as generic doc
+              }
+              
+              inputValue = manualDescription;
+              setProgressMessage("✅ Issue details prepared, asking AI to investigate...");
           } else if (mode === "document" && file) {
             inputType = "document";
             
@@ -212,7 +260,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
             const uploadResult = await uploadDocumentForAudit(file, user.id);
             
             documentPath = uploadResult.documentPath;
-            documentType = uploadResult.documentType;
+            documentType = uploadResult.documentType as any;
             inputValue = file.name;
             
             setProgressMessage("✅ Document uploaded, initializing accessibility checker...");
@@ -223,7 +271,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
           }
 
           const auditInput: AuditInput = {
-            input_type: inputType,
+            input_type: inputType as any, // Cast to any because DB might not be updated manually in types yet
             input_value: inputValue,
             user_id: user.id,
             document_path: documentPath,
@@ -246,9 +294,11 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
                 // If message isn't provided by backend, provide default
                 if (!progress.message) {
                     if (inputType === "url") {
-                    setProgressMessage("🤖 AI agent analyzing page structure, semantics, and ARIA patterns...");
+                      setProgressMessage("🤖 AI agent analyzing page structure, semantics, and ARIA patterns...");
+                    } else if (inputType === "manual") {
+                      setProgressMessage("🧠 AI agent researching the reported issue and context...");
                     } else {
-                    setProgressMessage("🤖 AI agent checking WCAG 2.2 compliance...");
+                      setProgressMessage("🤖 AI agent checking WCAG 2.2 compliance...");
                     }
                 }
                 setAuditStep("analyzing");
@@ -353,9 +403,12 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
             fileName: audit.input_type === 'snippet' ? 'HTML Snippet' 
               : audit.input_type === 'html' ? 'HTML Document' 
               : audit.input_type === 'document' ? (audit.document_path?.split('/').pop() || 'Document') 
+              : audit.input_type === 'manual' ? 'Manual Report'
               : undefined,
             documentType: (audit.input_type === 'url' || audit.input_type === 'html' || audit.input_type === 'snippet') 
               ? 'html' 
+              : audit.input_type === 'manual' 
+              ? 'manual'
               : (audit.document_type as any || 'pdf'),
             timestamp: audit.created_at,
             summary: {
@@ -545,7 +598,7 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
       )}
 
       <Tabs value={mode} onValueChange={(value) => { setMode(value as InputMode); }} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 h-auto">
+        <TabsList className="grid w-full grid-cols-5 h-auto">
           <TabsTrigger value="url" className="gap-2 text-base md:text-lg h-auto py-3 focus-ring">
             <Icon name="globe" library={iconLibrary} className="h-5 w-5" />
             URL
@@ -561,6 +614,10 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
           <TabsTrigger value="snippet" className="gap-2 text-base md:text-lg h-auto py-3 focus-ring">
             <Icon name="code" library={iconLibrary} className="h-5 w-5" />
             Snippet
+          </TabsTrigger>
+          <TabsTrigger value="manual" className="gap-2 text-base md:text-lg h-auto py-3 focus-ring">
+            <Icon name="edit" library={iconLibrary} className="h-5 w-5" />
+            Known Issue
           </TabsTrigger>
         </TabsList>
 
@@ -657,6 +714,67 @@ export function AuditInputForm({ onAuditComplete }: AuditInputFormProps) {
                 </Alert>
               )}
             </div>
+          </TabsContent>
+
+          {/* Known Issue (Manual Input) */}
+          <TabsContent value="manual" className="space-y-4">
+             <div className="space-y-4">
+                 <div className="space-y-2">
+                     <Label htmlFor="manual-desc" className="text-base md:text-lg">
+                        Issue Description
+                     </Label>
+                     <p className="text-sm text-muted-foreground">
+                        Describe the issue you found or paste a code snippet. The AI will analyze it, provide background info, and generate a remediation plan.
+                     </p>
+                     <Textarea
+                        id="manual-desc"
+                        value={manualDescription}
+                        onChange={(e) => {
+                            setManualDescription(e.target.value);
+                            setErrors([]);
+                        }}
+                        placeholder='Example: "https://andervang.com has no skip link" or paste HTML like <table> without caption.'
+                        className="text-base min-h-[150px] p-4 font-mono focus-ring"
+                        aria-invalid={!!getFieldError("manualDescription")}
+                        aria-describedby={getFieldError("manualDescription") ? "manual-error" : undefined}
+                     />
+                    {getFieldError("manualDescription") && (
+                        <Alert variant="destructive" role="alert" aria-live="polite">
+                        <Icon name="alert-circle" library={iconLibrary} className="h-4 w-4" />
+                        <AlertDescription id="manual-error" className="text-base">
+                            {getFieldError("manualDescription")?.message}
+                        </AlertDescription>
+                        </Alert>
+                    )}
+                 </div>
+
+                 <div className="space-y-2">
+                    <Label htmlFor="manual-image" className="text-base md:text-lg">
+                        Attach Image (Optional)
+                    </Label>
+                    <Input
+                        id="manual-image"
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        onChange={handleFileChange}
+                        className="text-base md:text-lg h-auto py-3 focus-ring cursor-pointer"
+                        aria-describedby={manualImage ? "image-success" : undefined}
+                    />
+                    {manualImage && !getFieldError("manualImage") && (
+                         <p id="image-success" className="text-sm md:text-base text-accent-foreground" role="status">
+                           ✓ Connected: {manualImage.name} ({(manualImage.size / 1024).toFixed(1)} KB)
+                         </p>
+                    )}
+                    {getFieldError("manualImage") && (
+                        <Alert variant="destructive" role="alert" aria-live="polite">
+                        <Icon name="alert-circle" library={iconLibrary} className="h-4 w-4" />
+                        <AlertDescription className="text-base">
+                            {getFieldError("manualImage")?.message}
+                        </AlertDescription>
+                        </Alert>
+                    )}
+                 </div>
+             </div>
           </TabsContent>
 
           {/* HTML Snippet */}

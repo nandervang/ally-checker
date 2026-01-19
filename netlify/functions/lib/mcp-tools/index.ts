@@ -56,7 +56,7 @@ export async function executeTool(toolName: string, args: any): Promise<any> {
     return await handleMagentaTool(toolName, args);
   }
   
-  if (toolName.startsWith("capture_")) {
+  if (toolName.startsWith("capture_") || toolName === "test_keyboard_navigation" || toolName === "check_focus_styles") {
     return await handlePlaywrightTool(toolName, args);
   }
   

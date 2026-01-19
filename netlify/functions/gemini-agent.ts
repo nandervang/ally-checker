@@ -10,7 +10,7 @@ import { parseGeminiResponse } from "../../src/lib/audit/response-parser.js";
 import { getAllTools, executeTool, convertToGeminiFormat } from "./lib/mcp-tools/index.js";
 
 interface AuditRequest {
-  mode: "url" | "html" | "snippet" | "document";
+  mode: "url" | "html" | "snippet" | "document" | "manual";
   content: string;
   model: "claude" | "gemini" | "gpt4";
   geminiModel?: "gemini-2.5-flash" | "gemini-2.5-pro"; // Specific Gemini variant
@@ -676,6 +676,19 @@ Process:
 5. Apply manual heuristic evaluation
 6. Provide comprehensive audit report with prioritized remediation steps
    - IMPORTANT: If test_keyboard_navigation returned a screenshot (in 'screenshot' property), include it in the issue reporting under the 'screenshot_data' field (map 'base64' to 'data').`;
+    
+    case "manual":
+      return `Analyze this reported accessibility issue:
+
+Reported Issue:
+"${request.content}"
+
+Process:
+1. Analyze the user's description of the issue.
+2. Identify the likely WCAG Success Criterion that is violated.
+3. Call get_wcag_criterion to verify the criterion details.
+4. Formulate a valid audit finding based on the user's report and WCAG standards.
+5. Provide specific remediation steps (how to fix).`;
     
     case "html":
       return `Audit the accessibility of this HTML content:

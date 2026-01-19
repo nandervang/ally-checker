@@ -23,14 +23,34 @@ export const handler: Handler = async (event: HandlerEvent) => {
   }
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // Fallback to Anon key if Service Role is missing
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
     console.error('Supabase not configured');
     return { statusCode: 500, body: "Server Configuration Error" };
   }
 
-  const supabase = createClient<Database>(supabaseUrl, supabaseKey);
+  // If Service Role is missing (local dev), try to use the user's JWT from the request
+  const options: any = {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      }
+  };
+  
+  const authHeader = event.headers.authorization || event.headers.Authorization;
+
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY && authHeader) {
+       console.log("Using Auth Header for Background Worker Context");
+       options.global = {
+         headers: {
+           Authorization: authHeader
+         }
+       };
+  }
+
+  const supabase = createClient<Database>(supabaseUrl, supabaseKey, options);
   
   let payload: any = {};
 
@@ -73,7 +93,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
     const reportTemplate = agentTracePayload?.configuration?.reportTemplate;
 
     const request: AuditRequest = {
-      mode: audit.input_type as "url" | "html" | "snippet" | "document",
+      mode: audit.input_type as "url" | "html" | "snippet" | "document" | "manual",
       content: audit.input_value || audit.url || "",
       model: (audit.ai_model?.includes('gemini') ? 'gemini' : 'claude') as "gemini" | "claude",
       geminiModel: audit.ai_model as any,
@@ -100,7 +120,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
     const { error: updateError } = await supabase
       .from('audits')
       .update({
-        status: 'completed',
+        status: 'complete',
         completed_at: new Date().toISOString(),
         progress: 100,
         current_stage: 'Complete',
@@ -175,7 +195,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
         screen_reader_testing: issue.screen_reader_testing || null,
         visual_testing: issue.visual_testing || null,
         expected_behavior: issue.expected_behavior || null,
-        screenshot_data: issue.screenshot_data || null,
+        // screenshot_data: issue.screenshot_data || null, // Configured for Supabase migration 017 but column missing in local cache
       }));
 
       const { error: issuesError } = await supabase

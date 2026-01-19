@@ -18,7 +18,7 @@
 
   [functions.esbuild]
     format = "esm"
-  external_node_modules = ["axe-core", "happy-dom"]
+  external_node_modules = ["axe-core", "happy-dom", "playwright", "playwright-core", "chromium-bidi"]
 
 # Configure individual functions with timeout and memory
 [functions."ai-agent-audit"]

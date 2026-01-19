@@ -35,7 +35,9 @@ export type IconName =
   // Code & Development
   | 'code' | 'code-2' | 'globe' | 'brain' | 'lightbulb' 
   // Accessibility
-  | 'keyboard' | 'audio' | 'play-circle'
+  | 'keyboard' | 'audio' | 'play-circle' | 'contrast'
+  // Tools & Stats
+  | 'activity' | 'bar-chart' | 'tool'
   // Auth
   | 'logout' | 'login';
 
@@ -114,6 +116,12 @@ const ICON_MAP: Record<IconName, Record<IconLibrary, string>> = {
   'keyboard': { lucide: 'Keyboard', hugeicons: 'Keyboard', tabler: 'Keyboard', phosphor: 'Keyboard' },
   'audio': { lucide: 'AudioLines', hugeicons: 'MusicNote01', tabler: 'Waveform', phosphor: 'Waveform' },
   'play-circle': { lucide: 'PlayCircle', hugeicons: 'Play', tabler: 'PlayerPlay', phosphor: 'PlayCircle' },
+  'contrast': { lucide: 'Contrast', hugeicons: 'Colors', tabler: 'Contrast', phosphor: 'CircleHalf' },
+  
+  // Tools & Stats
+  'activity': { lucide: 'Activity', hugeicons: 'Activity01', tabler: 'Activity', phosphor: 'Activity' },
+  'bar-chart': { lucide: 'BarChart3', hugeicons: 'ChartHistogram', tabler: 'ChartBar', phosphor: 'ChartBar' },
+  'tool': { lucide: 'Wrench', hugeicons: 'Wrench01', tabler: 'Tool', phosphor: 'Wrench' },
   
   // Auth
   'logout': { lucide: 'LogOut', hugeicons: 'Logout01', tabler: 'Logout', phosphor: 'SignOut' },

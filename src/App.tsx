@@ -10,13 +10,17 @@ import { AuditInputForm } from "@/components/AuditInputForm";
 import { AuditResults } from "@/components/AuditResults";
 import { AuthForm } from "@/components/AuthForm";
 import { ActionBanner } from "@/components/ActionBanner";
+import { DashboardWidgets } from "@/components/DashboardWidgets";
 import { SettingsSheet } from "@/components/SettingsSheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { IconLibraryProvider, useIconLibrary } from "@/contexts/IconLibraryContext";
 import { Icon } from "@/lib/icons";
 import { useTheme } from "@/hooks/useTheme";
 import type { AuditResult } from "@/data/mockAuditResults";
+import { getUserAudits, getAudit, getAuditIssues } from "@/lib/audit";
 import { getUserSettings, type UserSettings } from "@/services/settingsService";
+import { ContrastChecker } from "@/components/ContrastChecker";
+import { BookmarkletsTool } from "@/components/BookmarkletsTool";
 import { applyDesignSettings } from "@/lib/apply-design-settings";
 import "./index.css";
 
@@ -31,9 +35,24 @@ export function App() {
     if (user) {
       setIsLoadingSettings(true);
       getUserSettings()
-        .then(userSettings => {
+        .then(async userSettings => {
           setSettings(userSettings);
-          void applyDesignSettings(userSettings);
+          
+          // Sync theme to localStorage so useTheme hook picks it up later
+          if (userSettings.theme) {
+             localStorage.setItem('theme', userSettings.theme);
+             
+             // Apply theme class immediately for applyDesignSettings to work correctly
+             const root = window.document.documentElement;
+             root.classList.remove("light", "dark");
+             let effectiveTheme = userSettings.theme;
+             if (effectiveTheme === 'system') {
+                effectiveTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+             }
+             root.classList.add(effectiveTheme);
+          }
+
+          await applyDesignSettings(userSettings);
           setIsLoadingSettings(false);
         })
         .catch(error => {
@@ -41,7 +60,12 @@ export function App() {
           setIsLoadingSettings(false);
         });
     } else {
-      setIsLoadingSettings(false);
+      // If not logged in, try to load from localStorage
+      const localSettings = getUserSettings().then(async s => {
+         setSettings(s);
+         await applyDesignSettings(s);
+         setIsLoadingSettings(false);
+      });
     }
   }, [user]);
 
@@ -73,12 +97,32 @@ function AppContent({ settings, onSettingsChange }: { settings: UserSettings | n
   const { theme } = useTheme();
   const { iconLibrary } = useIconLibrary();
   const [activePanel, setActivePanel] = useState<string | null>(null);
+  const [recentAudits, setRecentAudits] = useState<AuditResult[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const { user } = useAuth();
+  
+  useEffect(() => {
+    if (user) {
+      setLoadingHistory(true);
+      getUserAudits(user.id)
+        .then(audits => {
+           setRecentAudits(audits as any);
+           setLoadingHistory(false);
+        })
+        .catch(err => {
+           console.error(err);
+           setLoadingHistory(false);
+        });
+    }
+  }, [user]);
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [contrastCheckOpen, setContrastCheckOpen] = useState(false);
+  const [bookmarkletsOpen, setBookmarkletsOpen] = useState(false);
 
   const menuItems = [
-    { id: "overview", label: t("nav.overview"), icon: "file" as const },
-    { id: "components", label: t("nav.components"), icon: "database" as const },
+    { id: "recent-runs", label: "Recent Runs", icon: "clock" as const },
+    { id: "reports", label: "Reports", icon: "file-text" as const },
     { id: "settings", label: t("nav.settings"), icon: "settings" as const },
   ];
 
@@ -108,7 +152,11 @@ function AppContent({ settings, onSettingsChange }: { settings: UserSettings | n
                     variant="ghost"
                     className="justify-start gap-3 focus-ring text-lg h-auto py-3"
                     onClick={() => {
-                      setActivePanel(item.id);
+                      if (item.id === 'settings') {
+                        setSettingsOpen(true);
+                      } else {
+                        setActivePanel(item.id);
+                      }
                     }}
                   >
                     <Icon name={item.icon} library={iconLibrary} className="h-5 w-5" />
@@ -125,7 +173,13 @@ function AppContent({ settings, onSettingsChange }: { settings: UserSettings | n
                 key={item.id}
                 variant="outline"
                 className="gap-2 whitespace-nowrap focus-ring shadow-elevation-1 hover:shadow-elevation-2 transition-all text-base md:text-lg lg:text-xl h-auto py-4 px-8"
-                onClick={() => setActivePanel(item.id)}
+                onClick={() => {
+                  if (item.id === 'settings') {
+                    setSettingsOpen(true);
+                  } else {
+                     setActivePanel(item.id);
+                  }
+                }}
               >
                 <Icon name={item.icon} library={iconLibrary} className="h-5 w-5 md:h-6 md:w-6" />
                 {item.label}
@@ -158,259 +212,207 @@ function AppContent({ settings, onSettingsChange }: { settings: UserSettings | n
         </div>
       </Main>
 
-      {/* Action Banner - Swedbank-style full-width section */}
-      <ActionBanner variant="primary">
-        <h2 className="text-3xl md:text-4xl font-bold">
-          {t("banners.aiPowered.title") ?? "AI-Powered Accessibility Insights"}
-        </h2>
-        <p className="text-lg md:text-xl opacity-90">
-          {t("banners.aiPowered.description") ?? "Get expert-level accessibility analysis powered by advanced AI. Combining automated testing with intelligent pattern recognition."}
-        </p>
-        <div className="flex gap-4 justify-center flex-wrap mt-8">
-          <Button size="lg" variant="secondary" className="gap-2 h-auto py-4 px-8 text-lg">
-            <Icon name="sparkles" library={iconLibrary} className="h-5 w-5" />
-            {t("banners.aiPowered.tryNow") ?? "Try AI Analysis"}
-          </Button>
-          <Button size="lg" variant="outline" className="gap-2 h-auto py-4 px-8 text-lg bg-background/10 border-primary-foreground/20 hover:bg-background/20">
-            <Icon name="zap" library={iconLibrary} className="h-5 w-5" />
-            {t("banners.aiPowered.learnMore") ?? "Learn More"}
-          </Button>
-        </div>
-      </ActionBanner>
+      {/* Audit Complete Banner */}
+      {auditResult && (
+        <ActionBanner variant="primary" className="mb-12">
+           <div className="flex flex-col items-center text-center space-y-4">
+             <div className="p-3 bg-primary-foreground/10 rounded-full mb-2">
+                <Icon name="check-circle" library={iconLibrary} className="h-8 w-8 text-primary-foreground" />
+             </div>
+             <h2 className="text-3xl md:text-4xl font-bold">{t('banners.auditComplete.title')}</h2>
+             <p className="text-xl md:text-2xl opacity-90 max-w-2xl mx-auto leading-relaxed">
+               {t('banners.auditComplete.description')}
+             </p>
+             
+             {auditResult.summary && (
+               <div className="mt-6 inline-flex items-center gap-3 bg-primary-foreground/10 px-6 py-3 rounded-full border border-primary-foreground/20 backdrop-blur-sm">
+                  {auditResult.summary.totalIssues > 0 ? (
+                    <>
+                      <Icon name="alert-triangle" library={iconLibrary} className="h-5 w-5 text-yellow-300" />
+                      <span className="font-bold text-lg">
+                        {t('banners.auditComplete.issuesFound', { count: auditResult.summary.totalIssues })}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="sparkles" library={iconLibrary} className="h-5 w-5 text-green-300" />
+                      <span className="font-bold text-lg">
+                        {t('banners.auditComplete.noIssues')}
+                      </span>
+                    </>
+                  )}
+               </div>
+             )}
+           </div>
+        </ActionBanner>
+      )}
 
-      <Main>
-        <div className="max-w-[1600px] mx-auto w-full px-8 lg:px-12 py-12">
-          {/* Content Grid - Responsive */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 w-full">
-            <Card className="shadow-elevation-2 hover:shadow-elevation-3 transition-all cursor-pointer" onClick={() => setActivePanel("overview")}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-xl md:text-2xl lg:text-3xl">
-                  <Icon name="file" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8" />
-                  {t("cards.m3Demo.title")}
-                </CardTitle>
-                <CardDescription className="text-base md:text-lg">
-                  {t("cards.m3Demo.description")}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-3 flex-wrap">
-                  <Button size="sm" className="text-base">{t("components.buttons.default")}</Button>
-                  <Button size="sm" variant="secondary" className="text-base">{t("components.buttons.secondary")}</Button>
-                  <Button size="sm" variant="outline" className="text-base">{t("components.buttons.outline")}</Button>
-                </div>
-                <div className="p-4 bg-muted/50 rounded-lg text-base md:text-lg">
-                  <p>✅ {t("cards.m3Demo.features.baseFont")}</p>
-                  <p>✅ {t("cards.m3Demo.features.touchTargets")}</p>
-                  <p>✅ {t("cards.m3Demo.features.focusRings")}</p>
-                  <p>✅ {t("cards.m3Demo.features.contrast")}</p>
-                </div>
-              </CardContent>
-            </Card>
+      {/* Dashboard Widgets Section */}
+      <DashboardWidgets 
+        recentAudits={recentAudits} 
+        onQuickAction={(action) => {
+           if (action === 'settings') {
+             setSettingsOpen(true);
+           } else if (action === 'contrast') {
+             setContrastCheckOpen(true);
+           } else if (action === 'bookmarklets') {
+             setBookmarkletsOpen(true);
+           }
+        }} 
+      />
 
-            <Card className="shadow-elevation-2 hover:shadow-elevation-3 transition-all cursor-pointer" onClick={() => setActivePanel("components")}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-xl md:text-2xl lg:text-3xl">
-                  <Icon name="database" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8" />
-                  {t("cards.uiComponents.title")}
-                </CardTitle>
-                <CardDescription className="text-base md:text-lg">{t("cards.uiComponents.description")}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-base md:text-lg">
-                  <li>✅ {t("cards.uiComponents.items.react")}</li>
-                  <li>✅ {t("cards.uiComponents.items.shadcn")}</li>
-                  <li>✅ {t("cards.uiComponents.items.tailwind")}</li>
-                  <li>✅ {t("cards.uiComponents.items.linting")}</li>
-                  <li>✅ {t("cards.uiComponents.items.darkMode")}</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-elevation-2 hover:shadow-elevation-3 transition-all cursor-pointer lg:col-span-2 xl:col-span-1" onClick={() => setActivePanel("settings")}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-xl md:text-2xl lg:text-3xl">
-                  <Icon name="settings" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8" />
-                  {t("cards.configuration.title")}
-                </CardTitle>
-                <CardDescription className="text-base md:text-lg">{t("cards.configuration.description")}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <span className="text-base md:text-lg font-medium">{t("settings.themeSection")}</span>
-                    <span className="text-base md:text-lg text-muted-foreground capitalize">{theme}</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <span className="text-base md:text-lg font-medium">{t("settings.features.focusIndicators.title")}</span>
-                    <span className="text-base md:text-lg text-muted-foreground">{t("settings.features.status.active")}</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <span className="text-base md:text-lg font-medium">{t("settings.features.highContrast.title")}</span>
-                    <span className="text-base md:text-lg text-muted-foreground">{t("settings.features.status.active")}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </Main>
+      <ContrastChecker open={contrastCheckOpen} onOpenChange={setContrastCheckOpen} />
+      <BookmarkletsTool open={bookmarkletsOpen} onOpenChange={setBookmarkletsOpen} />
 
       <Footer />
 
-      <Sheet open={activePanel === "overview"} onOpenChange={(open) => !open && setActivePanel(null)}>
+      {/* Recent Runs Sheet */}
+      <Sheet open={activePanel === "recent-runs"} onOpenChange={(open) => !open && setActivePanel(null)}>
         <SheetContent side="right" className="w-full sm:w-[540px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2 text-2xl md:text-3xl">
-              <Icon name="file" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7" />
-              {t("overview.title")}
+              <Icon name="clock" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7" />
+              Recent Runs
             </SheetTitle>
             <SheetDescription className="text-base md:text-lg">
-              {t("overview.description")}
+              Your recent accessibility audits.
             </SheetDescription>
           </SheetHeader>
-          <div className="mt-6 space-y-6">
-            <div>
-              <h3 className="font-semibold mb-3 text-xl md:text-2xl">{t("overview.colorSystem")}</h3>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-4 bg-primary text-primary-foreground rounded-lg text-base md:text-lg">{t("overview.colors.primary")}</div>
-                <div className="p-4 bg-secondary text-secondary-foreground rounded-lg text-base md:text-lg">{t("overview.colors.secondary")}</div>
-                <div className="p-4 bg-accent text-accent-foreground rounded-lg text-base md:text-lg">{t("overview.colors.accent")}</div>
-                <div className="p-4 bg-muted text-muted-foreground rounded-lg text-base md:text-lg">{t("overview.colors.muted")}</div>
-              </div>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-3 text-xl md:text-2xl">{t("overview.typographyScale")}</h3>
-              <div className="space-y-2">
-                <p className="text-4xl md:text-5xl lg:text-6xl font-bold">{t("overview.headings.h1")}</p>
-                <p className="text-3xl md:text-4xl lg:text-5xl font-bold">{t("overview.headings.h2")}</p>
-                <p className="text-2xl md:text-3xl lg:text-4xl font-semibold">{t("overview.headings.h3")}</p>
-                <p className="text-xl md:text-2xl lg:text-3xl">{t("overview.headings.h4")}</p>
-                <p className="text-lg md:text-xl">{t("overview.headings.large")}</p>
-                <p className="text-base">{t("overview.headings.body")}</p>
-                <p className="text-sm md:text-base">{t("overview.headings.small")}</p>
-              </div>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-3 text-xl md:text-2xl">{t("overview.elevationShadows")}</h3>
-              <div className="space-y-3">
-                {[1, 2, 3, 4, 5].map((level) => (
-                  <div key={level} className={`p-4 bg-card rounded-lg shadow-elevation-${level} text-base md:text-lg`}>
-                    {t("overview.elevation.level", { level })}
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div className="mt-6 space-y-4">
+             {loadingHistory ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                </div>
+             ) : recentAudits.length > 0 ? (
+                recentAudits.map((audit: any) => (
+                   <Card key={audit.id} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={async () => {
+                      try {
+                        let issues: any[] = [];
+                        try {
+                           issues = await getAuditIssues(audit.id);
+                        } catch (e) {
+                           console.error("Failed to fetch issues", e);
+                        }
+
+                        const mappedIssues = issues.map((i: any) => ({
+                             id: i.id,
+                             principle: i.wcag_principle?.toLowerCase() || 'perceivable',
+                             guideline: i.wcag_criterion || 'Unknown',
+                             wcagLevel: i.wcag_level || 'A',
+                             severity: i.severity || 'minor',
+                             title: i.title || 'Untitled Issue',
+                             description: i.description || '',
+                             element: i.element_html || i.element_selector || 'Unknown element',
+                             selector: i.element_selector || '',
+                             impact: i.user_impact || 'Moderate impact',
+                             remediation: i.how_to_fix || 'No remediation provided',
+                             helpUrl: i.wcag_url || '#',
+                             occurrences: 1,
+                             codeExample: i.code_example
+                        }));
+
+                        setAuditResult({
+                          ...audit,
+                          issues: mappedIssues,
+                          // Ensure summary defaults to avoid crashes if legacy data
+                          summary: audit.summary || {
+                            totalIssues: 0,
+                            critical: 0,
+                            serious: 0,
+                            moderate: 0,
+                            minor: 0,
+                            passed: 0,
+                            failed: 0
+                          }
+                        });
+                        setActivePanel(null);
+                        // Scroll to results
+                        setTimeout(() => {
+                           const resultsElement = document.getElementById('audit-results');
+                           if (resultsElement) resultsElement.scrollIntoView({ behavior: 'smooth' });
+                        }, 100);
+                      } catch (e) {
+                         console.error(e);
+                      }
+                   }}>
+                      <CardHeader className="p-4 pb-2">
+                        <CardTitle className="text-lg font-medium flex justify-between items-center">
+                           <span className="truncate max-w-[300px]">
+                            {audit.url || (audit.input_value?.length > 50 ? audit.input_value.slice(0, 50) + '...' : audit.input_value) || 'Audit'}
+                           </span>
+                           <span className="text-xs text-muted-foreground font-normal">
+                             {new Date(audit.created_at).toLocaleDateString()}
+                           </span>
+                        </CardTitle>
+                        <CardDescription className="flex justify-between items-center">
+                           <span>{audit.document_type || 'HTML'} • {audit.ai_model || 'AI'}</span>
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0">
+                         <div className="flex gap-2 text-xs mt-2">
+                           {audit.summary ? (
+                             <>
+                               {audit.summary.critical > 0 && (
+                                <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded dark:bg-red-900 dark:text-red-200 font-medium">
+                                    {audit.summary.critical} Critical
+                                </span>
+                               )}
+                               {audit.summary.serious > 0 && (
+                                <span className="bg-orange-100 text-orange-800 px-2 py-0.5 rounded dark:bg-orange-900 dark:text-orange-200 font-medium">
+                                    {audit.summary.serious} Serious
+                                </span>
+                               )}
+                               {audit.summary.totalIssues === 0 && (
+                                 <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded dark:bg-green-900 dark:text-green-200 font-medium">
+                                   Passed
+                                 </span>
+                               )}
+                             </>
+                           ) : (
+                             <span className="text-muted-foreground">In progress...</span>
+                           )}
+                         </div>
+                      </CardContent>
+                   </Card>
+                ))
+             ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                   <Icon name="clock" library={iconLibrary} className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                   <p className="text-lg">No recent audits found</p>
+                   <p className="text-sm">Run your first accessibility audit to see it here.</p>
+                </div>
+             )}
           </div>
         </SheetContent>
       </Sheet>
 
-      <Sheet open={activePanel === "components"} onOpenChange={(open) => !open && setActivePanel(null)}>
+      {/* Reports Sheet */}
+      <Sheet open={activePanel === "reports"} onOpenChange={(open) => !open && setActivePanel(null)}>
         <SheetContent side="right" className="w-full sm:w-[540px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2 text-2xl md:text-3xl">
-              <Icon name="database" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7" />
-              {t("components.title")}
+              <Icon name="file-text" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7" />
+              Reports
             </SheetTitle>
             <SheetDescription className="text-base md:text-lg">
-              {t("components.description")}
+              Generated accessibility reports and statements.
             </SheetDescription>
           </SheetHeader>
-          <div className="mt-6 space-y-6">
-            <div>
-              <h3 className="font-semibold mb-3 text-xl md:text-2xl">{t("components.interactive")}</h3>
-              <div className="space-y-3">
-                <div className="flex gap-2 flex-wrap">
-                  <Button className="text-base">{t("components.buttons.default")}</Button>
-                  <Button variant="secondary" className="text-base">{t("components.buttons.secondary")}</Button>
-                  <Button variant="outline" className="text-base">{t("components.buttons.outline")}</Button>
-                  <Button variant="ghost" className="text-base">{t("components.buttons.ghost")}</Button>
-                  <Button variant="destructive" className="text-base">{t("components.buttons.destructive")}</Button>
+          <div className="mt-6">
+             <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
+                <div className="p-6 bg-muted rounded-full">
+                   <Icon name="file-text" library={iconLibrary} className="h-10 w-10 text-muted-foreground" />
                 </div>
-              </div>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-3 text-xl md:text-2xl">{t("components.installed")}</h3>
-              <ul className="space-y-2 text-base md:text-lg">
-                <li>✓ {t("components.list.accordion")}</li>
-                <li>✓ {t("components.list.alert")}</li>
-                <li>✓ {t("components.list.button")}</li>
-                <li>✓ {t("components.list.card")}</li>
-                <li>✓ {t("components.list.dialog")}</li>
-                <li>✓ {t("components.list.dropdownMenu")}</li>
-                <li>✓ {t("components.list.form")}</li>
-                <li>✓ {t("components.list.progress")}</li>
-                <li>✓ {t("components.list.separator")}</li>
-                <li>✓ {t("components.list.sheet")}</li>
-                <li>✓ {t("components.list.skeleton")}</li>
-                <li>✓ {t("components.list.tabs")}</li>
-                <li>✓ {t("components.list.toast")}</li>
-              </ul>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      <Sheet open={activePanel === "settings"} onOpenChange={(open) => !open && setActivePanel(null)}>
-        <SheetContent side="right" className="w-full sm:w-[540px] overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle className="flex items-center gap-2 text-2xl md:text-3xl">
-              <Icon name="settings" library={iconLibrary} className="h-6 w-6 md:h-7 md:w-7" />
-              {t("settings.title")}
-            </SheetTitle>
-            <SheetDescription className="text-base md:text-lg">
-              {t("settings.description")}
-            </SheetDescription>
-          </SheetHeader>
-          <div className="mt-6 space-y-6">
-            <div>
-              <h3 className="font-semibold mb-3 text-xl md:text-2xl">{t("settings.themeSection")}</h3>
-              <div className="flex gap-2">
-                <Button
-                  variant={theme === "light" ? "default" : "outline"}
-                  onClick={() => {
-                    setTheme("light");
-                  }}
-                  className="flex-1 text-base md:text-lg h-auto py-3"
-                >
-                  {t("theme.light")}
+                <div>
+                   <h3 className="text-xl font-medium mb-2">Coming Soon</h3>
+                   <p className="text-muted-foreground max-w-xs mx-auto text-base">
+                      Access your generated PDF reports and Accessibility Statements here.
+                   </p>
+                </div>
+                <Button variant="outline" onClick={() => setActivePanel(null)}>
+                  Close
                 </Button>
-                <Button
-                  variant={theme === "dark" ? "default" : "outline"}
-                  onClick={() => {
-                    setTheme("dark");
-                  }}
-                  className="flex-1 text-base md:text-lg h-auto py-3"
-                >
-                  {t("theme.dark")}
-                </Button>
-              </div>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-3 text-xl md:text-2xl">{t("settings.a11yFeatures")}</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <p className="font-medium text-base md:text-lg">{t("settings.features.focusIndicators.title")}</p>
-                    <p className="text-sm md:text-base text-muted-foreground">{t("settings.features.focusIndicators.description")}</p>
-                  </div>
-                  <span className="text-sm md:text-base text-green-600 dark:text-green-400">{t("settings.features.status.active")}</span>
-                </div>
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <p className="font-medium text-base md:text-lg">{t("settings.features.touchTargets.title")}</p>
-                    <p className="text-sm md:text-base text-muted-foreground">{t("settings.features.touchTargets.description")}</p>
-                  </div>
-                  <span className="text-sm md:text-base text-green-600 dark:text-green-400">{t("settings.features.status.active")}</span>
-                </div>
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <p className="font-medium text-base md:text-lg">{t("settings.features.highContrast.title")}</p>
-                    <p className="text-sm md:text-base text-muted-foreground">{t("settings.features.highContrast.description")}</p>
-                  </div>
-                  <span className="text-sm md:text-base text-green-600 dark:text-green-400">{t("settings.features.status.active")}</span>
-                </div>
-              </div>
-            </div>
+             </div>
           </div>
         </SheetContent>
       </Sheet>

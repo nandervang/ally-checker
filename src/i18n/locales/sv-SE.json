@@ -69,6 +69,42 @@
       "toast": "Toast (Sonner)"
     }
   },
+  "bookmarklets": {
+    "title": "Tillgänglighetsbokmärken",
+    "description": "Verktyg för att testa tillgänglighet genom att injicera stilar på sidan.",
+    "howToUse": "Hur man använder",
+    "installInstruction": "För att installera:",
+    "installStep": "Dra knapparna nedan till ditt bokmärkesfält.",
+    "testInstruction": "För att testa nu:",
+    "testStep": "Klicka på knapparna för att applicera stilar på den här sidan direkt.",
+    "textSpacing": {
+      "title": "Textavstånd (WCAG 1.4.12)",
+      "description": "Testar om innehållet anpassas korrekt när textegenskaper justeras. (Radhöjd: 1.5, Teckenavstånd: 0.12em, Ordavstånd: 0.16em, Styckeavstånd: 2em).",
+      "button": "Test Textavstånd",
+      "label": "Dra till innehåll eller klicka för att testa"
+    },
+    "lineHeight": {
+      "title": "Endast Radhöjd (WCAG 1.4.12)",
+      "description": "Testar specifikt för radhöjdsöverensstämmelse (1.5 gånger teckenstorlek).",
+      "button": "Test Radhöjd",
+      "label": "Dra till innehåll eller klicka för att testa"
+    },
+    "letterSpacing": {
+      "title": "Endast Teckenavstånd (WCAG 1.4.12)",
+      "description": "Testar specifikt för teckenavstånd (0.12em) och ordavstånd (0.16em).",
+      "button": "Test Teckenavstånd",
+      "label": "Dra till innehåll eller klicka för att testa"
+    },
+     "preview": {
+      "title": "Förhandsgranskningsområde",
+      "reset": "Återställ stilar",
+      "heading": "Rubriktext för avståndskontroll",
+      "subheading": "Testar underrubriksavstånd (bör inte klippas)",
+      "paragraph1": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+      "paragraph2": "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+      "footer": "Klicka på ett bokärke ovan för att applicera stilar här. Obs: Detta påverkar hela applikationen tills du laddar om eller klickar på Återställ."
+    }
+  },
   "settings": {
     "title": "Inställningar & Konfiguration",
     "description": "Tillgänglighets- och temainställningar",
@@ -553,5 +589,97 @@
   },
   "common": {
     "optional": "(valfritt)"
+  },
+  "banners": {
+    "auditComplete": {
+      "title": "Analys klar",
+      "description": "Din tillgänglighetsgranskning är klar. Se resultaten ovan eller utforska våra verktyg nedan för att åtgärda problemen.",
+      "issuesFound": "{{count}} problem hittade",
+      "noIssues": "Inga problem hittade - Bra jobbat!"
+    }
+  },
+  "dashboard": {
+    "tipOfTheMoment": "Dagens Tips: {{title}}",
+    "readMore": "Läs mer i {{source}}",
+    "anotherTip": "Ge mig ett till proffstips",
+    "health": {
+      "title": "Tillgänglighetshälsa",
+      "subtitle": "Baserat på dina senaste {{count}} körningar",
+      "avgScore": "Snittpoäng",
+      "totalIssues": "Totalt antal problem",
+      "empty": "Kör din första granskning för att se statistik här."
+    },
+    "quickTools": {
+      "title": "Snabbverktyg",
+      "subtitle": "Hjälpmedel för ditt arbetsflöde",
+      "contrastChecker": {
+        "title": "Kontrastkontroll",
+        "subtitle": "Verifiera färgefterlevnad"
+      },
+      "bookmarklets": {
+        "title": "A11y Bokmärken",
+        "subtitle": "Testverktyg"
+      }
+    }
+  },
+  "tips": {
+    "vis-1": { "title": "Beroende av färg", "content": "Visste du? Färg ensam får inte användas för att förmedla innebörd. Använd ikoner, textetiketter eller mönster tillsammans med färgindikatorer för att säkerställa att användare med färgblindhet förstår statusen." },
+    "vis-2": { "title": "Textkontrast", "content": "Brödtext ska ha ett kontrastförhållande på minst 4,5:1 mot bakgrunden. Stor text (fet 18pt+ eller vanlig 24pt+) behöver ett förhållande på 3:1." },
+    "vis-3": { "title": "Fokusindikatorer", "content": "Alla interaktiva element måste ha en synlig fokusindikator. Ta aldrig bort konturerna med CSS om du inte ersätter dem med en tydlig anpassad stil." },
+    "vis-4": { "title": "Zoom och skalning", "content": "Användare ska kunna zooma in upp till 200% utan förlust av innehåll eller funktionalitet. Undvik att inaktivera viewport-zoom i dina meta-taggar." },
+    "vis-5": { "title": "Identifiering av länkar", "content": "Länkar i textblock ska kunna identifieras med mer än bara färg. Understrykning är det vanligaste och mest förstådda sättet att särskilja länkar." },
+    "key-1": { "title": "Tangentbordsfällor", "content": "Se till att användare kan navigera in i och ut ur alla interaktiva element med enbart tangentbord. Anpassade modaler är vanliga ställen där tangentbordsfokus kan fastna." },
+    "key-2": { "title": "Logisk tabborning", "content": "Tabbordningen ska följa sidans visuella läsordning. Undvik att använda positiva tabindex-värden (> 0) då de kan störa det naturliga flödet." },
+    "key-3": { "title": "Hopplänkar", "content": "Erbjud en 'Hoppa till huvudinnehåll'-länk högst upp på sidan. Detta låter tangentbords- och skärmläsaranvändare hoppa över upprepade navigeringsmenyer." },
+    "key-4": { "title": "Interaktiva element", "content": "Allt som ser klickbart ut måste vara klickbart med tangentbord. Om du använder en <div> som knapp måste du lägga till role='button' och tabindex='0' samt hantera Enter/Space-tangenter." },
+    "sr-1": { "title": "Alternativtext", "content": "Alt-text ska beskriva bildens syfte, inte bara dess utseende. Om en bild är rent dekorativ, använd ett tomt alt-attribut (alt=\"\")." },
+    "sr-2": { "title": "Rubrikstruktur", "content": "Använd rubriker (H1-H6) för att skapa en logisk disposition av ditt innehåll. Hoppa inte över rubriknivåer (t.ex. H1 till H3) eftersom skärmläsaranvändare förlitar sig på dem för navigering." },
+    "sr-3": { "title": "Meningsfull länktext", "content": "Länktext ska vara begriplig på egen hand. Undvik 'Klicka här' eller 'Läs mer'. Använd istället beskrivande text som 'Läs mer om tillgänglighet'." },
+    "sr-4": { "title": "Landmärken", "content": "Använd HTML5-semantiska regioner som <main>, <nav>, <header> och <footer>. Dessa känns automatiskt igen som landmärken av skärmläsare." },
+    "sr-5": { "title": "Språkattribut", "content": "Ställ alltid in <html lang=\"sv\"> (eller rätt språk). Detta säkerställer att skärmläsare uttalar innehållet korrekt med rätt accent och regler." },
+    "form-1": { "title": "Synliga etiketter", "content": "Varje formulärfält behöver en permanent synlig etikett. Platshållare (placeholders) är inte en ersättning för etiketter, eftersom de försvinner när användaren börjar skriva." },
+    "form-2": { "title": "Felmeddelanden", "content": "När ett formulärfel uppstår, identifiera felet tydligt i text och koppla programmatiskt felmeddelandet till inmatningsfältet med aria-describedby." },
+    "form-3": { "title": "Autocomplete-attribut", "content": "Använd autocomplete-attributet på inmatningsfält för att hjälpa användare fylla i formulär snabbare. Detta är särskilt hjälpsamt för personer med kognitiva funktionsnedsättningar." },
+    "form-4": { "title": "Gruppera kontroller", "content": "Relaterade formulärkontroller, som radioknappar eller kryssrutor, ska grupperas med <fieldset> och <legend> för att ge sammanhang." },
+    "gen-1": { "title": "Rörelsekänslighet", "content": "Erbjud en mekanism för att pausa, stoppa eller dölja automatiskt uppspelande innehåll eller animationer. Respektera media-queryn 'prefers-reduced-motion'." },
+    "gen-2": { "title": "Enkelt språk", "content": "Skriv tydligt och enkelt. Undvik jargong och komplexa meningsstrukturer. Detta gynnar användare med kognitiva funktionsnedsättningar och icke-modersmålstalare." },
+    "gen-3": { "title": "Konsekvent navigering", "content": "Håll navigeringsmekanismer konsekventa över hela webbplatsen. Användare ska inte behöva lära om hur man navigerar på varje ny sida." },
+    "gen-4": { "title": "Träffyta", "content": "Touch-mål bör vara minst 44x44 CSS-pixlar (eller 24x24 i WCAG 2.2) för att säkerställa att de är lätta att trycka på mobila enheter." },
+    "mag-1": { "title": "Automatiserad vs Manuell", "content": "Automatiserade verktyg fångar bara ca 30-50% av tillgänglighetsproblem. Manuell testning med tangentbord och skärmläsare är avgörande för full efterlevnad." },
+    "mag-2": { "title": "Acceptanskriterier", "content": "Inkludera tillgänglighetskontroller i din definition av klar (DoD). Tillgänglighet bör beaktas under design och utveckling, inte bara i slutet." },
+    "mag-3": { "title": "Headings Map", "content": "Använd ett webbläsartillägg som 'HeadingsMap' för att visualisera din dokument/sidstruktur. Dispositionen bör se ut som en innehållsförteckning." },
+    "mag-4": { "title": "Skärmläsare på mobil", "content": "Testa på riktiga mobila enheter med VoiceOver (iOS) eller TalkBack (Android). Emulatorer återspeglar ofta inte mobila skärmläsares beteende korrekt." },
+    "doc-1": { "title": "PDF-tillgänglighet", "content": "PDF:er behöver taggar för att vara tillgängliga. En taggad PDF innehåller ett dolt lager av struktur som skärmläsare använder för att navigera i dokumentet." },
+    "doc-2": { "title": "Tabellrubriker", "content": "Datatabeller måste ha rubrikceller (<th>) identifierade. Använd scope='col' eller scope='row' för att koppla dataceller till deras rubriker explicit." },
+    "dev-1": { "title": "Linter-integration", "content": "Använd eslint-plugin-jsx-a11y för att fånga tillgänglighetsfel medan du kodar. Det kan identifiera saknad alt-text, ogiltiga aria-roller och mer." },
+    "mag-5": { "title": "Tangentbordsfällor & Regioner", "content": "Se till att anpassade widgets (som komplexa rutnät eller kartor) tillåter tangentbordsexit. Användare ska aldrig fastna i en komponent utan väg ut." },
+    "wai-1": { "title": "Label in Name", "content": "För knappar med text och ikoner, se till att den synliga texten matchar det tillgängliga namnet (aria-label). Taligenkänningsanvändare förlitar sig på att säga exakt vad de ser." },
+    "wai-2": { "title": "Statusmeddelanden", "content": "Använd role='status' eller aria-live='polite' för dynamiska uppdateringar (som 'Sökresultat uppdaterat') så att skärmläsare meddelar dem utan att flytta fokus." },
+    "mob-2": { "title": "Orientering", "content": "Lås inte skärmorientering. Appar måste fungera i både porträtt- och landskapsläge, eftersom vissa användare har enheter fixerade vid rullstolar." },
+    "vis-6": { "title": "Omflöde (400% Zoom)", "content": "Testa din webbplats vid 400% zoom (1280px bredd). Innehåll ska flyta om till en enda kolumn utan horisontell scrollning, vilket är svårt för användare med nedsatt syn." },
+    "tool-2": { "title": "WAVE-verktyget", "content": "WAVE är ett webbläsartillägg som visualiserar tillgänglighetsproblem direkt på din sida. Det är utmärkt för att upptäcka fel i rubrikstruktur och kontrast." },
+    "tool-3": { "title": "axe DevTools", "content": "axe DevTools körs i din webbläsarkonsol och fångar ~50% av problemen automatiskt. Det är ett standardverktyg för utvecklare att fånga syntaxfel tidigt." },
+    "tool-4": { "title": "Colour Contrast Analyser", "content": "TPGi Colour Contrast Analyser (CCA) inkluderar en pipett för att testa kontrast på icke-webbfiler som PDF:er eller Figma-designer." }
+  },
+  "contrastCheckerTool": {
+    "title": "Kontrastkontroll",
+    "description": "Kontrollera om färgkombinationen uppfyller WCAG-tillgänglighetsstandarder.",
+    "foreground": "Förgrundsfärg",
+    "background": "Bakgrundsfärg",
+    "preview": {
+        "heading": "Den snabba bruna räven",
+        "subheading": "hoppar över den lata hunden"
+    },
+    "ratio": "Kontrastförhållande",
+    "normalText": "Normal text",
+    "largeText": "Stor text",
+    "enhanced": "Förbättrad (AAA)",
+    "status": {
+        "pass": "Godkänd",
+        "fail": "Underkänd",
+        "aaPass": "AA Godkänd",
+        "aaaPass": "AAA Godkänd",
+        "aaOnly": "Endast AA"
+    }
   }
 }

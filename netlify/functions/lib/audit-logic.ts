@@ -3,7 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { runGeminiAudit } from "../gemini-agent.js"; // Note: .js extension for ESM
 
 export interface AuditRequest {
-  mode: "url" | "html" | "snippet" | "document";
+  mode: "url" | "html" | "snippet" | "document" | "manual";
   content: string;
   model: "claude" | "gemini" | "gpt4";
   geminiModel?: "gemini-2.5-flash" | "gemini-2.5-pro"; // Specific Gemini variant

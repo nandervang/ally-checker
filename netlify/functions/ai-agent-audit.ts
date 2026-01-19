@@ -5,7 +5,7 @@ import { validateApiKey, getCorsHeaders, createAuthErrorResponse } from "./lib/a
 import type { Database } from "../../src/types/database";
 
 interface AuditRequest {
-  mode: "url" | "html" | "snippet" | "document";
+  mode: "url" | "html" | "snippet" | "document" | "manual";
   content: string;
   model: "claude" | "gemini" | "gpt4";
   geminiModel?: "gemini-2.5-flash" | "gemini-2.5-pro";
@@ -75,14 +75,33 @@ export const handler: Handler = async (event: HandlerEvent) => {
     }
 
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    // Fallback to Anon key if Service Role is missing (common in local dev)
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
     
     if (!supabaseUrl || !supabaseKey) {
-      console.error('Supabase not configured');
+      console.error('Supabase not configured: Missing URL or Key');
       return { statusCode: 500, headers, body: JSON.stringify({ error: "Server Configuration Error" }) };
     }
 
-    const supabase = createClient<Database>(supabaseUrl, supabaseKey);
+    // If using Anon key, we should try to forward the user's auth context if available
+    const options: any = {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      }
+    };
+
+    // If we have a user token and we are FORCED to use the Anon key (because Service Role is missing),
+    // we should initialize the client with that token to respect RLS.
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY && authHeader) {
+       options.global = {
+         headers: {
+           Authorization: authHeader
+         }
+       };
+    }
+
+    const supabase = createClient<Database>(supabaseUrl, supabaseKey, options);
 
     // Create audit record
     const { data: auditData, error: auditError } = await supabase
@@ -91,15 +110,14 @@ export const handler: Handler = async (event: HandlerEvent) => {
         user_id: userId || null,
         session_id: request.sessionId || null,
         url: request.mode === 'url' ? request.content : null,
-        status: 'pending',
+        status: 'queued',
         progress: 0,
         current_stage: 'Queued',
         input_type: request.mode,
-        input_value: (request.mode === 'html' || request.mode === 'snippet') ? request.content : null,
+        input_value: request.content,
         document_type: request.documentType || null,
         document_path: request.filePath || null,
         ai_model: request.geminiModel || request.model,
-        wcag_version: '2.1',
         created_at: new Date().toISOString(),
         agent_trace: request.reportTemplate ? { configuration: { reportTemplate: request.reportTemplate as string } } : null,
       })
@@ -120,10 +138,15 @@ export const handler: Handler = async (event: HandlerEvent) => {
 
     // Fire and forget (awaiting the acceptance, not the completion)
     try {
+        const bgHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (authHeader) {
+            bgHeaders['Authorization'] = authHeader;
+        }
+
         await fetch(backgroundUrl, {
             method: 'POST',
             body: JSON.stringify({ auditId: auditData.id }),
-            headers: { 'Content-Type': 'application/json' }
+            headers: bgHeaders
         });
     } catch (e) {
         console.error("Failed to trigger background function:", e);
