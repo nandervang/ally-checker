@@ -14,8 +14,10 @@ interface AuditRequest {
   content: string;
   model: "claude" | "gemini" | "gpt4";
   geminiModel?: "gemini-2.5-flash" | "gemini-2.5-pro"; // Specific Gemini variant
-  documentType?: "pdf" | "docx";
+  documentType?: "pdf" | "docx" | "image";
   filePath?: string;
+  fileData?: string;
+  mimeType?: string;
   reportTemplate?: string;
 }
 
@@ -663,7 +665,7 @@ Focus on actionable, detailed findings with comprehensive testing instructions.`
 /**
  * Build user prompt based on audit mode
  */
-function buildUserPrompt(request: AuditRequest): string {
+function buildUserPrompt(request: AuditRequest): string | Array<string | any> {
   switch (request.mode) {
     case "url":
       return `Audit the accessibility of this URL: ${request.content}
@@ -677,18 +679,33 @@ Process:
 6. Provide comprehensive audit report with prioritized remediation steps
    - IMPORTANT: If test_keyboard_navigation returned a screenshot (in 'screenshot' property), include it in the issue reporting under the 'screenshot_data' field (map 'base64' to 'data').`;
     
-    case "manual":
-      return `Analyze this reported accessibility issue:
+    case "manual": {
+      const textPrompt = `Analyze this reported accessibility issue:
 
 Reported Issue:
 "${request.content}"
 
 Process:
 1. Analyze the user's description of the issue.
-2. Identify the likely WCAG Success Criterion that is violated.
-3. Call get_wcag_criterion to verify the criterion details.
-4. Formulate a valid audit finding based on the user's report and WCAG standards.
-5. Provide specific remediation steps (how to fix).`;
+2. If an image is provided, analyze the visual context for accessibility barriers.
+3. Identify the likely WCAG Success Criterion that is violated.
+4. Call get_wcag_criterion to verify the criterion details.
+5. Formulate a valid audit finding based on the user's report and WCAG standards.
+6. Provide specific remediation steps (how to fix).`;
+
+      if (request.documentType === 'image' && request.fileData) {
+        return [
+          textPrompt,
+          {
+            inlineData: {
+              data: request.fileData,
+              mimeType: request.mimeType || 'image/png'
+            }
+          }
+        ];
+      }
+      return textPrompt;
+    }
     
     case "html":
       return `Audit the accessibility of this HTML content:

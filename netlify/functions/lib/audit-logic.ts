@@ -8,8 +8,10 @@ export interface AuditRequest {
   model: "claude" | "gemini" | "gpt4";
   geminiModel?: "gemini-2.5-flash" | "gemini-2.5-pro"; // Specific Gemini variant
   language?: string;
-  documentType?: "pdf" | "docx";
+  documentType?: "pdf" | "docx" | "image";
   filePath?: string;
+  fileData?: string;
+  mimeType?: string;
   userId?: string;
   sessionId?: string;
   reportTemplate?: string;
@@ -137,7 +139,8 @@ Steps:
 
   // Extract text from response
   const analysisText = response.content
-    .filter((block): block is { type: "text"; text: string } => block.type === "text")
+    .filter((block) => block.type === "text")
+    // @ts-ignore
     .map((block) => block.text)
     .join("\n");
 

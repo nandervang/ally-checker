@@ -92,6 +92,29 @@ export const handler: Handler = async (event: HandlerEvent) => {
     const agentTracePayload = audit.agent_trace as any;
     const reportTemplate = agentTracePayload?.configuration?.reportTemplate;
 
+    // Handle Image/Document Downloads for AI Analysis
+    let fileData: string | undefined;
+    let mimeType: string | undefined;
+
+    // Specifically for "Known Issue" images or other document analysis
+    if ((audit.input_type === 'manual' || audit.document_type === 'image') && audit.document_path) {
+       console.log(`[Background] Downloading file from storage: ${audit.document_path}`);
+       
+       const { data, error } = await supabase.storage
+        .from('audit-documents')
+        .download(audit.document_path);
+        
+       if (error) {
+         console.warn(`[Background] Failed to download document: ${error.message}`);
+       } else if (data) {
+         // Convert Blob/File to base64 string
+         const buffer = await data.arrayBuffer();
+         fileData = Buffer.from(buffer).toString('base64');
+         mimeType = data.type;
+         console.log(`[Background] Successfully downloaded ${data.size} bytes (${mimeType})`);
+       }
+    }
+
     const request: AuditRequest = {
       mode: audit.input_type as "url" | "html" | "snippet" | "document" | "manual",
       content: audit.input_value || audit.url || "",
@@ -102,6 +125,8 @@ export const handler: Handler = async (event: HandlerEvent) => {
       sessionId: audit.session_id,
       userId: audit.user_id || undefined,
       reportTemplate: reportTemplate,
+      fileData,
+      mimeType
     };
 
     // Update progress: Automated Analysis
