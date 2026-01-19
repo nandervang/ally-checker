@@ -126,6 +126,7 @@ Focuses on specific component accessibility.
 
 ## References
 
+- [Deployment & CI/CD Guide](docs/DEPLOYMENT_GUIDE.md) - Pipeline and production setup
 - [Swedish Accessibility Guide](ACCESSIBILITY_AGENT_SETUP_GUIDE_v5.md) - Systematic WCAG coverage patterns
 - [Enhanced System Prompt](SYSTEM_PROMPT_ENHANCED.md) - AI prompt documentation
 

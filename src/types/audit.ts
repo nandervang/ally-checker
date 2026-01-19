@@ -130,6 +130,7 @@ export interface AuditInput {
   session_id?: string;
   document_path?: string;
   document_type?: 'pdf' | 'docx';
+  reportTemplate?: string;
 }
 
 // Progress callback for streaming updates
@@ -137,6 +138,8 @@ export interface AuditProgress {
   status: AuditStatus;
   message: string;
   issues_found?: number;
+  progress?: number;
+  current_stage?: string;
 }
 
 export type AuditProgressCallback = (progress: AuditProgress) => void;

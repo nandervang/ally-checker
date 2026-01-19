@@ -1,4 +1,4 @@
 [serve.static]
 plugins = ["bun-plugin-tailwind"]
-# Inline environment variables starting with VITE_ for client-side access
-env = "VITE_*"
+# Inline ALL environment variables for client-side access
+env = "inline"

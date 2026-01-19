@@ -529,3 +529,68 @@ For questions or issues:
 2. Review specification in [spec.md](spec.md)
 3. Create Beads issue: `bd create --title "Question: <topic>"`
 4. Check project constitution: `.specify/memory/constitution.md`
+
+## Testing
+
+The project uses a comprehensive testing strategy:
+
+- **Unit Tests**: `bun run test` (Vitest)
+  - Located in `src/**/*.test.ts`
+  - Covers hooks (`src/hooks`), utilities (`src/lib`), and services.
+  - Mocks external dependencies like Supabase.
+
+- **Component Tests**: `bun run test` (Vitest + React Testing Library)
+  - Located in `src/components/**/*.test.tsx`.
+  - Tests UI interactions and rendering.
+
+- **E2E Tests**: `bun run test:e2e` (Playwright)
+  - Located in `e2e/`.
+  - Tests critical user journeys like Snippet Analysis.
+  - Uses a test user bypass (localStorage `E2E_TEST_USER`) to skip auth.
+
+- **Coverage**: `bun run test:coverage`
+  - Generates coverage reports in `coverage/`.
+  - Aiming for high coverage on core logic (`src/lib/audit`).
+
+#### Running Tests
+
+```bash
+# Run all unit/component tests
+bun run test
+
+# Run specific file
+bun run test src/lib/audit/audit-service.test.ts
+
+# Run E2E tests (requires dev server to be usable)
+bun run test:e2e
+
+# Check coverage
+bun run test:coverage
+```
+
+```bash
+bun run test
+# OR
+bun run test:run
+```
+
+Run with coverage report:
+
+```bash
+bun run test:coverage
+```
+
+### Running E2E Tests
+
+End-to-end tests run the full application in a browser environment.
+
+```bash
+bun run test:e2e
+```
+
+### Writing Tests
+
+- **Unit Tests**: Place in `src/**/__tests__` or next to files as `*.test.ts`.
+- **Component Tests**: Place next to components as `*.test.tsx`. Use `@testing-library/react`.
+- **E2E Tests**: Place in `e2e/` directory.
+

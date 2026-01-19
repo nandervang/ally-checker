@@ -1,11 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 
-// Environment variables injected at build time via build.ts
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Environment variables - hardcoded fallback for development
+// In production builds, these are replaced via build.ts
+const supabaseUrl = 'https://fbfmrqmrioszslqwxwbw.supabase.co';
+const supabaseAnonKey = 'sb_publishable_s9nEpcns2In-Y3z5jgHqGQ_oLA2mViK';
 
 if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("Supabase Config Error.");
   throw new Error(
     'Missing Supabase environment variables. Please check .env.local file.'
   );

@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { AlertCircle, CheckCircle, Download, ExternalLink, RotateCcw, CheckSquare } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogHeader } from '@/components/ui/dialog';
+import { AlertCircle, CheckCircle, Download, ExternalLink, RotateCcw, CheckSquare, Maximize2 } from "lucide-react";
 import type { AuditResult, AuditIssue } from "@/data/mockAuditResults";
 import { AgentTraceViewer } from "./AgentTraceViewer";
 import { useIssueSelection } from "@/hooks/useIssueSelection";
@@ -363,6 +364,43 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
                               <h5 className="font-semibold mb-1">{t("results.details.description")}</h5>
                               <p className="text-sm">{issue.description}</p>
                             </div>
+                            {(issue as any).screenshot_data && (issue as any).screenshot_data.data && (
+                                <div className="mt-3 border rounded-md p-3 bg-muted/20">
+                                  <h5 className="font-semibold mb-2 flex items-center gap-2 text-sm">
+                                    Capture Evidence
+                                  </h5>
+                                  <div className="bg-background border rounded p-2">
+                                     <Dialog>
+                                        <DialogTrigger asChild>
+                                          <div className="group relative cursor-pointer inline-block">
+                                            <img 
+                                              src={`data:${(issue as any).screenshot_data.mime_type || 'image/png'};base64,${(issue as any).screenshot_data.data}`}
+                                              alt="Issue screenshot thumbnail"
+                                              className="max-w-full h-auto max-h-60 rounded border border-border transition-opacity group-hover:opacity-90" 
+                                            />
+                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded">
+                                               <div className="bg-background/80 p-2 rounded-full shadow-sm">
+                                                  <Maximize2 className="h-5 w-5 text-primary" />
+                                               </div>
+                                            </div>
+                                          </div>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+                                          <DialogHeader>
+                                             <DialogTitle>{(issue as any).screenshot_data.description || 'Evidence Screenshot'}</DialogTitle>
+                                          </DialogHeader>
+                                          <div className="mt-2 text-center">
+                                            <img 
+                                               src={`data:${(issue as any).screenshot_data.mime_type || 'image/png'};base64,${(issue as any).screenshot_data.data}`}
+                                               alt="Issue screenshot full size"
+                                               className="max-w-full h-auto rounded border border-border mx-auto" 
+                                             />
+                                          </div>
+                                        </DialogContent>
+                                      </Dialog>
+                                  </div>
+                                </div>
+                            )}
                             <div>
                               <h5 className="font-semibold mb-1">{t("results.details.element")}</h5>
                               <code className="text-xs bg-muted p-2 rounded block overflow-x-auto">
@@ -456,6 +494,43 @@ export function AuditResults({ result, onNewAudit, onDownloadReport }: AuditResu
                               <h5 className="font-semibold mb-1">{t("results.details.description")}</h5>
                               <p className="text-sm">{issue.description}</p>
                             </div>
+                            {(issue as any).screenshot_data && (issue as any).screenshot_data.data && (
+                                <div className="mt-3 border rounded-md p-3 bg-muted/20">
+                                  <h5 className="font-semibold mb-2 flex items-center gap-2 text-sm">
+                                    Capture Evidence
+                                  </h5>
+                                  <div className="bg-background border rounded p-2">
+                                     <Dialog>
+                                        <DialogTrigger asChild>
+                                          <div className="group relative cursor-pointer inline-block">
+                                            <img 
+                                              src={`data:${(issue as any).screenshot_data.mime_type || 'image/png'};base64,${(issue as any).screenshot_data.data}`}
+                                              alt="Issue screenshot thumbnail"
+                                              className="max-w-full h-auto max-h-60 rounded border border-border transition-opacity group-hover:opacity-90" 
+                                            />
+                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded">
+                                               <div className="bg-background/80 p-2 rounded-full shadow-sm">
+                                                  <Maximize2 className="h-5 w-5 text-primary" />
+                                               </div>
+                                            </div>
+                                          </div>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+                                          <DialogHeader>
+                                             <DialogTitle>{(issue as any).screenshot_data.description || 'Evidence Screenshot'}</DialogTitle>
+                                          </DialogHeader>
+                                          <div className="mt-2 text-center">
+                                            <img 
+                                               src={`data:${(issue as any).screenshot_data.mime_type || 'image/png'};base64,${(issue as any).screenshot_data.data}`}
+                                               alt="Issue screenshot full size"
+                                               className="max-w-full h-auto rounded border border-border mx-auto" 
+                                             />
+                                          </div>
+                                        </DialogContent>
+                                      </Dialog>
+                                  </div>
+                                </div>
+                            )}
                             <div>
                               <h5 className="font-semibold mb-1">{t("results.details.element")}</h5>
                               <code className="text-xs bg-muted p-2 rounded block overflow-x-auto">

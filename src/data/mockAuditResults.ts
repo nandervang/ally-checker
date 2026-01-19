@@ -36,7 +36,7 @@ export interface AuditResult {
   auditId?: string;
   url?: string;
   fileName?: string;
-  documentType?: "html" | "pdf" | "docx";
+  documentType?: "html" | "pdf" | "docx" | "manual";
   timestamp: string;
   summary: {
     totalIssues: number;

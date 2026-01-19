@@ -10,18 +10,24 @@ import { parseGeminiResponse } from "../../src/lib/audit/response-parser.js";
 import { getAllTools, executeTool, convertToGeminiFormat } from "./lib/mcp-tools/index.js";
 
 interface AuditRequest {
-  mode: "url" | "html" | "snippet" | "document";
+  mode: "url" | "html" | "snippet" | "document" | "manual";
   content: string;
   model: "claude" | "gemini" | "gpt4";
   geminiModel?: "gemini-2.5-flash" | "gemini-2.5-pro"; // Specific Gemini variant
-  documentType?: "pdf" | "docx";
+  documentType?: "pdf" | "docx" | "image";
   filePath?: string;
+  fileData?: string;
+  mimeType?: string;
+  reportTemplate?: string;
 }
 
 interface MCPToolResult {
   tool: string;
+  args?: any;
   result: unknown;
   error?: string;
+  timestamp: string;
+  duration: number;
 }
 
 /**
@@ -110,7 +116,7 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
   
   try {
     // Build comprehensive system instruction
-    const systemInstruction = buildSystemInstruction();
+    const systemInstruction = buildSystemInstruction(request.reportTemplate);
     
     // Build user prompt based on mode
     const userPrompt = buildUserPrompt(request);
@@ -154,7 +160,17 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
               fix_priority: { type: "string", enum: ["MÅSTE", "BÖR", "KAN", "MUST", "SHOULD", "CAN"], description: "Swedish: MÅSTE (critical/must fix), BÖR (should fix), KAN (can fix). English: MUST, SHOULD, CAN" },
               en_301_549_ref: { type: "string", description: "EN 301 549 reference (e.g., '9.1.4.4' for Resize Text)" },
               webbriktlinjer_url: { type: "string", description: "Swedish Webbriktlinjer link (e.g., 'https://webbriktlinjer.se/riktlinjer/96-se-till-att-text-gar-att-forstora/')" },
-              screenshot_url: { type: "string", description: "Screenshot URL or base64 data (optional - to be generated later)" }
+              screenshot_url: { type: "string", description: "Legacy screenshot URL" },
+              screenshot_data: { 
+                type: "object", 
+                properties: {
+                  data: { type: "string", description: "Base64 encoded image data" },
+                  mime_type: { type: "string", description: "Mime type (e.g. image/png)" },
+                  width: { type: "number" },
+                  height: { type: "number" }
+                },
+                description: "Screenshot data from tool execution (e.g. keyboard trace)"
+              }
             },
             required: ["wcag_criterion", "wcag_level", "wcag_principle", "title", "description", "severity", "source", "how_to_fix", "wcag_explanation", "how_to_reproduce", "user_impact", "fix_priority"]
           }
@@ -215,7 +231,10 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
           
           toolCalls.push({
             tool: call.name,
+            args: call.args,
             result: toolResult,
+            timestamp: new Date(toolStart).toISOString(),
+            duration: toolTime
           });
           
           functionResponses.push({
@@ -233,8 +252,11 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
           
           toolCalls.push({
             tool: call.name,
+            args: call.args,
             result: errorResult,
             error: error instanceof Error ? error.message : 'Unknown error',
+            timestamp: new Date(toolStart).toISOString(),
+            duration: toolTime
           });
           
           functionResponses.push({
@@ -379,6 +401,7 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
       auditMethodology: auditMethodology,
       mcpToolsUsed: mcpToolsUsed,
       sourcesConsulted: sourcesConsulted,
+      duration_ms: elapsedTime,
     };
     
   } catch (error) {
@@ -404,7 +427,8 @@ async function runGeminiAuditInternal(request: AuditRequest, apiKey: string) {
 /**
  * Build system instruction for Gemini
  */
-function buildSystemInstruction(): string {
+function buildSystemInstruction(reportTemplate?: string): string {
+  const currentTemplate = reportTemplate || 'wcag-international';
   return `You are an expert accessibility auditor with deep knowledge of WCAG 2.2, WAI-ARIA, and Swedish accessibility standards.
 
 **CRITICAL: Research-Based Audit Process**
@@ -417,12 +441,17 @@ You have a 60-second execution limit. Use this workflow:
 5. **Consult WAI-ARIA specs** for interactive components (buttons, forms, landmarks, etc.)
 6. **Apply heuristic evaluation** for issues automated tools miss
 
+**Template Selection Rules:**
+- You MUST generate the report using the following template: ${currentTemplate}
+
 **Available MCP Tools - USE THEM EXTENSIVELY!**
 
 **Phase 1: Automated Testing**
 - **analyze_html / analyze_url**: Run axe-core automated testing (use FIRST)
 - audit_pdf/audit_docx: Document accessibility audits
 - fetch_url: Retrieve HTML content from URLs
+- **capture_element_screenshot**: Capture visual evidence of specific elements (use for high priority issues)
+- **capture_violations_screenshots**: Capture screenshots for a list of violations
 
 **Phase 2: Research & Documentation (MANDATORY)**
 - **get_wcag_criterion**: Get official WCAG documentation for a criterion (e.g., "1.1.1")
@@ -459,6 +488,7 @@ After axe-core returns violations:
 2. For HTML/snippets: Use analyze_html to run axe-core
 3. For Documents: Use audit_pdf or audit_docx
 4. Collect all automated test results
+5. **Capture Visual Evidence**: Use capture_element_screenshot for critical visual issues (contrast, layout, missing alt text rendering)
 
 **PHASE 2: Research & Documentation (Next 30 seconds) - MANDATORY!**
 5. **For EACH unique WCAG criterion found:**
@@ -533,9 +563,10 @@ Do NOT skip research phase. Professional reports require authoritative sources.
    - Find relevant Webbriktlinjer guideline matching the WCAG criterion
    - Only include for Swedish locale or ETU template
 
-7. **screenshot_url**: Leave null/empty - screenshots generated separately via browser automation
-   - Will be populated later by screenshot capture process
-   - Just set to null in JSON output
+7. **screenshot**: If you captured a screenshot for this issue using capture_element_screenshot, include the result object here
+   - Format: { "base64": "...", "mimeType": "image/png", ... }
+   - Populate from the tool output
+   - If no screenshot captured, omit or set to null
 
 **Testing Guidance (Magenta A11y Style):**
 For each issue, provide comprehensive testing instructions:
@@ -620,7 +651,7 @@ Each issue in the array must include:
 - severity: "critical", "serious", "moderate", or "minor"
 - source: "axe-core", "ai-heuristic", or "manual"
 - how_to_fix: Remediation steps
-- Optional but recommended: element_selector, element_html, code_example, user_impact, how_to_reproduce, keyboard_testing, screen_reader_testing, visual_testing, expected_behavior, wcag_url
+- Optional but recommended: element_selector, element_html, code_example, user_impact, how_to_reproduce, keyboard_testing, screen_reader_testing, visual_testing, expected_behavior, wcag_url, screenshot
 
 **Severity Guidelines:**
 - critical: Level A violations blocking access
@@ -634,17 +665,47 @@ Focus on actionable, detailed findings with comprehensive testing instructions.`
 /**
  * Build user prompt based on audit mode
  */
-function buildUserPrompt(request: AuditRequest): string {
+function buildUserPrompt(request: AuditRequest): string | Array<string | any> {
   switch (request.mode) {
     case "url":
       return `Audit the accessibility of this URL: ${request.content}
 
 Process:
 1. Use analyze_url to run axe-core automated tests
-2. If needed, use fetch_url to examine the HTML structure
-3. Cross-reference any violations with get_wcag_criterion
-4. Apply manual heuristic evaluation
-5. Provide comprehensive audit report with prioritized remediation steps`;
+2. TEST KEYBOARD NAVIGATION: Use test_keyboard_navigation to capture a visible tab trace. This is CRITICAL for detecting focus issues.
+3. If needed, use fetch_url to examine the HTML structure
+4. Cross-reference any violations with get_wcag_criterion
+5. Apply manual heuristic evaluation
+6. Provide comprehensive audit report with prioritized remediation steps
+   - IMPORTANT: If test_keyboard_navigation returned a screenshot (in 'screenshot' property), include it in the issue reporting under the 'screenshot_data' field (map 'base64' to 'data').`;
+    
+    case "manual": {
+      const textPrompt = `Analyze this reported accessibility issue:
+
+Reported Issue:
+"${request.content}"
+
+Process:
+1. Analyze the user's description of the issue.
+2. If an image is provided, analyze the visual context for accessibility barriers.
+3. Identify the likely WCAG Success Criterion that is violated.
+4. Call get_wcag_criterion to verify the criterion details.
+5. Formulate a valid audit finding based on the user's report and WCAG standards.
+6. Provide specific remediation steps (how to fix).`;
+
+      if (request.documentType === 'image' && request.fileData) {
+        return [
+          textPrompt,
+          {
+            inlineData: {
+              data: request.fileData,
+              mimeType: request.mimeType || 'image/png'
+            }
+          }
+        ];
+      }
+      return textPrompt;
+    }
     
     case "html":
       return `Audit the accessibility of this HTML content:
@@ -678,8 +739,8 @@ Process:
       return `Audit the accessibility of this ${docType.toUpperCase()} document: ${filePath}
 
 Process:
-1. Check document structure and accessibility features
-2. Cross-reference findings with WCAG criteria using get_wcag_criterion
-3. Provide comprehensive document accessibility report with remediation guidance`;
+1. Use the appropriate tool (${docType === 'docx' ? 'audit_docx' : 'audit_pdf'}) to parse and check the document. This is MANDATORY.
+2. Cross-reference findings with WCAG criteria using get_wcag_criterion if needed for more context.
+3. Provide comprehensive document accessibility report with remediation guidance.`;
   }
 }

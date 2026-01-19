@@ -4,20 +4,21 @@
 
 All 13 TypeScript MCP tools are deployed and ready to test in production!
 
-## 🧪 Local Testing (Limited)
+## 🧪 Local Testing
 
-**Note**: The `analyze_html` and `analyze_url` tools require a browser-like environment and won't work in pure Node.js/Bun local tests. They will work correctly in Netlify Functions.
+You can run a comprehensive verification of the MCP tool registry and basic execution logic using the included test script. This script simulates the tool loading process used by the agent.
 
-Run basic tests (excluding axe-core):
 ```bash
-bun test-mcp-tools-simple.ts
+bun scripts/test-mcp-tools.ts
 ```
 
 This tests:
-- ✅ WCAG documentation tools
-- ✅ WAI tips and ARIA pattern tools  
-- ✅ Magenta component testing tools
-- ✅ Fetch metadata tool
+- ✅ **Registry Integrity**: Verifies all 19 tools are correctly exported and have valid input schemas.
+- ✅ **Knowledge Tools**: Verifies WCAG, WAI, and Magenta database lookups work.
+- ✅ **Python Integration**: Verifies the path resolution for the Document Accessibility server (that it can find the `cli.py`).
+- ✅ **Network Tools**: Verifies `fetch` tools can make outbound requests.
+
+**Note**: Advanced tools like `analyze_url` (which require a Playwright browser instance) are validated for *schema correctness* but may not perform a full browser launch in this simple test script to keep it fast. For full functional testing of the browser audit, rely on the Production Testing steps below.
 
 ## 🚀 Production Testing (Full)
 

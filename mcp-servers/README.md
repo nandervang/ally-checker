@@ -1,173 +1,40 @@
 # Ally Checker MCP Servers
 
-Python-based Model Context Protocol servers for accessibility analysis.
+This directory contains specialized Model Context Protocol (MCP) servers used by the Ally Checker application.
 
-## Servers
+## Active Servers
 
-### 1. Fetch Server (`mcp-servers/fetch-server`)
-Fetches web content for accessibility analysis.
-
-**Tools:**
-- `fetch_url`: Fetch HTML content from URLs
-- `fetch_url_metadata`: Get URL metadata without full content
-
-**Install:**
-```bash
-cd mcp-servers/fetch-server
-pip install -r requirements.txt
-```
-
-**Run:**
-```bash
-python server.py
-```
-
-### 2. WCAG Docs Server (`mcp-servers/wcag-docs-server`)
-Provides WCAG 2.2 success criteria documentation.
+### 1. Document Accessibility Server (`mcp-servers/document-accessibility-server`)
+Provides tools for auditing DOCX and PDF documents. This server is Python-based (due to specialized library dependencies like `python-docx` and `pdfminer`) and requires a local Python environment.
 
 **Tools:**
-- `get_wcag_criterion`: Get details for specific criterion (e.g., "1.1.1")
-- `search_wcag_by_principle`: Search by principle (Perceivable, Operable, etc.)
-- `get_all_criteria`: List all criteria
+- `audit_docx`: Analyze DOCX documents
+- `audit_pdf`: Analyze PDF documents
 
-**Install:**
-```bash
-cd mcp-servers/wcag-docs-server
-pip install -r requirements.txt
-```
+**Status**: Active.
+- **Production**: Invoked via `spawn("python3", ...)` from the Node.js functions. Requires Python environment (currently limited support in Netlify Functions).
+- **Development**: Runs locally if Python dependencies are installed (`pip install -r requirements.txt`).
 
-**Run:**
-```bash
-python server.py
-```
-
-### 3. Axe-Core Server (`mcp-servers/axe-core-server`)
-Runs axe-core automated accessibility testing.
+### 2. Supabase Schema Server (`mcp-servers/supabase-schema-server`)
+Provides database schema introspection for Supabase. Primarily used for development/agentic tasks to understand the database structure.
 
 **Tools:**
-- `analyze_html`: Analyze HTML content
-- `analyze_url`: Fetch and analyze a URL
+- `list_tables`
+- `get_table_schema`
+- `get_table_relationships`
 
-**Install:**
-```bash
-cd mcp-servers/axe-core-server
-pip install -r requirements.txt
-playwright install chromium
-```
+**Status**: Development Tool Only.
 
-**Run:**
-```bash
-python server.py
-```
+---
 
-### 4. Supabase Schema Server (`mcp-servers/supabase-schema-server`)
-Provides database schema introspection for Supabase.
+## Migrated Servers (Removed from this directory)
 
-**Tools:**
-- `list_tables`: List all tables in public schema
-- `get_table_schema`: Get column details for a table
-- `get_table_relationships`: View foreign key relationships
-- `get_table_indexes`: List indexes
-- `get_rls_policies`: View Row Level Security policies
+The following servers have been migrated to native TypeScript implementations for better performance and compatibility with Netlify Functions runtime. The Python versions have been removed.
 
-**Install:**
-```bash
-cd mcp-servers/supabase-schema-server
-pip install -r requirements.txt
-```
+- **Fetch Server** → `netlify/functions/lib/mcp-tools/fetch.ts`
+- **WCAG Docs Server** → `netlify/functions/lib/mcp-tools/wcag-docs.ts`
+- **Axe-Core Server** → `netlify/functions/lib/mcp-tools/axe-core.ts`
+- **WAI Tips Server** → `netlify/functions/lib/mcp-tools/wai-tips.ts`
+- **Magenta Server** → `netlify/functions/lib/mcp-tools/magenta.ts`
 
-**Configure:**
-```bash
-# Create .env file (for production)
-echo "SUPABASE_DB_HOST=db.xxxxxxxxxxxx.supabase.co" > .env
-echo "SUPABASE_DB_PASSWORD=your-password" >> .env
-
-# Or use defaults for local Supabase (127.0.0.1:54322)
-```
-
-**Run:**
-```bash
-python server.py
-```
-
-### 5. WAI Tips Server (`mcp-servers/wai-tips-server`)
-Provides W3C WAI tips and ARIA patterns.
-
-**Tools:**
-- `get_wai_resource`: Access W3C WAI resources (developing, designing, writing, aria, understanding)
-- `search_wai_tips`: Search WAI tips by topic (headings, forms, images, color, keyboard)
-- `get_aria_pattern`: Get WAI-ARIA patterns for interactive components (dialog, tabs, menu, etc.)
-
-**Install:**
-```bash
-cd mcp-servers/wai-tips-server
-pip install -r requirements.txt
-```
-
-**Run:**
-```bash
-python server.py
-```
-
-### 6. Magenta A11y Server (`mcp-servers/magenta-server`)
-Provides Magenta A11y component testing checklists.
-
-**Tools:**
-- `get_magenta_component`: Get testing checklist for specific component (button, form, dialog, tabs, etc.)
-- `search_magenta_patterns`: Search components by category or description
-- `get_magenta_testing_methods`: Get keyboard/screen reader/visual testing procedures
-
-**Install:**
-```bash
-cd mcp-servers/magenta-server
-pip install -r requirements.txt
-```
-
-**Run:**
-```bash
-python server.py
-```
-
-## Usage with Claude Desktop
-
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "ally-checker-fetch": {
-      "command": "python",
-      "args": ["/path/to/ally-checker/mcp-servers/fetch-server/server.py"]
-    },
-    "ally-checker-wcag-docs": {
-      "command": "python",
-      "args": ["/path/to/ally-checker/mcp-servers/wcag-docs-server/server.py"]
-    },
-    "ally-checker-axe-core": {
-      "command": "python",
-      "args": ["/path/to/ally-checker/mcp-servers/axe-core-server/server.py"]
-    },
-    "ally-checker-supabase-schema": {
-      "command": "python",
-      "args": ["/path/to/ally-checker/mcp-servers/supabase-schema-server/server.py"],
-      "env": {
-        "SUPABASE_DB_HOST": "127.0.0.1",
-        "SUPABASE_DB_PORT": "54322",
-        "SUPABASE_DB_PASSWORD": "postgres"
-      }
-    },
-    "ally-checker-wai-tips": {
-      "command": "python",
-      "args": ["/path/to/ally-checker/mcp-servers/wai-tips-server/server.py"]
-    },
-    "ally-checker-magenta": {
-      "command": "python",
-      "args": ["/path/to/ally-checker/mcp-servers/magenta-server/server.py"]
-    }
-  }
-}
-```
-
-## Development
-
-Each server is a standalone Python application using the MCP SDK. They communicate via stdio with AI agents (Claude, Gemini, etc.) that can orchestrate accessibility analysis workflows.
+See [MCP_TYPESCRIPT_MIGRATION.md](../docs/MCP_TYPESCRIPT_MIGRATION.md) for full details.

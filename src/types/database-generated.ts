@@ -7,30 +7,10 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
@@ -38,23 +18,31 @@ export type Database = {
         Row: {
           agent_trace: Json | null
           ai_model: string | null
+          analysis_duration_ms: number | null
           analysis_steps: string[] | null
+          audit_methodology: Json | null
           completed_at: string | null
           created_at: string
           critical_issues: number | null
+          current_stage: string | null
           document_path: string | null
           document_type: string | null
           error_message: string | null
           id: string
           input_type: string
           input_value: string
+          last_updated_at: string | null
+          mcp_tools_used: string[] | null
           minor_issues: number | null
           moderate_issues: number | null
           operable_issues: number | null
           perceivable_issues: number | null
+          progress: number | null
           robust_issues: number | null
           serious_issues: number | null
           session_id: string | null
+          sources_consulted: string[] | null
+          started_at: string | null
           status: string
           suspected_issue: string | null
           tools_used: string[] | null
@@ -67,23 +55,31 @@ export type Database = {
         Insert: {
           agent_trace?: Json | null
           ai_model?: string | null
+          analysis_duration_ms?: number | null
           analysis_steps?: string[] | null
+          audit_methodology?: Json | null
           completed_at?: string | null
           created_at?: string
           critical_issues?: number | null
+          current_stage?: string | null
           document_path?: string | null
           document_type?: string | null
           error_message?: string | null
           id?: string
           input_type: string
           input_value: string
+          last_updated_at?: string | null
+          mcp_tools_used?: string[] | null
           minor_issues?: number | null
           moderate_issues?: number | null
           operable_issues?: number | null
           perceivable_issues?: number | null
+          progress?: number | null
           robust_issues?: number | null
           serious_issues?: number | null
           session_id?: string | null
+          sources_consulted?: string[] | null
+          started_at?: string | null
           status?: string
           suspected_issue?: string | null
           tools_used?: string[] | null
@@ -96,23 +92,31 @@ export type Database = {
         Update: {
           agent_trace?: Json | null
           ai_model?: string | null
+          analysis_duration_ms?: number | null
           analysis_steps?: string[] | null
+          audit_methodology?: Json | null
           completed_at?: string | null
           created_at?: string
           critical_issues?: number | null
+          current_stage?: string | null
           document_path?: string | null
           document_type?: string | null
           error_message?: string | null
           id?: string
           input_type?: string
           input_value?: string
+          last_updated_at?: string | null
+          mcp_tools_used?: string[] | null
           minor_issues?: number | null
           moderate_issues?: number | null
           operable_issues?: number | null
           perceivable_issues?: number | null
+          progress?: number | null
           robust_issues?: number | null
           serious_issues?: number | null
           session_id?: string | null
+          sources_consulted?: string[] | null
+          started_at?: string | null
           status?: string
           suspected_issue?: string | null
           tools_used?: string[] | null
@@ -220,22 +224,29 @@ export type Database = {
           element_context: string | null
           element_html: string | null
           element_selector: string | null
+          en_301_549_ref: string | null
+          en301549_chapter: string | null
           expected_behavior: string | null
+          fix_priority: string | null
           how_to_fix: string
           how_to_reproduce: string | null
           id: string
           keyboard_testing: string | null
           report_text: string | null
           screen_reader_testing: string | null
+          screenshot_data: Json | null
+          screenshot_url: string | null
           severity: string
           source: string
           title: string
           user_impact: string | null
           visual_testing: string | null
           wcag_criterion: string
+          wcag_explanation: string | null
           wcag_level: string
           wcag_principle: string
           wcag_url: string | null
+          webbriktlinjer_url: string | null
         }
         Insert: {
           audit_id: string
@@ -246,22 +257,29 @@ export type Database = {
           element_context?: string | null
           element_html?: string | null
           element_selector?: string | null
+          en_301_549_ref?: string | null
+          en301549_chapter?: string | null
           expected_behavior?: string | null
+          fix_priority?: string | null
           how_to_fix: string
           how_to_reproduce?: string | null
           id?: string
           keyboard_testing?: string | null
           report_text?: string | null
           screen_reader_testing?: string | null
+          screenshot_data?: Json | null
+          screenshot_url?: string | null
           severity: string
           source: string
           title: string
           user_impact?: string | null
           visual_testing?: string | null
           wcag_criterion: string
+          wcag_explanation?: string | null
           wcag_level: string
           wcag_principle: string
           wcag_url?: string | null
+          webbriktlinjer_url?: string | null
         }
         Update: {
           audit_id?: string
@@ -272,22 +290,29 @@ export type Database = {
           element_context?: string | null
           element_html?: string | null
           element_selector?: string | null
+          en_301_549_ref?: string | null
+          en301549_chapter?: string | null
           expected_behavior?: string | null
+          fix_priority?: string | null
           how_to_fix?: string
           how_to_reproduce?: string | null
           id?: string
           keyboard_testing?: string | null
           report_text?: string | null
           screen_reader_testing?: string | null
+          screenshot_data?: Json | null
+          screenshot_url?: string | null
           severity?: string
           source?: string
           title?: string
           user_impact?: string | null
           visual_testing?: string | null
           wcag_criterion?: string
+          wcag_explanation?: string | null
           wcag_level?: string
           wcag_principle?: string
           wcag_url?: string | null
+          webbriktlinjer_url?: string | null
         }
         Relationships: [
           {
@@ -336,6 +361,7 @@ export type Database = {
           component_library: string | null
           created_at: string | null
           custom_mcp_servers: Json | null
+          custom_system_prompt: string | null
           default_language: string | null
           default_report_template: string | null
           font: string | null
@@ -359,6 +385,7 @@ export type Database = {
           theme_color: string | null
           ui_density: string | null
           updated_at: string | null
+          use_custom_prompt: boolean | null
           user_id: string
         }
         Insert: {
@@ -370,6 +397,7 @@ export type Database = {
           component_library?: string | null
           created_at?: string | null
           custom_mcp_servers?: Json | null
+          custom_system_prompt?: string | null
           default_language?: string | null
           default_report_template?: string | null
           font?: string | null
@@ -393,6 +421,7 @@ export type Database = {
           theme_color?: string | null
           ui_density?: string | null
           updated_at?: string | null
+          use_custom_prompt?: boolean | null
           user_id: string
         }
         Update: {
@@ -404,6 +433,7 @@ export type Database = {
           component_library?: string | null
           created_at?: string | null
           custom_mcp_servers?: Json | null
+          custom_system_prompt?: string | null
           default_language?: string | null
           default_report_template?: string | null
           font?: string | null
@@ -427,6 +457,7 @@ export type Database = {
           theme_color?: string | null
           ui_density?: string | null
           updated_at?: string | null
+          use_custom_prompt?: boolean | null
           user_id?: string
         }
         Relationships: []
@@ -456,7 +487,8 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      cleanup_old_audits: { Args: { days_old?: number }; Returns: number }
+      update_audit_counts: { Args: { audit_uuid: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
@@ -585,11 +617,7 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },
 } as const
-

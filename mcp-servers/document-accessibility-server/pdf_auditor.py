@@ -127,40 +127,98 @@ async def check_document_structure(file_path: str) -> List[Dict[str, Any]]:
     return issues
 
 
+def get_struct_tree_root(reader):
+    """Get the structure tree root if it exists."""
+    try:
+        catalog = reader.trailer["/Root"]
+        if "/StructTreeRoot" in catalog:
+            return catalog["/StructTreeRoot"]
+    except Exception:
+        pass
+    return None
+
+def count_figures_with_alt(obj, stats):
+    """Recursively count Figure elements and Alt entries."""
+    if not isinstance(obj, dict):
+        return
+
+    # Check type
+    type_name = obj.get("/S", "")
+    if isinstance(type_name, str) and type_name.endswith("Figure"):
+        stats["figures"] += 1
+        if "/Alt" in obj:
+            stats["figures_with_alt"] += 1
+    
+    # Recurse into kids
+    if "/K" in obj:
+        kids = obj["/K"]
+        if isinstance(kids, list):
+            for kid in kids:
+                # Resolve indirect objects
+                if hasattr(kid, "get_object"):
+                    kid = kid.get_object()
+                count_figures_with_alt(kid, stats)
+        elif hasattr(kids, "get_object"):
+            count_figures_with_alt(kids.get_object(), stats)
+        elif isinstance(kids, dict):
+             count_figures_with_alt(kids, stats)
+
 async def check_alternative_text(file_path: str) -> List[Dict[str, Any]]:
     """Check for images without alternative text."""
     issues = []
     
     try:
-        doc = fitz.open(file_path)
-        images_without_alt = []
-        
-        for page_num in range(doc.page_count):
-            page = doc[page_num]
-            images = page.get_images()
+        # First check if tagged
+        with open(file_path, 'rb') as f:
+            reader = pypdf.PdfReader(f)
+            struct_root = get_struct_tree_root(reader)
             
-            for img_index, img in enumerate(images):
-                # Check if image has alt text in structure tree
-                # Note: This is simplified - full PDF/UA check requires deeper analysis
-                images_without_alt.append({
-                    "page": page_num + 1,
-                    "image_index": img_index + 1,
+            if not struct_root:
+                # If not tagged, all images are inaccessible (already covered by tag check, but emphasize images)
+                # Count images using fitz for reporting
+                doc = fitz.open(file_path)
+                total_images = 0
+                for page in doc:
+                    total_images += len(page.get_images())
+                doc.close()
+                
+                if total_images > 0:
+                    issues.append({
+                        "wcag_principle": "Perceivable",
+                        "success_criterion": "1.1.1",
+                        "success_criterion_name": "Non-text Content",
+                        "severity": "critical",
+                        "description": f"Document has {total_images} images but is not tagged. Assistive technology cannot identify them.",
+                        "remediation": "Tag the PDF and ensure all Figures have Alternative Text.",
+                        "detection_source": "pdf-image-check",
+                    })
+                return issues
+
+            # If tagged, analyze structure tree
+            stats = {"figures": 0, "figures_with_alt": 0}
+            # Resolve root object if indirect
+            if hasattr(struct_root, "get_object"):
+                struct_root = struct_root.get_object()
+                
+            count_figures_with_alt(struct_root, stats)
+            
+            missing_alt = stats["figures"] - stats["figures_with_alt"]
+            
+            if missing_alt > 0:
+                issues.append({
+                    "wcag_principle": "Perceivable",
+                    "success_criterion": "1.1.1",
+                    "success_criterion_name": "Non-text Content",
+                    "severity": "critical",
+                    "description": f"Found {stats['figures']} Figure tags, but {missing_alt} are missing Alternative Text.",
+                    "remediation": "Add descriptive /Alt entries to all Figure tags in the PDF structure tree.",
+                    "detection_source": "pdf-image-check",
+                    "metadata": stats
                 })
-        
-        if images_without_alt:
-            issues.append({
-                "wcag_principle": "Perceivable",
-                "success_criterion": "1.1.1",
-                "success_criterion_name": "Non-text Content",
-                "severity": "critical",
-                "description": f"Found {len(images_without_alt)} images that may be missing alternative text. This prevents screen reader users from understanding the content.",
-                "element_snippet": f"Images on pages: {', '.join(str(img['page']) for img in images_without_alt[:5])}...",
-                "remediation": "Add alternative text to all images in the PDF. Use Adobe Acrobat or other PDF editing tools to tag images with descriptive alt text.",
-                "detection_source": "pdf-image-check",
-            })
-        
-        doc.close()
-    
+
+            # Also check if there are raw images not in figures (untagged artifacts)
+            # This is complex to correlate, so we stick to structure analysis which is the "accessible" view.
+            
     except Exception as e:
         logger.error(f"Error checking alt text: {e}")
     

@@ -2,7 +2,7 @@
  * Tests for WCAG Categorization Logic
  */
 
-import { describe, test, expect } from 'bun:test';
+import { describe, test, expect } from "vitest";
 import { parseGeminiResponse } from '../response-parser';
 import { calculateMetrics } from '../metrics';
 import type { Issue } from '@/types/audit';

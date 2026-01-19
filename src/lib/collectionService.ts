@@ -70,10 +70,11 @@ export async function saveCollection(
     }
 
     return { collection, error: null };
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Save collection error:', error);
     return { 
       collection: null as any, 
-      error: error instanceof Error ? error : new Error(String(error))
+      error: error instanceof Error ? error : new Error(error?.message || String(error))
     };
   }
 }

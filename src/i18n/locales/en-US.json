@@ -69,6 +69,42 @@
       "toast": "Toast (Sonner)"
     }
   },
+  "bookmarklets": {
+    "title": "Accessibility Bookmarklets",
+    "description": "Tools to test accessibility by injecting styles into the page.",
+    "howToUse": "How to use",
+    "installInstruction": "To install:",
+    "installStep": "Drag the buttons below to your bookmarks bar.",
+    "testInstruction": "To test now:",
+    "testStep": "Click the buttons to apply styles to this page immediately.",
+    "textSpacing": {
+      "title": "Text Spacing (WCAG 1.4.12)",
+      "description": "Tests if content adapts correctly when text properties are adjusted. (Line height: 1.5, Letter spacing: 0.12em, Word spacing: 0.16em, Paragraph spacing: 2em).",
+      "button": "Text Spacing Test",
+      "label": "Drag to content or Click to test"
+    },
+    "lineHeight": {
+      "title": "Line Height Only (WCAG 1.4.12)",
+      "description": "Tests specifically for line height compliance (1.5 times font size).",
+      "button": "Line Height Test",
+      "label": "Drag to content or Click to test"
+    },
+    "letterSpacing": {
+      "title": "Letter Spacing Only (WCAG 1.4.12)",
+      "description": "Tests specifically for letter spacing (0.12em) and word spacing (0.16em) compliance.",
+      "button": "Letter Spacing Test",
+      "label": "Drag to content or Click to test"
+    },
+     "preview": {
+      "title": "Test Preview Area",
+      "reset": "Reset Styles",
+      "heading": "Heading text for spacing check",
+      "subheading": "Testing sub-heading spacing (should not clip)",
+      "paragraph1": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+      "paragraph2": "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+      "footer": "Click a bookmarklet above to apply styles here. Note: This affects the entire application until you reload or click Reset."
+    }
+  },
   "settings": {
     "title": "Settings & Configuration",
     "description": "Accessibility and theme preferences",
@@ -168,7 +204,7 @@
     "fileSuccess": "{{name}} ({{size}} KB)"
   },
   "results": {
-    "title": "Accessibility Report",
+    "title": "A11y Findings",
     "url": "URL",
     "file": "File",
     "type": "Type",
@@ -553,5 +589,103 @@
   },
   "common": {
     "optional": "(optional)"
+  },
+  "banners": {
+    "aiPowered": {
+      "title": "AI-Powered Accessibility Insights",
+      "description": "Get expert-level accessibility analysis powered by advanced AI. Combining automated testing with intelligent pattern recognition.",
+      "tryNow": "Try AI Analysis",
+      "learnMore": "Learn More"
+    },
+    "auditComplete": {
+      "title": "Analysis Complete",
+      "description": "Your accessibility audit is ready. Review the findings above or explore our tools below to help fix the issues.",
+      "issuesFound": "{{count}} issues found",
+      "noIssues": "No issues found - Great job!"
+    }
+  },
+  "dashboard": {
+    "tipOfTheMoment": "Tip of the Moment: {{title}}",
+    "readMore": "Read more in {{source}}",
+    "anotherTip": "Give me another pro tip",
+    "health": {
+      "title": "Accessibility Health",
+      "subtitle": "Based on your last {{count}} runs",
+      "avgScore": "Avg Score",
+      "totalIssues": "Total Issues",
+      "empty": "Run your first audit to see stats here."
+    },
+    "quickTools": {
+      "title": "Quick Tools",
+      "subtitle": "Helpers for your workflow",
+      "contrastChecker": {
+        "title": "Contrast Checker",
+        "subtitle": "Verify color compliance"
+      },
+      "bookmarklets": {
+        "title": "A11y Bookmarklets",
+        "subtitle": "Testing tools"
+      }
+    }
+  },
+  "tips": {
+    "vis-1": { "title": "Color Reliance", "content": "Did you know? Color alone should not be used to convey meaning. Use icons, text labels, or patterns alongside color indicators to ensure users with color blindness can understand the status." },
+    "vis-2": { "title": "Text Contrast", "content": "Body text should have a contrast ratio of at least 4.5:1 against its background. Large text (bold 18pt+ or regular 24pt+) needs a ratio of 3:1." },
+    "vis-3": { "title": "Focus Indicators", "content": "All interactive elements must have a visible focus indicator. Never remove the outline style with CSS unless you replace it with a highly visible custom style." },
+    "vis-4": { "title": "Zoom and Scaling", "content": "Users should be able to zoom in up to 200% without loss of content or functionality. Avoid disabling viewport zooming in your meta tags." },
+    "vis-5": { "title": "Link Identification", "content": "Links within text blocks should be identifiable by more than just color. Underlines are the most common and understood way to distinguish links." },
+    "key-1": { "title": "Keyboard Traps", "content": "Ensure users can navigate into and out of all interactive elements using only a keyboard. Custom modals are common places where keyboard focus can get stuck." },
+    "key-2": { "title": "Logical Tab Order", "content": "The tab order should follow the visual reading order of the page. Avoid using positive tabindex values (> 0) as they can disrupt the natural flow." },
+    "key-3": { "title": "Skip Links", "content": "Provide a 'Skip to Main Content' link at the top of the page. This allows keyboard and screen reader users to bypass repetitive navigation menus." },
+    "key-4": { "title": "Interactive Elements", "content": "Anything that looks clickable must be clickable with a keyboard. If you use a <div> as a button, you must add role='button' and tabindex='0' and handle Enter/Space keys." },
+    "sr-1": { "title": "Alternative Text", "content": "Alt text should describe the purpose of the image, not just its appearance. If an image is purely decorative, use an empty alt attribute (alt=\"\")." },
+    "sr-2": { "title": "Heading Structure", "content": "Use headings (H1-H6) to create a logical outline of your content. Don't skip heading levels (e.g., H1 to H3) as screen reader users rely on them for navigation." },
+    "sr-3": { "title": "Meaningful Link Text", "content": "Link text should make sense on its own. Avoid 'Click here' or 'Read more'. Instead, use descriptive text like 'Read more about Accessibility'." },
+    "sr-4": { "title": "Landmarks", "content": "Use HTML5 semantic regions like <main>, <nav>, <header>, and <footer>. These are automatically recognized as landmarks by screen readers." },
+    "sr-5": { "title": "Language Attribute", "content": "Always set the <html lang=\"en\"> attribute. This ensures screen readers pronounce the content correctly using the appropriate accent and rules." },
+    "form-1": { "title": "Visible Labels", "content": "Every form input needs a permanently visible label. Placeholders are not a substitute for labels, as they disappear when the user starts typing." },
+    "form-2": { "title": "Error Identification", "content": "When a form error occurs, identify the error clearly in text and programmatically associate the error message with the input field using aria-describedby." },
+    "form-3": { "title": "Autocomplete Attributes", "content": "Use the autocomplete attribute on input fields to help users fill out forms faster. This is especially helpful for people with cognitive disabilities." },
+    "form-4": { "title": "Grouping Controls", "content": "Related form controls, like radio buttons or checkboxes, should be grouped using <fieldset> and <legend> to provide context." },
+    "gen-1": { "title": "Motion Sensitivity", "content": "Provide a mechanism to pause, stop, or hide any auto-playing content or animations. Respect the 'prefers-reduced-motion' media query." },
+    "gen-2": { "title": "Simple Language", "content": "Write clearly and simply. Avoid jargon and complex sentence structures. This benefits users with cognitive disabilities and non-native speakers." },
+    "gen-3": { "title": "Consistent Navigation", "content": "Keep navigation mechanisms consistent across your site. Users shouldn't have to relearn how to navigate on every new page." },
+    "gen-4": { "title": "Target Size", "content": "Touch targets should be at least 44x44 CSS pixels (or 24x24 in WCAG 2.2) to ensure they are easily tappable on mobile devices." },
+    "mag-1": { "title": "Automated vs Manual", "content": "Automated tools only catch about 30-50% of accessibility issues. Manual testing with keyboard and screen readers is essential for full compliance." },
+    "mag-2": { "title": "Acceptance Criteria", "content": "Include accessibility checks in your definition of done (DoD). Accessibility should be considered during design and development, not just at the end." },
+    "mag-3": { "title": "Headings Map", "content": "Use a browser extension like 'HeadingsMap' to visualize your document/page structure. The outline should look like a table of contents." },
+    "mag-4": { "title": "Screen Reader on Mobile", "content": "Test on real mobile devices using VoiceOver (iOS) or TalkBack (Android). Emulators often don't accurately reflect mobile screen reader behavior." },
+    "doc-1": { "title": "PDF Accessibility", "content": "PDFs need tags to be accessible. A tagged PDF contains a hidden layer of structure that screen readers use to navigate the document." },
+    "doc-2": { "title": "Table Headers", "content": "Data tables must have header cells (<th>) identified. Use scope='col' or scope='row' to association data cells with their headers explicitly." },
+    "dev-1": { "title": "Linter Integration", "content": "Use eslint-plugin-jsx-a11y to catch accessibility errors while you code. It can identify missing alt text, invalid aria roles, and more." },
+    "mag-5": { "title": "Keyboard Traps & Regions", "content": "Ensure custom widgets (like complex grids or maps) allow keyboard escape. Users should never get stuck in a component without a way to exit." },
+    "wai-1": { "title": "Label in Name", "content": "For buttons with text and icons, ensure the visible text matches the accessible name (aria-label). Speech recognition users rely on saying exactly what they see." },
+    "wai-2": { "title": "Status Messages", "content": "Use role='status' or aria-live='polite' for dynamic updates (like 'Search results updated') so screen readers announce them without moving focus." },
+    "mob-2": { "title": "Orientation", "content": "Don't lock screen orientation. Apps must work in both portrait and landscape modes, as some users have devices fixed to wheelchairs." },
+    "vis-6": { "title": "Reflow (400% Zoom)", "content": "Test your site at 400% zoom (1280px width). Content should reflow into a single column without horizontal scrolling, which is difficult for low-vision users." },
+    "tool-2": { "title": "WAVE Tool", "content": "WAVE is a browser extension that visualizes accessibility issues directly on your page. It's excellent for spotting heading structure and contrast errors." },
+    "tool-3": { "title": "axe DevTools", "content": "axe DevTools runs in your browser console and catches ~50% of issues automatically. It's a standard tool for developers to catch syntax errors early." },
+    "tool-4": { "title": "Colour Contrast Analyser", "content": "The TPGi Colour Contrast Analyser (CCA) includes an eyedropper to test contrast on non-web files like PDFs or Figma designs." }
+  },
+  "contrastCheckerTool": {
+    "title": "Contrast Checker",
+    "description": "Check if your color combination meets WCAG accessibility standards.",
+    "foreground": "Foreground Color",
+    "background": "Background Color",
+    "preview": {
+        "heading": "The quick brown fox",
+        "subheading": "jumps over the lazy dog"
+    },
+    "ratio": "Contrast Ratio",
+    "normalText": "Normal Text",
+    "largeText": "Large Text",
+    "enhanced": "Enhanced (AAA)",
+    "status": {
+        "pass": "Pass",
+        "fail": "Fail",
+        "aaPass": "AA Pass",
+        "aaaPass": "AAA Pass",
+        "aaOnly": "AA Only"
+    }
   }
 }
