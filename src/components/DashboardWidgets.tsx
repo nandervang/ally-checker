@@ -94,13 +94,13 @@ function AccessibilityHealth({ recentAudits }: AccessibilityHealthProps) {
     ? Math.round(recentAudits.reduce((acc, curr) => {
         // Calculate a score based on issues (Mock usage example: 100 - (issues * 5))
         // Since we don't have a direct 'score' field in the type often, we'll estimate or use a placeholder
-        const issueCount = (curr.summary.totalIssues || 0);
+        const issueCount = (curr.summary?.totalIssues || 0);
         const score = Math.max(0, 100 - (issueCount * 5)); 
         return acc + score;
       }, 0) / totalAudits)
     : 0;
 
-  const totalIssues = recentAudits.reduce((acc, curr) => acc + (curr.summary.totalIssues || 0), 0);
+  const totalIssues = recentAudits.reduce((acc, curr) => acc + (curr.summary?.totalIssues || 0), 0);
 
   if (totalAudits === 0) {
      return (
