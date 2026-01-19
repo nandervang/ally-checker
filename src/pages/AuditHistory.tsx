@@ -102,7 +102,7 @@ export function AuditHistory() {
       } else if (sortBy === "oldest") {
         return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
       } else if (sortBy === "mostIssues") {
-        return b.summary.totalIssues - a.summary.totalIssues;
+        return (b.summary?.totalIssues || 0) - (a.summary?.totalIssues || 0);
       }
       return 0;
     });
@@ -266,38 +266,38 @@ export function AuditHistory() {
                   <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
                       <div className="text-center p-3 bg-muted rounded-lg">
-                        <div className={`text-2xl font-bold ${getSeverityColor(audit.summary.critical, audit.summary.serious)}`}>
-                          {audit.summary.totalIssues}
+                        <div className={`text-2xl font-bold ${getSeverityColor(audit.summary?.critical || 0, audit.summary?.serious || 0)}`}>
+                          {audit.summary?.totalIssues || 0}
                         </div>
                         <div className="text-xs text-muted-foreground">{t("history.stats.total")}</div>
                       </div>
                       <div className="text-center p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
                         <div className="text-2xl font-bold text-red-700 dark:text-red-400">
-                          {audit.summary.critical}
+                          {audit.summary?.critical || 0}
                         </div>
                         <div className="text-xs text-red-600 dark:text-red-300">{t("history.stats.critical")}</div>
                       </div>
                       <div className="text-center p-3 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
                         <div className="text-2xl font-bold text-orange-700 dark:text-orange-400">
-                          {audit.summary.serious}
+                          {audit.summary?.serious || 0}
                         </div>
                         <div className="text-xs text-orange-600 dark:text-orange-300">{t("history.stats.serious")}</div>
                       </div>
                       <div className="text-center p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
                         <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">
-                          {audit.summary.moderate}
+                          {audit.summary?.moderate || 0}
                         </div>
                         <div className="text-xs text-yellow-600 dark:text-yellow-300">{t("history.stats.moderate")}</div>
                       </div>
                       <div className="text-center p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                         <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">
-                          {audit.summary.minor}
+                          {audit.summary?.minor || 0}
                         </div>
                         <div className="text-xs text-blue-600 dark:text-blue-300">{t("history.stats.minor")}</div>
                       </div>
                       <div className="text-center p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
                         <div className="text-2xl font-bold text-green-700 dark:text-green-400">
-                          {audit.summary.passed}
+                          {audit.summary?.passed || 0}
                         </div>
                         <div className="text-xs text-green-600 dark:text-green-300">{t("history.stats.passed")}</div>
                       </div>
