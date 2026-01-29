@@ -48,6 +48,21 @@ VITE_REPORT_SERVICE_KEY=test-service-key
 GEMINI_API_KEY=test-gemini-api-key
 ```
 
+**Note:** Some tests require actual backend services (Supabase, Gemini API) to be running. For a full test run:
+- Use a real Supabase instance URL and keys
+- Use a valid Gemini API key
+- Or run against a deployed production environment
+
+### Quick Validation Test
+
+To verify the test setup is working without backend services:
+
+```bash
+bunx playwright test e2e/testing-flow.spec.ts -g "sanity check" --project=chromium
+```
+
+This test only validates that the UI loads correctly.
+
 ### Run All Testing Flow Tests
 
 ```bash
@@ -59,6 +74,23 @@ Or with Playwright directly:
 ```bash
 bunx playwright test e2e/testing-flow.spec.ts
 ```
+
+### Test Against Production
+
+To test the deployed production application, update `playwright.config.ts`:
+
+```typescript
+use: {
+  baseURL: 'https://your-production-site.netlify.app',
+}
+```
+
+Then run:
+```bash
+bunx playwright test e2e/testing-flow.spec.ts --project=chromium
+```
+
+This will test the actual production deployment to ensure everything works end-to-end.
 
 ### Run a Specific Test
 
