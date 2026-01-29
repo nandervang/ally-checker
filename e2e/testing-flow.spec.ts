@@ -35,6 +35,9 @@ test.describe('A11y Checker - Testing Flow Agent', () => {
     // Check title
     await expect(page).toHaveTitle(/Bun/);
     
+    // Bypass auth to access the main app
+    await bypassAuth(page);
+    
     // Wait for the main UI to load
     const tablist = page.getByRole('tablist');
     await expect(tablist).toBeVisible({ timeout: 10000 });
